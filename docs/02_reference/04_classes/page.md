@@ -58,7 +58,7 @@ A field definition of a blueprint: `name`, `type`, `props`, `label()`, `get($key
 
 ## [`File`](../../../src/File.php)
 
-A file in a page folder: `filename()`, `name()`, `extension()`, `type()` (image, video, audio, document, archive, other), `mime()`, `size()`, `dimensions()`, `url()`, `id()`, `uid()`, `template()`, `data()`, `blueprint()`, field methods, `isUsed()` (only used files are public), `update($values)`, `changeName($name)`, `delete()`, `File::create($page, $filename, $contents, $data)`, `File::resolveUrls($html, $page)`.
+A file in a page folder: `filename()`, `name()`, `extension()`, `type()` (image, video, audio, document, archive, other), `mime()`, `size()`, `modified()`, `dimensions()`, `url()`, `id()`, `uid()`, `template()`, `data()`, `blueprint()`, field methods, `isUsed()` (only used files are public), `update($values)`, `changeName($name)`, `replace($contents)` (same filename, uid and data; restored if not accepted), `delete()`, `File::create($page, $filename, $contents, $data)`, `File::resolveUrls($html, $page)`.
 
 ## [`Block`](../../../src/Block.php), [`Layout`](../../../src/Layout.php), [`LayoutColumn`](../../../src/LayoutColumn.php)
 

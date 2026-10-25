@@ -25,8 +25,9 @@ A JSON REST API under `/panel/api`, implemented in [`src/Panel.php`](../../../sr
 | `GET` | `/pages/{id}/files` | | files of the page |
 | `POST` | `/pages/{id}/files?filename=…&template=…` | the file (raw body) | upload a file |
 | `PATCH` | `/pages/{id}/files` | `{sort: [filenames]}` | sort the files, returns the sorted files |
-| `GET` | `/pages/{id}/files/{filename}` | | `{filename, uid, ref, url, type, mime, size, dimensions, template, blueprint, data, …}` |
+| `GET` | `/pages/{id}/files/{filename}` | | `{filename, uid, ref, url, type, mime, size, modified, dimensions, template, blueprint, data, …}` |
 | `PATCH` | `/pages/{id}/files/{filename}` | `{data?, name?}` | save fields, rename (without extension) |
+| `PUT` | `/pages/{id}/files/{filename}?filename=…` | the new file (raw body) | replace the file, the extension of `filename` must match; filename, uid and data stay |
 | `DELETE` | `/pages/{id}/files/{filename}` | | delete the file and its data |
 | `GET` | `/blueprints/pages` | | page types: `[{type, title, icon}]`, `page` first (`default` only if both blueprints exist) |
 | `GET` | `/roles` | | `[{name, title}]`, see [roles](../01_blueprints/04_users/page.md#roles) |

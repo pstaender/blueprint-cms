@@ -780,7 +780,6 @@ select[multiple].input {
 }
 
 .tree-link {
-  padding-left: 4px;
   min-width: 0;
 }
 
@@ -1126,4 +1125,82 @@ select[multiple].input {
   .file-overview {
     grid-template-columns: 1fr;
   }
+}
+
+/* Context menu */
+
+.menu {
+  position: fixed;
+  z-index: 100;
+  min-width: 180px;
+  margin: 0;
+  padding: 4px;
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  list-style: none;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 3px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.menu-item:hover,
+.menu-item:focus-visible {
+  background: var(--color-hover);
+  outline: none;
+}
+
+.menu-item .icon {
+  color: var(--color-text-dimmed);
+}
+
+.menu-item.is-danger,
+.menu-item.is-danger .icon {
+  color: var(--color-negative);
+}
+
+.menu-item[aria-disabled="true"] {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.menu-separator {
+  height: 1px;
+  margin: 4px 0;
+  background: var(--color-border);
+}
+
+.item-with-options {
+  position: relative;
+}
+
+.item-with-options .item-link {
+  padding-right: 40px;
+}
+
+.item-options {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+}
+
+.items-cards .item-options {
+  top: auto;
+  bottom: 8px;
+  transform: none;
 }

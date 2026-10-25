@@ -39,6 +39,7 @@ class Panel
         ["PATCH", "#^/pages/([^/]+)/files$#", "sortFiles"],
         ["GET", "#^/pages/([^/]+)/files/([^/]+)$#", "getFile"],
         ["PATCH", "#^/pages/([^/]+)/files/([^/]+)$#", "updateFile"],
+        ["PUT", "#^/pages/([^/]+)/files/([^/]+)$#", "replaceFile"],
         ["DELETE", "#^/pages/([^/]+)/files/([^/]+)$#", "deleteFile"],
         ["GET", "#^/blueprints/pages$#", "pageBlueprints"],
         ["GET", "#^/roles$#", "listRoles"],
@@ -422,6 +423,25 @@ class Panel
         if (isset($input["name"]) && $input["name"] !== $file->name()) {
             $file = $file->changeName((string) $input["name"]);
         }
+
+        return self::json($this->fileDetails($file));
+    }
+
+    /**
+     * The body is the new file, e.g. PUT /pages/blog/files/cover.jpg?filename=new-cover.jpg
+     * (the extension has to stay the same).
+     */
+    private function replaceFile(ServerRequestInterface $request, string $id, string $filename): ResponseInterface
+    {
+        $file = $this->findFile($id, $filename);
+        $extension = strtolower(pathinfo((string) ($request->getQueryParams()["filename"] ?? ""), PATHINFO_EXTENSION));
+
+        if ($extension !== $file->extension()) {
+            throw new ApiError("The new file must be a .{$file->extension()} file", 400);
+        }
+
+        $body = $request->getBody();
+        $file->replace($body->detach() ?? (string) $body);
 
         return self::json($this->fileDetails($file));
     }

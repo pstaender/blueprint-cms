@@ -204,6 +204,34 @@ it("uploads, updates and deletes files", function () {
         ->and(api($this->app, "GET", "/pages/builder/files/renamed.png")[0])->toBe(404);
 });
 
+it("replaces files", function () {
+    $csrf = login($this->app);
+    $uid = page("builder")->file("notes.txt")->uid();
+    $replace = fn(string $filename, string $contents) => $this->app->handle(
+        (new Nyholm\Psr7\ServerRequest("PUT", "/panel/api/pages/builder/files/notes.txt", ["X-CSRF-Token" => $csrf], $contents))
+            ->withQueryParams(["filename" => $filename])
+    );
+
+    $response = $replace("New Notes.TXT", "new notes");
+    $file = json_decode(body($response), true);
+
+    expect($response->getStatusCode())->toBe(200)
+        ->and($file["filename"])->toBe("notes.txt")
+        ->and($file["uid"])->toBe($uid)
+        ->and(file_get_contents("$this->dir/content/builder/notes.txt"))->toBe("new notes")
+        ->and($replace("notes.pdf", "x")->getStatusCode())->toBe(400)
+        ->and(file_get_contents("$this->dir/content/builder/notes.txt"))->toBe("new notes");
+});
+
+it("restores a replaced file that isn't accepted", function () {
+    $file = page("builder")->file("photo.png");
+    $png = file_get_contents($file->root);
+
+    expect(fn() => $file->replace("not an image"))->toThrow(InvalidArgumentException::class)
+        ->and(file_get_contents($file->root))->toBe($png)
+        ->and(glob("$this->dir/content/builder/.*replaced"))->toBe([]);
+});
+
 it("sorts files", function () {
     $csrf = login($this->app);
 

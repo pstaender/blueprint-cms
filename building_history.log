@@ -150,3 +150,11 @@
   (`about.md`) become folders. Panel: "Storage format" in the page settings dialog (renamed from "Slug and type").
 - Structural page changes (move/rename, convert, create, delete) now refresh App's cached page tree themselves,
   not only the panel API.
+
+2026-10-25 – File context menu
+- File lists have a context menu (right click or the ⋯ button): Open, Rename, Change position, Replace, Delete.
+  `ContextMenu.vue` is a generic teleported menu (items + "-" separators, keyboard navigation, closes on outside
+  click, wheel, Escape, window blur/resize; not on scroll events, focusing the menu can scroll the document).
+- Replace: `PUT /panel/api/pages/{id}/files/{filename}?filename=…` with the raw body, same extension required.
+  `File::replace()` moves the old file to a hidden backup and restores it if the new one fails the `accept` rules,
+  so filename, uid, data and all references stay. Files expose `modified` (mtime), thumbnails use it as cache buster.

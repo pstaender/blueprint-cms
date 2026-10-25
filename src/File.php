@@ -101,9 +101,7 @@ class File
             throw new \InvalidArgumentException("The file \"$filename\" already exists");
         }
 
-        $target = fopen($path, "xb");
-        is_resource($contents) ? stream_copy_to_stream($contents, $target) : fwrite($target, (string) $contents);
-        fclose($target);
+        self::write($path, $contents);
 
         // the meta data first, its template chooses the blueprint with the accept rules
         $file = new self($path, $page);
@@ -116,6 +114,16 @@ class File
         }
 
         return $file;
+    }
+
+    /**
+     * @param resource|string $contents
+     */
+    private static function write(string $path, mixed $contents): void
+    {
+        $target = fopen($path, "xb");
+        is_resource($contents) ? stream_copy_to_stream($contents, $target) : fwrite($target, (string) $contents);
+        fclose($target);
     }
 
     /**
@@ -185,6 +193,11 @@ class File
     public function size(): int
     {
         return (int) filesize($this->root);
+    }
+
+    public function modified(): int
+    {
+        return (int) filemtime($this->root);
     }
 
     /**
@@ -336,6 +349,34 @@ class File
         return new self($target, $this->page);
     }
 
+    /**
+     * Replaces the file's contents, its filename, uid and data stay. The new contents must match the
+     * blueprint's `accept` rules, otherwise the old file is restored.
+     *
+     * @param resource|string $contents
+     */
+    public function replace(mixed $contents): void
+    {
+        $backup = dirname($this->root) . "/." . $this->filename() . ".replaced";
+        rename($this->root, $backup);
+
+        try {
+            self::write($this->root, $contents);
+            $error = $this->acceptError();
+        } catch (\Throwable $e) {
+            $error = $e;
+        }
+
+        if ($error !== null) {
+            @unlink($this->root);
+            rename($backup, $this->root);
+            throw $error instanceof \Throwable ? $error : new \InvalidArgumentException($error);
+        }
+
+        unlink($backup);
+        clearstatcache(true, $this->root);
+    }
+
     public function delete(): void
     {
         unlink($this->root);
@@ -416,6 +457,7 @@ class File
             "mime" => $this->mime(),
             "extension" => $this->extension(),
             "size" => $this->size(),
+            "modified" => $this->modified(),
             "dimensions" => $this->dimensions(),
             "template" => $this->template(),
             "isUsed" => $this->isUsed(),

@@ -65,6 +65,7 @@ export const api = {
     const query = new URLSearchParams({ filename: file.name, ...(template ? { template } : {}) });
     return request("POST", `/pages/${pageId}/files?${query}`, undefined, file);
   },
+  replace: (path, file) => request("PUT", `${path}?${new URLSearchParams({ filename: file.name })}`, undefined, file),
 };
 
 export async function loadSession() {
