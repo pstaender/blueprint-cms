@@ -6,7 +6,7 @@ defineProps({ file: { type: Object, required: true } });
 
 <template>
   <span class="thumb">
-    <img v-if="file.type === 'image'" :src="file.url" alt="" loading="lazy">
+    <img v-if="file.type === 'image'" :src="file.url" alt="" loading="lazy" draggable="false">
     <Icon v-else name="file" />
   </span>
 </template>

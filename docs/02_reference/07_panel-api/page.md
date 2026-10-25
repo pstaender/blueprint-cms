@@ -24,6 +24,7 @@ A JSON REST API under `/panel/api`, implemented in [`src/Panel.php`](../../../sr
 | `POST` | `/pages/{id}/children` | `{title, slug?, type?}` | create a draft |
 | `GET` | `/pages/{id}/files` | | files of the page |
 | `POST` | `/pages/{id}/files?filename=…&template=…` | the file (raw body) | upload a file |
+| `PATCH` | `/pages/{id}/files` | `{sort: [filenames]}` | sort the files, returns the sorted files |
 | `GET` | `/pages/{id}/files/{filename}` | | `{filename, uid, ref, url, type, mime, size, dimensions, template, blueprint, data, …}` |
 | `PATCH` | `/pages/{id}/files/{filename}` | `{data?, name?}` | save fields, rename (without extension) |
 | `DELETE` | `/pages/{id}/files/{filename}` | | delete the file and its data |

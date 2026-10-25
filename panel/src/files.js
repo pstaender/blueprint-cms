@@ -21,6 +21,11 @@ export async function reloadFiles(pageId) {
   store[pageId].loaded = true;
 }
 
+// stores a new order (filenames) and updates the shared list
+export async function sortFiles(pageId, filenames) {
+  store[pageId].list = await api.patch(`/pages/${pageId}/files`, { sort: filenames });
+}
+
 export async function uploadFiles(pageId, fileList, template) {
   const uploaded = [];
   const errors = [];

@@ -23,7 +23,7 @@ Singleton: `App::create(Config $config)`, `App::instance()`.
 | `data()` | raw data as [`Data`](../../../src/Data.php) |
 | `title()` | the `title` field, falls back to the slug |
 | `type()`, `uid()` | page type (default `page`), unique id |
-| `files()`, `file($filename)` | the page's [`File`](../../../src/File.php)s |
+| `files()`, `file($filename)`, `sortFiles($filenames)` | the page's [`File`](../../../src/File.php)s |
 | `field($name)`, `$page->{field}()` | [field values](../02_fields/02_field-methods/page.md) |
 | `blueprint()` | the page's [`Blueprint`](../../../src/Blueprint.php) |
 | `children()`, `drafts()`, `allChildren()`, `child($slug)`, `hasChildren()` | collections ([illuminate/support](https://laravel.com/docs/collections)) |

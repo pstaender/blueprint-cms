@@ -36,6 +36,7 @@ class Panel
         ["POST", "#^/pages/([^/]+)/children$#", "createPage"],
         ["GET", "#^/pages/([^/]+)/files$#", "listFiles"],
         ["POST", "#^/pages/([^/]+)/files$#", "uploadFile"],
+        ["PATCH", "#^/pages/([^/]+)/files$#", "sortFiles"],
         ["GET", "#^/pages/([^/]+)/files/([^/]+)$#", "getFile"],
         ["PATCH", "#^/pages/([^/]+)/files/([^/]+)$#", "updateFile"],
         ["DELETE", "#^/pages/([^/]+)/files/([^/]+)$#", "deleteFile"],
@@ -366,6 +367,23 @@ class Panel
         $file = File::create($page, (string) ($query["filename"] ?? ""), $contents, $template !== "" ? ["template" => $template] : []);
 
         return self::json($this->fileDetails($file), 201);
+    }
+
+    /**
+     * Body: {"sort": ["b.jpg", "a.png"]}
+     */
+    private function sortFiles(ServerRequestInterface $request, string $id): ResponseInterface
+    {
+        $page = $this->findPage($id);
+        $sort = self::input($request)["sort"] ?? null;
+
+        if (!is_array($sort) || !array_is_list($sort)) {
+            throw new ApiError("The sort order must be a list of filenames", 400);
+        }
+
+        $page->sortFiles(array_map("strval", $sort));
+
+        return $this->listFiles($request, $id);
     }
 
     private function getFile(ServerRequestInterface $request, string $id, string $filename): ResponseInterface

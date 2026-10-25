@@ -30,7 +30,7 @@ Then log in at http://localhost:8000/panel.
 - a nested page tree in the sidebar (expandable, listed pages sortable by drag & drop)
 - create pages (as drafts), change their status (draft, unlisted, listed), slug and type, sort and delete them
 - `pagelist` fields list subpages (sortable), `pagepicker`/`userpicker` are native selects
-- files: upload, edit their data, rename, delete; `filelist` and `filepicker` (sortable selection)
+- files: upload, sort by drag & drop, edit their data, rename, delete; `filelist` and `filepicker` (sortable selection)
 - block and layout editors: add, hide, duplicate, sort (drag the handle) and remove blocks and rows
 - create users, change email, role and password
 

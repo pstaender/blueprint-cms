@@ -10,3 +10,18 @@ fields:
     label: SEO description
     type: textarea
     size: large
+  files:
+    label: Files
+    type: filelist
+
+tabs:
+  content:
+    columns:
+      - width: 2/3
+        fields: true
+      - width: 1/3
+        fields:
+          - files
+  meta:
+    fields:
+      - seoDescription

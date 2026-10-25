@@ -203,3 +203,17 @@ it("uploads, updates and deletes files", function () {
     expect(api($this->app, "DELETE", "/pages/builder/files/renamed.png", csrf: $csrf)[0])->toBe(204)
         ->and(api($this->app, "GET", "/pages/builder/files/renamed.png")[0])->toBe(404);
 });
+
+it("sorts files", function () {
+    $csrf = login($this->app);
+
+    [$status, $files] = api($this->app, "PATCH", "/pages/builder/files", ["sort" => ["photo.png", "notes.txt"]], $csrf);
+
+    expect($status)->toBe(200)
+        ->and(array_column($files, "filename"))->toBe(["photo.png", "notes.txt"])
+        ->and(page("builder")->file("notes.txt")->data()->sort)->toBe(2)
+        ->and(api($this->app, "PATCH", "/pages/builder/files", ["sort" => "x"], $csrf)[0])->toBe(400);
+
+    [, $files] = api($this->app, "PATCH", "/pages/builder/files", ["sort" => ["notes.txt"]], $csrf);
+    expect(array_column($files, "filename"))->toBe(["notes.txt", "photo.png"]);
+});

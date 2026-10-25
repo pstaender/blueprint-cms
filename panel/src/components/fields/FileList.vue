@@ -1,10 +1,11 @@
 <script setup>
 import { ref, computed } from "vue";
-import { filesOf, uploadFiles, uploadTemplate, acceptOf } from "../../files.js";
+import { filesOf, uploadFiles, sortFiles, uploadTemplate, acceptOf } from "../../files.js";
+import { useSortable, move } from "../../sortable.js";
 import FileThumb from "../FileThumb.vue";
 import Icon from "../Icon.vue";
 
-// The files of the model (`filelist` field), optionally filtered by `template`, with uploads.
+// The files of the model (`filelist` field), optionally filtered by `template`, with uploads and drag & drop sorting.
 const props = defineProps({
   field: { type: Object, required: true },
   model: { type: Object, default: null },
@@ -17,6 +18,17 @@ const files = computed(() => {
   const list = store?.list ?? [];
   const templates = [props.field.template ?? []].flat();
   return templates.length ? list.filter((file) => templates.includes(file.template)) : list;
+});
+
+// a filtered list moves the file to its target's position in the full list
+const { bind } = useSortable(async (from, to) => {
+  const all = store.list.map((file) => file.filename);
+  const order = move(all, all.indexOf(files.value[from].filename), all.indexOf(files.value[to].filename));
+  try {
+    await sortFiles(props.model.id, order);
+  } catch (e) {
+    errors.value = [e.message];
+  }
 });
 
 async function upload(event) {
@@ -40,8 +52,8 @@ async function upload(event) {
     <p v-for="error in errors" :key="error" class="notice notice-negative">{{ error }}</p>
 
     <ul v-if="files.length" class="items" :class="`items-${field.layout || 'list'}`">
-      <li v-for="file in files" :key="file.filename" class="item">
-        <RouterLink :to="`/pages/${file.page}/files/${encodeURIComponent(file.filename)}`" class="item-link">
+      <li v-for="(file, index) in files" :key="file.filename" class="item" v-bind="bind(index)" title="Drag to sort">
+        <RouterLink :to="`/pages/${file.page}/files/${encodeURIComponent(file.filename)}`" class="item-link" draggable="false">
           <FileThumb :file="file" />
           <span class="item-title">{{ file.filename }}</span>
           <span class="item-info">{{ file.template !== "default" ? file.template : "" }}</span>

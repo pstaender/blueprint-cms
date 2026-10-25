@@ -225,6 +225,23 @@ class Page
     }
 
     /**
+     * Stores the order as `sort` in the files' data, files missing in the list keep their order after them.
+     *
+     * @param string[] $filenames
+     */
+    public function sortFiles(array $filenames): void
+    {
+        $files = $this->files()->keyBy(fn(File $file) => $file->filename());
+        $sorted = $files->only($filenames)->sortBy(fn(File $file) => array_search($file->filename(), $filenames, true));
+
+        foreach ($sorted->merge($files->except($filenames))->values() as $index => $file) {
+            if ($file->sort() !== $index + 1) {
+                $file->update(["sort" => $index + 1]);
+            }
+        }
+    }
+
+    /**
      * See Blueprint::forPage() for how the blueprint is chosen.
      */
     public function blueprint(): Blueprint

@@ -44,4 +44,4 @@ Modern PHP, keep it simple, flat class structure, camelCase, self-explaining nam
 
 ## Not implemented yet
 
-Translations, site files, sorting files, plugins, controllers, models, routes in `site/`, sqlite/postgres.
+Translations, site files, plugins, controllers, models, routes in `site/`, sqlite/postgres.
