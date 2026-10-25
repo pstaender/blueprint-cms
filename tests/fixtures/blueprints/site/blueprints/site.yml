@@ -3,3 +3,6 @@ fields:
   name:
     type: text
     required: true
+  slogan:
+    type: text
+    disabled: true

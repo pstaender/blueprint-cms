@@ -121,7 +121,8 @@ class Site
 
     public function update(array $values): void
     {
-        $data = array_filter([...$this->data()->toArray(), ...$values], fn($value) => $value !== null);
+        $existing = $this->data()->toArray();
+        $data = SystemFields::applyDates(array_filter([...$existing, ...$values], fn($value) => $value !== null), $existing);
         ContentFile::write("$this->contentDir/site.json", $data);
         $this->data = null;
     }

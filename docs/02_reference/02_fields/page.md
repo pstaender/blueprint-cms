@@ -14,7 +14,7 @@ Source: [`src/Field.php`](../../../src/Field.php). Field types and options follo
 | `required` | Value must not be empty |
 | `help` | Help text below the field |
 | `placeholder` | Placeholder of inputs |
-| `disabled` | Not editable |
+| `disabled` | Shown, but not editable (the panel API doesn't save it) |
 | `when` | Only show the field if other fields match, e.g. `when: {hasCover: true}` |
 | `translate` | `false` for values shared between languages |
 | `extends` | Inherit props from a blueprint file, e.g. `custom-fields/seo` |

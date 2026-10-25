@@ -12,6 +12,16 @@ fields:
   files:
     label: Files
     type: filelist
+  createdAt:
+    label: Created
+    type: datetime
+    disabled: true
+    width: 1/2
+  modifiedAt:
+    label: Modified
+    type: datetime
+    disabled: true
+    width: 1/2
 
 tabs:
   content:
@@ -24,3 +34,5 @@ tabs:
   meta:
     fields:
       - metaIndex
+      - createdAt
+      - modifiedAt

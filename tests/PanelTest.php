@@ -62,9 +62,11 @@ it("reads and updates the site", function () {
     [$status, $result] = api($this->app, "PATCH", "/site", ["data" => ["name" => ""]], $csrf);
     expect($status)->toBe(422)->and($result["errors"])->toHaveKey("name");
 
-    [$status, $site] = api($this->app, "PATCH", "/site", ["data" => ["name" => "Renamed", "unknown" => "x"]], $csrf);
+    [$status, $site] = api($this->app, "PATCH", "/site", ["data" => ["name" => "Renamed", "unknown" => "x", "slogan" => "x"]], $csrf);
     expect($status)->toBe(200)
-        ->and($site["data"])->toBe(["name" => "Renamed"]);
+        ->and(array_keys($site["data"]))->toBe(["createdAt", "modifiedAt", "name"])
+        ->and($site["data"]["name"])->toBe("Renamed")
+        ->and($site["data"])->not->toHaveKey("slogan");
 });
 
 it("reads pages", function () {

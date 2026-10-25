@@ -44,7 +44,21 @@ tags: [team, company]
 
 `page.php` is executed when the page is rendered, see [Templates](../03_templates/page.md).
 
-`type` chooses the [blueprint](../05_blueprints/page.md) and the [template](../03_templates/page.md) of the page (default: `page`). Every write (panel or PHP) fills the hidden fields `uid`, `createdAt` (first write) and `modifiedAt` (last write, ISO 8601 datetimes) of pages, files and users; they can't be changed. References use the uid (`page://uid`), so they survive renamed slugs. In templates the dates work like datetime fields: `<?= $page->modifiedAt() ?>` (`2026-10-25 17:30`), `$page->modifiedAt()->format("d.m.Y")`. Existing content gets uids with `bin/blueprint content:uids`.
+`type` chooses the [blueprint](../05_blueprints/page.md) and the [template](../03_templates/page.md) of the page (default: `page`). Every write (panel or PHP) fills the hidden fields `uid`, `createdAt` (first write) and `modifiedAt` (last write, ISO 8601 datetimes) of pages, files and users (the site only gets the dates); they can't be changed. References use the uid (`page://uid`), so they survive renamed slugs. In templates the dates work like datetime fields: `<?= $page->modifiedAt() ?>` (`2026-10-25 17:30`), `$page->modifiedAt()->format("d.m.Y")`. They are hidden in the panel, unless a blueprint shows them as read-only fields:
+
+```yaml
+fields:
+  createdAt:
+    label: Created
+    type: datetime
+    disabled: true
+  modifiedAt:
+    label: Modified
+    type: datetime
+    disabled: true
+```
+
+ Existing content gets uids with `bin/blueprint content:uids`.
 
 ## Files
 

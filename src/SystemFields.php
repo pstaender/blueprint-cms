@@ -6,8 +6,9 @@ namespace Blueprint;
 
 /**
  * Hidden fields that the cms fills in the data of pages, files and users on every write:
- * `uid`, `createdAt` (first write) and `modifiedAt` (last write), as ISO 8601 datetimes.
- * They aren't part of blueprints or panel forms, but work like fields: `$page->modifiedAt()->format("d.m.Y")`.
+ * `uid`, `createdAt` (first write) and `modifiedAt` (last write), as ISO 8601 datetimes. The site only gets the dates.
+ * They work like datetime fields (`$page->modifiedAt()->format("d.m.Y")`) and are hidden in the panel, unless a
+ * blueprint shows them, e.g. `modifiedAt: {type: datetime, disabled: true}` (disabled fields aren't saved).
  */
 class SystemFields
 {
@@ -18,10 +19,20 @@ class SystemFields
      */
     public static function apply(array $data, array $existing = []): array
     {
+        return [
+            "uid" => self::filled($existing["uid"] ?? null) ?? self::filled($data["uid"] ?? null) ?? Uid::generate(),
+            ...self::applyDates($data, $existing),
+        ];
+    }
+
+    /**
+     * Only `createdAt` and `modifiedAt` (the site has no uid).
+     */
+    public static function applyDates(array $data, array $existing = []): array
+    {
         $now = date(DATE_ATOM);
 
         return [
-            "uid" => self::filled($existing["uid"] ?? null) ?? self::filled($data["uid"] ?? null) ?? Uid::generate(),
             "createdAt" => self::filled($existing["createdAt"] ?? null) ?? self::filled($data["createdAt"] ?? null) ?? $now,
             "modifiedAt" => $now,
             ...array_diff_key($data, array_flip(self::NAMES)),

@@ -30,7 +30,7 @@ Special data keys:
 | `createdAt` | ISO 8601 datetime of the first write |
 | `modifiedAt` | ISO 8601 datetime of the last write |
 
-The cms fills these hidden fields on every write of pages, files (`{filename}.json`) and users ([`SystemFields`](../../../src/SystemFields.php)); `uid` and `createdAt` can't be changed. Content written by hand gets them with the next save (or `bin/blueprint content:uids`).
+The cms fills these hidden fields on every write of pages, files (`{filename}.json`) and users ([`SystemFields`](../../../src/SystemFields.php)), `site.json` only gets `createdAt` and `modifiedAt`; `uid` and `createdAt` can't be changed. Content written by hand gets them with the next save (or `bin/blueprint content:uids`).
 
 ## Files
 

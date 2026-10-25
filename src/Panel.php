@@ -596,7 +596,7 @@ class Panel
         $values = [];
 
         foreach ($blueprint->fields() as $name => $field) {
-            if ($field->hasValue() && is_array($input) && array_key_exists($name, $input)) {
+            if ($field->hasValue() && $field->get("disabled") !== true && is_array($input) && array_key_exists($name, $input)) {
                 $values[$name] = $input[$name] === "" || $input[$name] === [] ? null : $input[$name];
             }
         }
