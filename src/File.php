@@ -318,8 +318,8 @@ class File
      */
     public function update(array $values): void
     {
-        $data = array_filter([...$this->data()->toArray(), ...$values], fn($value) => $value !== null);
-        $data["uid"] ??= Uid::generate();
+        $existing = $this->data()->toArray();
+        $data = SystemFields::apply(array_filter([...$existing, ...$values], fn($value) => $value !== null), $existing);
         ContentFile::write($this->metaFile(), $data);
         $this->data = null;
     }
@@ -375,6 +375,7 @@ class File
 
         unlink($backup);
         clearstatcache(true, $this->root);
+        $this->update([]);
     }
 
     public function delete(): void

@@ -44,7 +44,7 @@ tags: [team, company]
 
 `page.php` is executed when the page is rendered, see [Templates](../03_templates/page.md).
 
-`type` chooses the [blueprint](../05_blueprints/page.md) and the [template](../03_templates/page.md) of the page (default: `page`). The panel adds a `uid` to every page, file and user it saves, references between them use it (`page://uid`), so they survive renamed slugs. Existing content gets uids with `bin/blueprint content:uids`.
+`type` chooses the [blueprint](../05_blueprints/page.md) and the [template](../03_templates/page.md) of the page (default: `page`). Every write (panel or PHP) fills the hidden fields `uid`, `createdAt` (first write) and `modifiedAt` (last write, ISO 8601 datetimes) of pages, files and users; they can't be changed. References use the uid (`page://uid`), so they survive renamed slugs. In templates the dates work like datetime fields: `<?= $page->modifiedAt() ?>` (`2026-10-25 17:30`), `$page->modifiedAt()->format("d.m.Y")`. Existing content gets uids with `bin/blueprint content:uids`.
 
 ## Files
 
@@ -54,7 +54,7 @@ Other files in a page folder belong to the page, their data lives in `{filename}
 content/01_blog/
   page.md
   cover.jpg          → /blog/cover.jpg
-  cover.jpg.json     {"uid": "…", "alt": "…"}
+  cover.jpg.json     {"uid": "…", "createdAt": "…", "modifiedAt": "…", "alt": "…"}
 ```
 
 Files are only public when they are used in the content, e.g. as `![hello](hello.jpg)` in a textarea (relative links are resolved to `/blog/hello.jpg`) or picked in a `filepicker`. In the panel, drag a file from a file list (or from your computer) into a textarea to insert such a link.

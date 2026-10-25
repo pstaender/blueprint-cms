@@ -134,6 +134,28 @@ describe("changing content", function () {
             ->and(site()->findByUid(page("about")->uid())->id())->toBe("about");
     });
 
+    it("fills createdAt and modifiedAt of pages, files and users", function () {
+        $old = "2026-01-01T10:00:00+00:00";
+        page("about")->update(["title" => "About", "uid" => "keptuid000000000", "createdAt" => $old, "modifiedAt" => $old]);
+        page("about")->update(["uid" => "x", "createdAt" => "2020-01-01"]);
+        $about = page("about");
+
+        expect(array_slice(array_keys($about->data()->toArray()), 0, 3))->toBe(["uid", "createdAt", "modifiedAt"])
+            ->and($about->uid())->toBe("keptuid000000000")
+            ->and($about->data()->createdAt)->toBe($old)
+            ->and($about->data()->modifiedAt)->not->toBe($old)
+            ->and($about->modifiedAt()->toDate()->isToday())->toBeTrue()
+            ->and((string) $about->createdAt())->toBe("2026-01-01 10:00")
+            ->and(Page::create(null, "new", ["title" => "New"])->data()->createdAt)->not->toBeNull();
+
+        $file = File::create($about, "a.txt", "a");
+        $user = \Blueprint\User::create("new@example.com", "secret-password");
+
+        expect($file->data()->createdAt)->toBe($file->data()->modifiedAt)
+            ->and($user->data->createdAt)->not->toBeNull()
+            ->and($user->update(["createdAt" => $old])->data->createdAt)->toBe($user->data->createdAt);
+    });
+
     it("finds pages by uid references", function () {
         $field = new \Blueprint\FieldValue("related", ["page://builder001", "about"], new \Blueprint\Field(["name" => "related", "type" => "pagepicker"]));
 

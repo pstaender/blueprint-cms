@@ -372,7 +372,7 @@ class Page
             return $this;
         }
 
-        $data = ["uid" => Uid::generate(), ...$this->readData()];
+        $data = SystemFields::apply($this->readData(), $this->readData());
         $dir = $this->isFolder() ? $this->root : substr($this->root, 0, -strlen(".md"));
 
         if (!$this->isFolder()) {
@@ -437,8 +437,8 @@ class Page
             throw new \LogicException("The page \"{$this->id()}\" is a php file and can't be edited");
         }
 
-        $data = array_filter([...$this->readData(), ...$values], fn($value) => $value !== null);
-        $data = ["uid" => $data["uid"] ?? Uid::generate(), ...$data];
+        $existing = $this->readData();
+        $data = SystemFields::apply(array_filter([...$existing, ...$values], fn($value) => $value !== null), $existing);
 
         if (!$this->isFolder()) {
             ContentFile::write($this->root, $data);
@@ -512,7 +512,7 @@ class Page
             throw new \InvalidArgumentException("A page with the slug \"$slug\" already exists");
         }
 
-        ContentFile::write("$dir/.$slug/page.json", [...$data, "uid" => Uid::generate()]);
+        ContentFile::write("$dir/.$slug/page.json", SystemFields::apply(array_diff_key($data, array_flip(SystemFields::NAMES))));
         App::instance()->refreshSite();
 
         return self::fromPath("$dir/.$slug", $parent);

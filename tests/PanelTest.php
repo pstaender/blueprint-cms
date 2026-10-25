@@ -211,6 +211,7 @@ it("uploads, updates and deletes files", function () {
 
 it("replaces files", function () {
     $csrf = login($this->app);
+    page("builder")->file("notes.txt")->update(["createdAt" => "2026-01-01T10:00:00+00:00", "modifiedAt" => "2026-01-01T10:00:00+00:00"]);
     $uid = page("builder")->file("notes.txt")->uid();
     $replace = fn(string $filename, string $contents) => $this->app->handle(
         (new Nyholm\Psr7\ServerRequest("PUT", "/panel/api/pages/builder/files/notes.txt", ["X-CSRF-Token" => $csrf], $contents))
@@ -223,6 +224,8 @@ it("replaces files", function () {
     expect($response->getStatusCode())->toBe(200)
         ->and($file["filename"])->toBe("notes.txt")
         ->and($file["uid"])->toBe($uid)
+        ->and($file["data"]["createdAt"])->toBe("2026-01-01T10:00:00+00:00")
+        ->and($file["data"]["modifiedAt"])->not->toBe("2026-01-01T10:00:00+00:00")
         ->and(file_get_contents("$this->dir/content/builder/notes.txt"))->toBe("new notes")
         ->and($replace("notes.pdf", "x")->getStatusCode())->toBe(400)
         ->and(file_get_contents("$this->dir/content/builder/notes.txt"))->toBe("new notes");

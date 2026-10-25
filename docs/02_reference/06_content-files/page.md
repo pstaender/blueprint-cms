@@ -26,7 +26,11 @@ Special data keys:
 | Key | |
 |---|---|
 | `type` | the page type, chooses the [blueprint](../01_blueprints/02_pages/page.md) and the template (default `page`) |
-| `uid` | unique id, added by the panel (or `bin/blueprint content:uids`), used for references like `page://uid` |
+| `uid` | unique id, used for references like `page://uid` |
+| `createdAt` | ISO 8601 datetime of the first write |
+| `modifiedAt` | ISO 8601 datetime of the last write |
+
+The cms fills these hidden fields on every write of pages, files (`{filename}.json`) and users ([`SystemFields`](../../../src/SystemFields.php)); `uid` and `createdAt` can't be changed. Content written by hand gets them with the next save (or `bin/blueprint content:uids`).
 
 ## Files
 

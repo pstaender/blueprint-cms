@@ -16,7 +16,7 @@ trait HasFields
 
     public function field(string $name): FieldValue
     {
-        $field = $this->fieldDefinition($name);
+        $field = $this->fieldDefinition($name) ?? SystemFields::field($name);
         $values = $this->data()->toArray();
         $value = $values[$name] ?? ($field !== null ? $values[$field->name] ?? null : null);
 

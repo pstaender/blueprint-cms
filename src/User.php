@@ -63,13 +63,12 @@ class User
 
         self::validateRole($role);
 
-        $user = new self(new Data([
-            ...$data,
+        $user = new self(new Data(SystemFields::apply([
+            ...array_diff_key($data, array_flip(SystemFields::NAMES)),
             "email" => $email,
-            "uid" => Uid::generate(),
             "role" => $role,
             "password" => self::hashPassword($password),
-        ]));
+        ])));
 
         self::saveAll([...self::all()->all(), $user]);
 
@@ -114,7 +113,7 @@ class User
     }
 
     /**
-     * Saves the values to users.json, `null` values are removed. The uid can't be changed.
+     * Saves the values to users.json, `null` values are removed. The uid and createdAt can't be changed.
      */
     public function update(array $values): self
     {
@@ -123,7 +122,8 @@ class User
             self::validateRole((string) $values["role"]);
         }
 
-        $data = array_filter([...$this->data->toArray(), ...$values, "uid" => $this->uid() ?: Uid::generate()], fn($value) => $value !== null);
+        $existing = $this->data->toArray();
+        $data = SystemFields::apply(array_filter([...$existing, ...$values], fn($value) => $value !== null), $existing);
         $email = (string) ($data["email"] ?? "");
 
         if ($email === "" || (($other = self::find($email)) !== null && $other->uid() !== $this->uid())) {

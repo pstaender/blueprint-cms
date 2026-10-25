@@ -168,3 +168,10 @@
   instead of Kirby's `+`: readable and identical to the page id. Routes with suffixes (`/children`, `/files`,
   `/files/{filename}`) come first with a non-greedy page id; the first matching path decides (other methods → 405,
   so `DELETE /pages/blog/files` never deletes a page). The slugs `children` and `files` are reserved in the panel.
+
+2026-10-25 – createdAt and modifiedAt
+- `SystemFields::apply()` fills `uid`, `createdAt` and `modifiedAt` (ISO 8601) on every write of pages, files and
+  users, as the first keys of the data. Existing `uid`/`createdAt` win over written values, so they can't be changed.
+  Not in blueprints or panel forms (hidden), but field methods treat the dates as `datetime` fields
+  (`SystemFields::field()`) unless the blueprint defines a field with that name. Replacing a file updates its
+  `modifiedAt`. Hand-written content without them gets them with the next write.

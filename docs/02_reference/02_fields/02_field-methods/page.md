@@ -30,7 +30,7 @@ Echoing a field value (or `esc($value)`, which doesn't escape it twice) outputs:
 | `textarea` | markdown as html, inline html in the markdown is escaped (use `md($page->data()->text)` to allow html); relative file links like `![](hello.jpg)` point to the page's files |
 | `writer`, `list` | the html as it is (trusted editor content) |
 | `date` | `Y-m-d`, `Y-m-d H:i` with `time: true`, or the field's `format` (PHP date format) |
-| `datetime` | `Y-m-d H:i` or `format` |
+| `datetime` | `Y-m-d H:i` or `format`, also `createdAt()` / `modifiedAt()` of pages, files and users (unless their blueprint defines these fields) |
 | `time` | `H:i` or `format` |
 | `toggle` | `true` / `false` |
 | `select`, `radio`, `toggles`, `checkboxes`, `multiselect`, `tags` | option labels, comma separated |
