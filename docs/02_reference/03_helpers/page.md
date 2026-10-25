@@ -16,6 +16,8 @@ Global functions for templates, defined in [`src/helpers.php`](../../../src/help
 | `static_file_url("/assets/app.css")` | `/assets/app.css?1700000000` (modification time of the file in `public/`) |
 | `redirect("/test", 302)` | stops rendering and redirects |
 | `dd(...$values)` | dumps the values and stops |
+| `optimized_content_image($file, $maxFileSize = null, $quality = null)` | url of the image converted to AVIF, see [Images](../../01_guides/07_images/page.md) |
+| `optimized_content_images($html, $maxFileSize = null, $quality = null)` | the html with all local images converted to AVIF |
 
 ```php
 <link rel="stylesheet" href="<?= esc(static_file_url("/assets/css/layout.css")) ?>">

@@ -87,7 +87,7 @@ describe("files", function () {
 
         expect($files->map(fn(File $file) => $file->filename())->all())->toBe(["notes.txt", "photo.png"])
             ->and(page("builder")->file("photo.png")->type())->toBe("image")
-            ->and(page("builder")->file("photo.png")->dimensions())->toBe(["width" => 2, "height" => 3])
+            ->and(page("builder")->file("photo.png")->dimensions())->toBe(["width" => 40, "height" => 30])
             ->and(page("builder")->file("photo.png")->url())->toBe("/builder/photo.png")
             ->and(page("builder")->file("photo.png")->blueprint()->name)->toBe("files/image")
             ->and((string) page("builder")->file("photo.png")->alt())->toBe("Photo alt")

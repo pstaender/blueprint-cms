@@ -19,6 +19,8 @@ Create a user (there is no sign up):
 bin/blueprint user:create admin@example.com admin   # asks for the password
 bin/blueprint user:password admin@example.com
 bin/blueprint user:list
+bin/blueprint content:uids                          # adds missing uids
+bin/blueprint media:clear                           # deletes optimized images
 ```
 
 Then log in at http://localhost:8000/panel.

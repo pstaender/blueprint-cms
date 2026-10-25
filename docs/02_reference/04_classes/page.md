@@ -79,6 +79,10 @@ Structure rows and object fields with field methods. Field methods come from the
 
 The panel app and its [REST API](../07_panel-api/page.md), [`Session`](../../../src/Session.php) (login, CSRF token), [`ApiError`](../../../src/ApiError.php).
 
+## [`ImageOptimizer`](../../../src/ImageOptimizer.php)
+
+Converts content images to AVIF (`url($file, $maxFileSize, $quality)`, `replaceImages($html, $optimize)`, `isSupported()`), with [`GdImageFile`](../../../src/GdImageFile.php) or [`ImagickImage`](../../../src/ImagickImage.php) ([`Image`](../../../src/Image.php)), see [Images](../../01_guides/07_images/page.md). `App::imageOptimizer()`, `App::resolveFile($reference, $page)`.
+
 ## Others
 
 [`ContentFile`](../../../src/ContentFile.php) (reads json, yaml and markdown files), [`Redirects`](../../../src/Redirects.php), [`Redirect`](../../../src/Redirect.php) (exception thrown by `redirect()`).

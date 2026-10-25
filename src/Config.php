@@ -13,6 +13,8 @@ class Config
         "panel" => true,
         "contentFolder" => "content",
         "siteFolder" => "site",
+        // converts all local <img> of rendered pages to AVIF, see ImageOptimizer
+        "optimizeContentImages" => false,
     ];
 
     public function __construct(

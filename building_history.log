@@ -134,3 +134,12 @@
 - File::isUsed(): filename (with word boundaries) in the own page's data, or `file://uid` / `page/id/file`
   in any page's or the site's data. Unused files are 404 for visitors, visible for logged in users (panel
   previews). The check scans all pages only for files that aren't used on their own page.
+
+2026-10-25 – Image optimizer
+- Ported from minimaxcms (user's project): AVIF in public/media/images/{sha256(file hash|maxFileSize|quality)}.avif,
+  auto quality by resolution, quality then resolution reduction to reach maxFileSize, temp file + rename.
+- Differences: sources are File objects (resolved from urls, paths, file://uid or filenames of the current page via
+  App::resolveFile()), only used files are converted (the optimizer must not make unused files public), the
+  helpers return raw urls (escape in templates, like all helpers). `optimizeContentImages` (default false) runs
+  optimized_content_images() over every rendered page; the helpers work without it. bin/blueprint media:clear.
+- The 2x3 test png was hand-made and not decodable (getimagesize only reads the header): replaced by a GD png.

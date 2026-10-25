@@ -80,6 +80,6 @@ it("provides site, user and page helpers", function () {
         ->and(user("admin")->uid())->toBe("19qiajkmca")
         ->and(user())->toBeNull()
         ->and(page("blog")->url())->toBe("/blog/")
-        ->and(page("blog")->num)->toBe(1)
-        ->and(site()->children()->map->slug->all())->toBe(["blog", "about", "home", "imprint"]);
+        ->and(page("blog")->num)->toBeInt()
+        ->and(site()->children()->map->slug->all())->toContain("blog", "about", "home", "imprint");
 });

@@ -82,6 +82,42 @@ function partial(string $name, array $variables = [], bool $return = false): ?st
 }
 
 /**
+ * The url of a content image converted to AVIF and cached in public/media/images/, e.g. /media/images/7abed….avif.
+ * The file is a File, an url (`/blog/hello.jpg`), path (`blog/hello.jpg`), reference (`file://uid`) or filename
+ * of the current page. Returns the file's url if it can't be converted (no Imagick/GD with AVIF, not an image,
+ * not used anywhere) or already is a small WebP/AVIF (auto mode), unknown files are returned unchanged.
+ *
+ * @param int|null $maxFileSize roughly, in KB (null: auto)
+ * @param int|null $quality 0–100 (null: auto, depending on the resolution)
+ */
+function optimized_content_image(File|string $file, ?int $maxFileSize = null, ?int $quality = null): string
+{
+    $app = App::instance();
+    $resolved = $file instanceof File ? $file : $app->resolveFile($file, Page::current());
+
+    if ($resolved === null) {
+        return (string) $file;
+    }
+
+    return $app->imageOptimizer()->url($resolved, $maxFileSize, $quality);
+}
+
+/**
+ * The html with every local <img> pointing to its optimized AVIF (see optimized_content_image()),
+ * e.g. optimized_content_images(md($page->data()->content)).
+ *
+ * @param int|null $maxFileSize roughly, in KB (null: auto)
+ * @param int|null $quality 0–100 (null: auto, depending on the resolution)
+ */
+function optimized_content_images(string $html, ?int $maxFileSize = null, ?int $quality = null): string
+{
+    return \Blueprint\ImageOptimizer::replaceImages(
+        $html,
+        static fn(string $path): string => optimized_content_image($path, $maxFileSize, $quality),
+    );
+}
+
+/**
  * Appends the file's modification time for cache busting, e.g. /assets/css/layout.css?1700000000.
  */
 function static_file_url(string $path): string

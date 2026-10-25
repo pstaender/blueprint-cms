@@ -19,6 +19,7 @@ Usage:
   bin/blueprint user:password <email|uid>    sets a new password
   bin/blueprint user:list
   bin/blueprint content:uids                 adds a uid to all pages, files and users without one
+  bin/blueprint media:clear                  deletes the optimized images (they are created again when needed)
 
 TXT;
 
@@ -74,6 +75,11 @@ try {
                 }
             }
             echo "Added $count uids", PHP_EOL;
+            break;
+        case "media:clear":
+            $files = glob(App::instance()->publicDir() . Blueprint\ImageOptimizer::URL_PATH . "/*.avif") ?: [];
+            array_map("unlink", $files);
+            echo "Deleted " . count($files) . " optimized images", PHP_EOL;
             break;
         default:
             echo $usage;

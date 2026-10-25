@@ -7,3 +7,4 @@ title: Guides
 4. [Configuration](04_configuration/page.md)
 5. [Blueprints](05_blueprints/page.md)
 6. [Panel](06_panel/page.md)
+7. [Images](07_images/page.md)

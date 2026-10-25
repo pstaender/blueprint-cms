@@ -19,6 +19,7 @@ class App
     private Dumbo $router;
     private ?Site $site = null;
     private ?Redirects $redirects = null;
+    private ?ImageOptimizer $imageOptimizer = null;
 
     public function __construct(public readonly Config $config)
     {
@@ -77,6 +78,45 @@ class App
     public function site(): Site
     {
         return $this->site ??= new Site($this->contentDir());
+    }
+
+    public function imageOptimizer(): ImageOptimizer
+    {
+        return $this->imageOptimizer ??= new ImageOptimizer($this->publicDir());
+    }
+
+    /**
+     * A file by url (`/blog/hello.jpg`), path (`blog/hello.jpg`), reference (`file://uid`)
+     * or filename of the given page (`hello.jpg`). Drafts' files only for logged in users.
+     */
+    public function resolveFile(string $reference, ?Page $page = null): ?File
+    {
+        [$scheme, $uid] = Uid::parse($reference) ?? [null, null];
+
+        if ($scheme === "file") {
+            $file = $this->site()->findFileByUid($uid);
+
+            return $file !== null && (!$this->isInDraft($file->page) || User::current() !== null) ? $file : null;
+        }
+
+        $path = trim(rawurldecode((string) parse_url($reference, PHP_URL_PATH)), "/");
+
+        if (!str_contains($path, "/")) {
+            return $page?->file($path);
+        }
+
+        return $this->site()->find(dirname($path))?->file(basename($path));
+    }
+
+    private function isInDraft(Page $page): bool
+    {
+        for ($current = $page; $current !== null; $current = $current->parent) {
+            if ($current->isDraft) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function redirects(): Redirects
@@ -165,7 +205,13 @@ class App
                 throw new Redirect($page->url() . ($query === "" ? "" : "?$query"), 301);
             }
 
-            return new Response(200, ["Content-Type" => "text/html; charset=UTF-8"], $this->renderPage($page));
+            $html = $this->renderPage($page);
+
+            if ($this->config->get("optimizeContentImages")) {
+                $html = optimized_content_images($html);
+            }
+
+            return new Response(200, ["Content-Type" => "text/html; charset=UTF-8"], $html);
         } catch (Redirect $redirect) {
             return new Response($redirect->status, ["Location" => $redirect->url]);
         } finally {

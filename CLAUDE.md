@@ -8,7 +8,7 @@ Flat file CMS inspired by Kirby. PHP >= 8.3, namespace `Blueprint\` → `src/`. 
 - `composer test` (Pest, tests in `tests/`)
 - `composer serve` → dev server on http://localhost:8000 (`public/index.php` is the front controller)
 - `composer panel:build` (Vue + Vite in `panel/` → `public/panel/`, gitignored), `composer panel:dev` (vite on :5173/panel/, proxies the API to :8000)
-- `bin/blueprint user:create <email> [role]`, `user:password <email>`, `user:list`, `content:uids`
+- `bin/blueprint user:create <email> [role]`, `user:password <email>`, `user:list`, `content:uids`, `media:clear`
 
 ## Architecture
 
@@ -32,6 +32,7 @@ Flat file CMS inspired by Kirby. PHP >= 8.3, namespace `Blueprint\` → `src/`. 
 - `BlueprintNormalizer` – raw props → tabs → columns → fields (Kirby v6 style: root `fields` are definitions referenced by name from tabs/columns when a layout exists; `fields: true` in a tab/column = all unused definitions; sections → fields; groups spliced; `extends`; string shortcuts; blocks/layout `fieldsets` and `layouts`). Invalid fields become `info` error fields instead of exceptions.
 - `Field` – a blueprint field definition (`name`, `type`, props, `validate()`).
 - `FieldValue` – field methods of models (`HasFields` trait on `Page`, `Site`, `User`, `Values`): `$page->createdAt()` is formatted + escaped by field type when echoed; other calls go to Carbon/Collection/Stringable (string results are wrapped again, so they stay escaped). Raw values stay in `data()`. Model methods win over field names, use `field("url")`. `Values` = structure rows / object fields.
+- `ImageOptimizer` – AVIF versions of used content images in `public/media/images/{hash}.avif` (GD or Imagick, adapters `GdImageFile`/`ImagickImage`), helpers `optimized_content_image()`/`optimized_content_images()`; config `optimizeContentImages` applies it to every rendered page.
 - Global helpers in `src/helpers.php`: `page()`, `site()`, `user()`, `md()`, `esc()`, `dd()`, `redirect()`, `partial()` (`site/templates/partials/`), `static_file_url()` (mtime from `public/`).
 - Templates get `$page` and `$site`; field methods are already escaped (`esc()` doesn't double-escape them), raw `data()` must be `esc()`ed, `md()` for markdown.
 
