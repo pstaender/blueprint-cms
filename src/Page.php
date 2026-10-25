@@ -192,6 +192,12 @@ class Page
     public const DEFAULT_TYPE = "page";
 
     /**
+     * How the data of a page is stored: `json` (page.json), `md` (page.md: yaml front matter + text)
+     * or `json+md` (page.json + the text in page.content.md).
+     */
+    public const CONTENT_FORMATS = ["json", "md", "json+md"];
+
+    /**
      * The page type (`type` in the data), chooses the blueprint (pages/{type}.yml)
      * and the template (templates/{type}.php → page.php → default.php).
      */
@@ -338,6 +344,77 @@ class Page
         }
     }
 
+    public function contentFormat(): string
+    {
+        return match (true) {
+            !$this->isFolder() => "md",
+            is_file("$this->root/page.content.md") => "json+md",
+            is_file("$this->root/page.md") => "md",
+            default => "json",
+        };
+    }
+
+    /**
+     * Rewrites the data in the given format and removes the other content files. A single file page
+     * (`about.md`) becomes a folder (`about/`) for the json formats.
+     */
+    public function changeContentFormat(string $format): self
+    {
+        if (!in_array($format, self::CONTENT_FORMATS, true)) {
+            throw new \InvalidArgumentException("Invalid content format \"$format\" (" . implode(", ", self::CONTENT_FORMATS) . ")");
+        }
+
+        if (!$this->isEditable()) {
+            throw new \LogicException("The page \"{$this->id()}\" is a php file and can't be converted");
+        }
+
+        if ($format === $this->contentFormat()) {
+            return $this;
+        }
+
+        $data = ["uid" => Uid::generate(), ...$this->readData()];
+        $dir = $this->isFolder() ? $this->root : substr($this->root, 0, -strlen(".md"));
+
+        if (!$this->isFolder()) {
+            if (file_exists($dir)) {
+                throw new \RuntimeException("Can't convert the page, $dir already exists");
+            }
+
+            mkdir($dir, 0775);
+        }
+
+        // the new files are written first, the old ones are only removed afterwards
+        $content = trim((string) ($data["content"] ?? ""));
+        $files = match ($format) {
+            "json" => ["page.json" => ContentFile::toJson($data)],
+            "md" => ["page.md" => ContentFile::toMarkdown($data)],
+            "json+md" => [
+                "page.json" => ContentFile::toJson(array_diff_key($data, ["content" => true])),
+                "page.content.md" => "$content\n",
+            ],
+        };
+
+        foreach ($files as $name => $output) {
+            if (file_put_contents("$dir/$name", $output, LOCK_EX) === false) {
+                throw new \RuntimeException("Can't write $dir/$name");
+            }
+        }
+
+        foreach (array_diff(["page.json", "page.md", "page.content.md"], array_keys($files)) as $name) {
+            if (is_file("$dir/$name")) {
+                unlink("$dir/$name");
+            }
+        }
+
+        if (!$this->isFolder()) {
+            unlink($this->root);
+        }
+
+        App::instance()->refreshSite();
+
+        return self::fromPath($dir, $this->parent) ?? throw new \RuntimeException("Can't read the converted page $dir");
+    }
+
     public function status(): string
     {
         return $this->isDraft ? "draft" : ($this->isListed() ? "listed" : "unlisted");
@@ -436,6 +513,7 @@ class Page
         }
 
         ContentFile::write("$dir/.$slug/page.json", [...$data, "uid" => Uid::generate()]);
+        App::instance()->refreshSite();
 
         return self::fromPath("$dir/.$slug", $parent);
     }
@@ -447,6 +525,7 @@ class Page
         }
 
         self::deletePath($this->root);
+        App::instance()->refreshSite();
     }
 
     public function siblings(): Collection
@@ -473,6 +552,7 @@ class Page
         }
 
         rename($this->root, $target);
+        App::instance()->refreshSite();
 
         return self::fromPath($target, $this->parent);
     }

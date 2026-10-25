@@ -224,7 +224,7 @@ class Panel
     }
 
     /**
-     * Body: {"data": {...}} to save fields, {"slug": "…"}, {"type": "…"}, {"status": "listed"} and/or {"num": 2}.
+     * Body: {"data": {...}} to save fields, {"contentFormat": "json"}, {"slug": "…"}, {"type": "…"}, {"status": "listed"} and/or {"num": 2}.
      */
     private function updatePage(ServerRequestInterface $request, string $id): ResponseInterface
     {
@@ -233,6 +233,10 @@ class Panel
 
         if (isset($input["data"]) && is_array($input["data"])) {
             $page->update($this->validatedValues($page->blueprint(), $page->data()->toArray(), $input["data"]));
+        }
+
+        if (isset($input["contentFormat"]) && $input["contentFormat"] !== $page->contentFormat()) {
+            $page = $page->changeContentFormat((string) $input["contentFormat"]);
         }
 
         if (isset($input["type"]) && $input["type"] !== $page->type()) {
@@ -344,6 +348,7 @@ class Panel
             ...$this->pageSummary($page),
             "isHome" => $page->isHome(),
             "isEditable" => $page->isEditable(),
+            "contentFormat" => $page->contentFormat(),
             "canHaveChildren" => $page->isFolder(),
             "blueprint" => $page->blueprint()->toArray(),
             "data" => $page->data()->toArray(),

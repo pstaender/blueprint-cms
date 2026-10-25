@@ -28,7 +28,8 @@ Singleton: `App::create(Config $config)`, `App::instance()`.
 | `blueprint()` | the page's [`Blueprint`](../../../src/Blueprint.php) |
 | `children()`, `drafts()`, `allChildren()`, `child($slug)`, `hasChildren()` | collections ([illuminate/support](https://laravel.com/docs/collections)) |
 | `isHome()`, `isListed()`, `isFolder()`, `status()`, `isEditable()` | |
-| `update($values)`, `changeStatus($status)`, `changeNum($position)`, `changeSlug($slug)`, `changeType($type)`, `delete()`, `Page::create($parent, $slug, $data)` | write to the content folder (and add a uid) |
+| `update($values)`, `changeStatus($status)`, `changeNum($position)`, `changeSlug($slug)`, `changeType($type)`, `changeContentFormat($format)`, `delete()`, `Page::create($parent, $slug, $data)` | write to the content folder (and add a uid) |
+| `contentFormat()` | `json`, `md` or `json+md` |
 | `Page::current()`, `Page::find($path)` | |
 
 ## [`Site`](../../../src/Site.php)

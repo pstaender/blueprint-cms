@@ -253,3 +253,13 @@ it("lists page and default as one type unless both blueprints exist", function (
     file_put_contents("$this->dir/site/blueprints/pages/default.yml", "title: Default\n");
     expect($types())->toContain("page", "default");
 });
+
+it("changes the content format", function () {
+    $csrf = login($this->app);
+    [$status, $page] = api($this->app, "PATCH", "/pages/about", ["contentFormat" => "md"], $csrf);
+
+    expect($status)->toBe(200)
+        ->and($page["contentFormat"])->toBe("md")
+        ->and(is_file("$this->dir/content/about/page.md"))->toBeTrue()
+        ->and(api($this->app, "PATCH", "/pages/about", ["contentFormat" => "xml"], $csrf)[0])->toBe(400);
+});

@@ -11,6 +11,16 @@ title: Content files
 | `page.php` | renders the page, or returns data |
 | `{slug}.md`, `{slug}.php` | single file page |
 
+A page uses one of three storage formats, changeable in the panel (page settings → Storage format) or with `$page->changeContentFormat()`:
+
+| Format | Files | |
+|---|---|---|
+| `json` | `page.json` | recommended: all data in one file |
+| `md` | `page.md` | yaml front matter, the text (`content`) as markdown body |
+| `json+md` | `page.json` + `page.content.md` | data as json, the text as markdown file |
+
+Single file pages (`about.md`) use the `md` format, converting them to a json format turns them into a folder.
+
 Special data keys:
 
 | Key | |

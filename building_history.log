@@ -143,3 +143,10 @@
   helpers return raw urls (escape in templates, like all helpers). `optimizeContentImages` (default false) runs
   optimized_content_images() over every rendered page; the helpers work without it. bin/blueprint media:clear.
 - The 2x3 test png was hand-made and not decodable (getimagesize only reads the header): replaced by a GD png.
+
+2026-10-25 – Storage format
+- Page::contentFormat() / changeContentFormat(): json (page.json, recommended), md (page.md front matter + text),
+  json+md (page.json + page.content.md). New files are written before the old ones are removed; single file pages
+  (`about.md`) become folders. Panel: "Storage format" in the page settings dialog (renamed from "Slug and type").
+- Structural page changes (move/rename, convert, create, delete) now refresh App's cached page tree themselves,
+  not only the panel API.

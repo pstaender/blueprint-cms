@@ -19,7 +19,13 @@ const loadError = ref(null);
 const dialog = ref(null);
 const busy = ref(false);
 const dialogError = ref(null);
-const settings = ref({ slug: "", type: "" });
+const settings = ref({ slug: "", type: "", contentFormat: "json" });
+
+const contentFormats = [
+  { value: "json", label: "JSON (recommended)", files: "page.json" },
+  { value: "md", label: "Markdown with front matter", files: "page.md" },
+  { value: "json+md", label: "JSON with the text as Markdown", files: "page.json + page.content.md" },
+];
 const types = ref([]);
 
 const { values, errors, message, saving, isDirty, reset, submit } = useEditing(async (data) => {
@@ -64,7 +70,7 @@ async function changeStatus(event) {
 }
 
 async function openSettings() {
-  settings.value = { slug: page.value.path.split("/").pop(), type: page.value.type };
+  settings.value = { slug: page.value.path.split("/").pop(), type: page.value.type, contentFormat: page.value.contentFormat };
   dialogError.value = null;
   dialog.value = "settings";
   types.value = await api.get("/blueprints/pages");
@@ -123,7 +129,7 @@ onMounted(async () => {
             <option v-for="(status, key) in statuses" :key="key" :value="key">{{ status.label }}</option>
           </select>
         </label>
-        <button type="button" class="button" title="Slug and type" :disabled="isDirty" @click="openSettings"><Icon name="settings" /></button>
+        <button type="button" class="button" title="Page settings" :disabled="isDirty" @click="openSettings"><Icon name="settings" /></button>
         <button v-if="!page.isHome" type="button" class="button" title="Delete" @click="dialog = 'delete'"><Icon name="trash" /></button>
       </template>
     </ViewHeader>
@@ -136,7 +142,7 @@ onMounted(async () => {
 
     <Dialog
       :open="dialog !== null"
-      :title="dialog === 'delete' ? 'Delete page' : 'Slug and type'"
+      :title="dialog === 'delete' ? 'Delete page' : 'Page settings'"
       :submit-label="dialog === 'delete' ? 'Delete' : 'Save'"
       :danger="dialog === 'delete'"
       :busy="busy"
@@ -157,6 +163,16 @@ onMounted(async () => {
             <option v-for="type in types" :key="type.type" :value="type.type">{{ type.title }}</option>
           </select>
           <small class="field-help">Chooses the blueprint (pages/{{ settings.type }}.yml) and the template.</small>
+        </label>
+        <label v-if="page.isEditable" class="field">
+          <span class="field-label">Storage format</span>
+          <select v-model="settings.contentFormat" class="input">
+            <option v-for="format in contentFormats" :key="format.value" :value="format.value">{{ format.label }}</option>
+          </select>
+          <small class="field-help">
+            Stored as {{ contentFormats.find((format) => format.value === settings.contentFormat)?.files }}.
+            Changes only the files, not the content.
+          </small>
         </label>
       </template>
     </Dialog>

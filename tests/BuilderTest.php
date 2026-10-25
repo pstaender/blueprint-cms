@@ -258,3 +258,51 @@ describe("file access and links", function () {
         expect((string) $field)->toContain('<img src="/builder/photo.png" alt="Photo"');
     });
 });
+
+describe("content formats", function () {
+    beforeEach(function () {
+        $this->dir = copyProject(BLUEPRINT_PROJECT);
+        $this->app = createApp($this->dir);
+    });
+
+    afterEach(fn() => removeProject($this->dir));
+
+    it("converts between the content formats and keeps the data", function () {
+        page("about")->update(["content" => "Some **text**"]);
+        $about = "$this->dir/content/about";
+        $data = page("about")->data()->toArray();
+
+        expect(page("about")->contentFormat())->toBe("json");
+
+        $page = page("about")->changeContentFormat("md");
+        expect($page->contentFormat())->toBe("md")
+            ->and(is_file("$about/page.json"))->toBeFalse()
+            ->and(file_get_contents("$about/page.md"))->toEndWith("---\nSome **text**\n")
+            ->and($page->data()->toArray())->toEqualCanonicalizing($data);
+
+        $page = $page->changeContentFormat("json+md");
+        expect($page->contentFormat())->toBe("json+md")
+            ->and(is_file("$about/page.md"))->toBeFalse()
+            ->and(json_decode(file_get_contents("$about/page.json"), true))->not->toHaveKey("content")
+            ->and(file_get_contents("$about/page.content.md"))->toBe("Some **text**\n")
+            ->and($page->data()->toArray())->toEqualCanonicalizing($data);
+
+        $page = $page->changeContentFormat("json");
+        expect($page->contentFormat())->toBe("json")
+            ->and(is_file("$about/page.content.md"))->toBeFalse()
+            ->and($page->data()->content)->toBe("Some **text**")
+            ->and(fn() => $page->changeContentFormat("xml"))->toThrow(InvalidArgumentException::class);
+    });
+
+    it("turns single file pages into folders", function () {
+        file_put_contents("$this->dir/content/02_note.md", "---\ntitle: Note\n---\nHello\n");
+        $page = page("note")->changeContentFormat("json");
+
+        expect($page->root)->toBe("$this->dir/content/02_note")
+            ->and($page->num)->toBe(2)
+            ->and(file_exists("$this->dir/content/02_note.md"))->toBeFalse()
+            ->and(page("note")->data()->title)->toBe("Note")
+            ->and(page("note")->data()->content)->toBe("Hello")
+            ->and(page("note")->uid())->toMatch('/^[a-z0-9]{10}$/');
+    });
+});

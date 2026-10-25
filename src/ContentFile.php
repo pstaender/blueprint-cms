@@ -36,7 +36,7 @@ class ContentFile
     public static function write(string $file, array $data): void
     {
         $output = match (pathinfo($file, PATHINFO_EXTENSION)) {
-            "json" => json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR) . "\n",
+            "json" => self::toJson($data),
             "md" => self::toMarkdown($data),
             default => throw new \InvalidArgumentException("Can't write content to $file"),
         };
@@ -48,6 +48,11 @@ class ContentFile
         if (file_put_contents($file, $output, LOCK_EX) === false) {
             throw new \RuntimeException("Can't write $file");
         }
+    }
+
+    public static function toJson(array $data): string
+    {
+        return json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR) . "\n";
     }
 
     public static function toMarkdown(array $data): string
