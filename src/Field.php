@@ -86,6 +86,19 @@ class Field
         return array_map(fn(array $props) => new self($props), $this->props["fields"] ?? []);
     }
 
+    /**
+     * The fields of each block type of a blocks/layout field.
+     *
+     * @return array<string, array<string, Field>>
+     */
+    public function fieldsets(): array
+    {
+        return array_map(
+            fn(array $fieldset) => array_map(fn(array $props) => new self($props), $fieldset["fields"] ?? []),
+            is_array($this->props["fieldsets"] ?? null) ? $this->props["fieldsets"] : [],
+        );
+    }
+
     public function defaultValue(): mixed
     {
         return $this->props["default"] ?? null;

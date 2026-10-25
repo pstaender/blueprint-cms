@@ -89,3 +89,26 @@
   <dialog> for dialogs (no window.confirm). Structure rows as fieldsets with up/down/remove, tags as comma
   separated text with a datalist. Files, blocks and layout have no editor yet. Dark mode via prefers-color-scheme.
 - structuredClone fails on Vue proxies -> JSON clone helper (all values are JSON anyway).
+
+2026-10-25 – Files, blocks, layouts, sorting, slugs, uids, page types
+- Page type (user request, like Kirby's intendedTemplate): `type` in the page data (default "page") chooses the
+  blueprint pages/{type}.yml and the template templates/{type}.php -> page.php -> default.php. Replaces the
+  `template` key (content and fixtures migrated). The pagelist filter option keeps Kirby's name `template`
+  (`type` is the field type).
+- UIDs: 10 chars [a-z0-9] (like the existing user uid). Added on every write (page update/create, file meta,
+  users), `bin/blueprint content:uids` backfills. Pickers store references page://uid, file://uid, user://uid,
+  so references survive slug changes; old values (paths, filenames, emails) are still resolved.
+- `fields: true` in a tab/column = all definitions not used elsewhere, in definition order (first such column).
+- Files: everything else in a page folder; .md/.php are subpages, so they (and executable/server config
+  extensions) can't be files. Meta in {filename}.json (a json file whose name minus .json exists is meta).
+  Served under the page url by App when no page matches; only images/media/pdf/text inline, everything else as
+  download, plus nosniff + CSP sandbox (no html/svg execution on the site/panel origin). Site files are not
+  supported (content/ root holds site.json, users.json, ... – too easy to expose).
+- Uploads: raw request body (POST /pages/{id}/files?filename=…), no multipart parsing; names sanitized;
+  file blueprint `accept` (mime/extension/maxsize) checked after the meta (template) is written.
+- Blocks/layout: Kirby content format. Fieldsets normalized in the normalizer (list, map with inline/extended
+  definitions, groups), core block types in src/blueprints/blocks + snippets in src/views/blocks, overridable in
+  site/. Recursive block types are stopped with an error fieldset. Validation per visible block.
+- Panel: native HTML5 drag & drop (sortable.js, handles for items with inputs, nested lists independent), page
+  tree in the sidebar (expand state in localStorage), slug/type dialog, file view, filelist/filepicker, blocks
+  and layout editors. Block content is edited in place inside the view's reactive values.

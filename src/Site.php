@@ -84,6 +84,41 @@ class Site
         return $page;
     }
 
+    /**
+     * All pages including drafts, depth first.
+     */
+    public function index(): Collection
+    {
+        $pages = new Collection();
+        $collect = function (Collection $children) use (&$collect, $pages) {
+            foreach ($children as $page) {
+                $pages->push($page);
+                $collect($page->allChildren());
+            }
+        };
+        $collect($this->allChildren());
+
+        return $pages;
+    }
+
+    public function findByUid(string $uid): ?Page
+    {
+        return $this->index()->first(fn(Page $page) => $page->uid() === $uid);
+    }
+
+    public function findFileByUid(string $uid): ?File
+    {
+        foreach ($this->index() as $page) {
+            foreach ($page->files() as $file) {
+                if ($file->uid() === $uid) {
+                    return $file;
+                }
+            }
+        }
+
+        return null;
+    }
+
     public function update(array $values): void
     {
         $data = array_filter([...$this->data()->toArray(), ...$values], fn($value) => $value !== null);

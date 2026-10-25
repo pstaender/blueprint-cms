@@ -1,0 +1,11 @@
+title: Heading
+icon: title
+fields:
+  level:
+    type: select
+    width: 1/4
+    default: h2
+    options: [h1, h2, h3, h4, h5, h6]
+  text:
+    type: text
+    width: 3/4

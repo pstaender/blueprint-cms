@@ -29,12 +29,16 @@ class FieldValue implements \IteratorAggregate, \Countable, \JsonSerializable, \
     /**
      * Types whose formatted output is html, everything else is escaped.
      */
-    public const HTML_TYPES = ["textarea", "writer", "list"];
+    public const HTML_TYPES = ["textarea", "writer", "list", "blocks", "layout"];
 
+    /**
+     * @param object|null $model the page, site, user, file (or Values) the value belongs to
+     */
     public function __construct(
         public readonly string $name,
         private readonly mixed $value,
         public readonly ?Field $field = null,
+        public readonly ?object $model = null,
     ) {
     }
 
@@ -72,7 +76,7 @@ class FieldValue implements \IteratorAggregate, \Countable, \JsonSerializable, \
             return $this;
         }
 
-        return $fallback instanceof self ? $fallback : new self($this->name, $fallback, $this->field);
+        return $fallback instanceof self ? $fallback : new self($this->name, $fallback, $this->field, $this->model);
     }
 
     /**
@@ -93,7 +97,10 @@ class FieldValue implements \IteratorAggregate, \Countable, \JsonSerializable, \
             "select", "radio", "toggles", "checkboxes", "multiselect", "tags" => implode(", ", $this->labels()),
             "pagepicker" => $this->toPages()->map(fn(Page $page) => (string) $page->title())->implode(", "),
             "userpicker" => $this->toUsers()->map(fn(User $user) => (string) ($user->data->name ?? $user->email()))->implode(", "),
-            "password", "structure", "object", "blocks", "layout" => "",
+            "filepicker" => $this->toFiles()->map(fn(File $file) => $file->url())->implode(", "),
+            "blocks" => $this->toBlocks()->reject(fn(Block $block) => $block->isHidden())->map(fn(Block $block) => $block->render())->implode(""),
+            "layout" => $this->toLayouts()->map(fn(Layout $layout) => $layout->render())->implode(""),
+            "password", "structure", "object" => "",
             default => self::stringify($this->value),
         };
 
@@ -162,7 +169,7 @@ class FieldValue implements \IteratorAggregate, \Countable, \JsonSerializable, \
 
         $itemField = new Field([...$this->field?->props ?? ["name" => $this->name], "type" => $this->itemType()]);
 
-        return (new Collection($this->toArray()))->map(fn($item) => new self($this->name, $item, $itemField));
+        return (new Collection($this->toArray()))->map(fn($item) => new self($this->name, $item, $itemField, $this->model));
     }
 
     /**
@@ -184,14 +191,85 @@ class FieldValue implements \IteratorAggregate, \Countable, \JsonSerializable, \
     {
         $value ??= $this->value;
 
-        return new Values(is_array($value) ? $value : [], $this->field?->fields() ?? []);
+        return new Values(is_array($value) ? $value : [], $this->field?->fields() ?? [], $this->model);
     }
 
+    /**
+     * Pages by reference (`page://uid`) or path (`blog/newest_entry`), drafts included.
+     */
     public function toPages(): Collection
     {
         return (new Collection($this->toArray()))
-            ->map(fn($id) => is_string($id) ? Page::find($id) : null)
+            ->map(function ($reference) {
+                if (!is_string($reference)) {
+                    return null;
+                }
+
+                [$scheme, $uid] = Uid::parse($reference) ?? [null, null];
+
+                return $scheme === "page" ? site()->findByUid($uid) : site()->find($reference, includeDrafts: true);
+            })
             ->filter()
+            ->values();
+    }
+
+    /**
+     * Files by reference (`file://uid`), filename of the model's page (`cover.jpg`) or path (`blog/cover.jpg`).
+     */
+    public function toFiles(): Collection
+    {
+        $page = match (true) {
+            $this->model instanceof Page => $this->model,
+            $this->model instanceof File => $this->model->page,
+            $this->model instanceof Values && $this->model->model() instanceof Page => $this->model->model(),
+            $this->model instanceof Values && $this->model->model() instanceof File => $this->model->model()->page,
+            default => null,
+        };
+
+        return (new Collection($this->toArray()))
+            ->map(function ($reference) use ($page) {
+                if (!is_string($reference)) {
+                    return null;
+                }
+
+                [$scheme, $uid] = Uid::parse($reference) ?? [null, null];
+
+                return match (true) {
+                    $scheme === "file" => site()->findFileByUid($uid),
+                    str_contains($reference, "/") => site()->find(dirname($reference), includeDrafts: true)?->file(basename($reference)),
+                    default => $page?->file($reference),
+                };
+            })
+            ->filter()
+            ->values();
+    }
+
+    public function toFile(): ?File
+    {
+        return $this->toFiles()->first();
+    }
+
+    /**
+     * @return Collection<int, Block>
+     */
+    public function toBlocks(): Collection
+    {
+        $fieldsets = $this->field?->get("fieldsets") ?? [];
+
+        return (new Collection($this->toArray()))
+            ->filter(fn($block) => is_array($block) && isset($block["type"]))
+            ->map(fn(array $block) => Block::fromArray($block, is_array($fieldsets) ? $fieldsets : [], $this->model))
+            ->values();
+    }
+
+    /**
+     * @return Collection<int, Layout>
+     */
+    public function toLayouts(): Collection
+    {
+        return (new Collection($this->toArray()))
+            ->filter(fn($layout) => is_array($layout))
+            ->map(fn(array $layout) => new Layout($layout, $this->field, $this->model))
             ->values();
     }
 
@@ -203,7 +281,7 @@ class FieldValue implements \IteratorAggregate, \Countable, \JsonSerializable, \
     public function toUsers(): Collection
     {
         return (new Collection($this->toArray()))
-            ->map(fn($id) => is_string($id) ? User::find($id) : null)
+            ->map(fn($id) => is_string($id) ? User::find(Uid::parse($id)[1] ?? $id) : null)
             ->filter()
             ->values();
     }
@@ -258,7 +336,7 @@ class FieldValue implements \IteratorAggregate, \Countable, \JsonSerializable, \
         }
 
         if ($this->isEmpty()) {
-            return new self($this->name, null, $this->field);
+            return new self($this->name, null, $this->field, $this->model);
         }
 
         $target = match (true) {
@@ -274,7 +352,7 @@ class FieldValue implements \IteratorAggregate, \Countable, \JsonSerializable, \
         $result = $target->$method(...$arguments);
 
         return is_string($result) || $result instanceof Stringable
-            ? new self($this->name, (string) $result, new Field(["name" => $this->name, "type" => "text"]))
+            ? new self($this->name, (string) $result, new Field(["name" => $this->name, "type" => "text"]), $this->model)
             : $result;
     }
 

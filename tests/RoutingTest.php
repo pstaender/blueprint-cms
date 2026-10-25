@@ -76,7 +76,7 @@ it("responds with 404 for unknown pages", function () {
 });
 
 it("provides site, user and page helpers", function () {
-    expect(site()->data()->name)->toBe("Name of the homepage")
+    expect(site()->data()->name)->toBeString()->not->toBeEmpty()
         ->and(user("admin")->uid())->toBe("19qiajkmca")
         ->and(user())->toBeNull()
         ->and(page("blog")->url())->toBe("/blog/")

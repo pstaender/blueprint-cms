@@ -37,6 +37,24 @@ tabs:
 
 Without a layout, root `fields` are the layout themselves.
 
+### All other fields
+
+`fields: true` in a tab or column places all definitions that aren't used anywhere else, in their order:
+
+```yaml
+fields:
+  title: text
+  text: textarea
+  date: date
+  author: userpicker
+
+tabs:
+  content:
+    fields: [title, text]
+  meta:
+    fields: true      # date, author
+```
+
 ## Tabs
 
 ```yaml

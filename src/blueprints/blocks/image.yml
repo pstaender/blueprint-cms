@@ -1,0 +1,18 @@
+title: Image
+icon: image
+fields:
+  image:
+    type: filepicker
+    max: 1
+    accept: image/*
+    uploads: image
+  src:
+    label: Or external url
+    type: url
+  alt:
+    label: Alternative text
+    type: text
+  caption:
+    type: text
+  link:
+    type: url

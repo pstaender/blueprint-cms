@@ -1,0 +1,8 @@
+title: Code
+icon: code
+fields:
+  code:
+    type: textarea
+  language:
+    type: text
+    width: 1/2

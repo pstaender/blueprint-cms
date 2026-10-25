@@ -1,0 +1,8 @@
+title: List
+icon: list
+fields:
+  text:
+    label: List
+    type: textarea
+    size: small
+    help: "One entry per line, starting with - (bullets) or 1. (numbers)"

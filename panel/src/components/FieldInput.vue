@@ -5,6 +5,10 @@ import StructureField from "./fields/StructureField.vue";
 import ObjectField from "./fields/ObjectField.vue";
 import PickerField from "./fields/PickerField.vue";
 import PageList from "./fields/PageList.vue";
+import FileList from "./fields/FileList.vue";
+import FilePicker from "./fields/FilePicker.vue";
+import BlocksField from "./fields/BlocksField.vue";
+import LayoutField from "./fields/LayoutField.vue";
 
 // One blueprint field as native form element(s).
 const props = defineProps({
@@ -71,7 +75,6 @@ const entries = computed({
   set: (value) => update(value.split("\n").map((line) => line.trim()).filter(Boolean)),
 });
 
-const json = computed(() => (props.modelValue ? JSON.stringify(props.modelValue, null, 2) : ""));
 </script>
 
 <template>
@@ -84,6 +87,7 @@ const json = computed(() => (props.modelValue ? JSON.stringify(props.modelValue,
     <p>{{ field.text }}</p>
   </div>
   <PageList v-else-if="type === 'pagelist'" :field="field" :model="model" />
+  <FileList v-else-if="type === 'filelist'" :field="field" :model="model" />
   <div v-else-if="type === 'stats'" class="field">
     <span class="field-label">{{ field.label }}</span>
     <dl class="stats">
@@ -153,18 +157,17 @@ const json = computed(() => (props.modelValue ? JSON.stringify(props.modelValue,
 
     <textarea v-else-if="type === 'entries'" :id="id" v-model.lazy="entries" class="input textarea" :disabled="field.disabled"></textarea>
 
-    <StructureField v-else-if="type === 'structure'" :model-value="modelValue" :field="field" :errors="errors" :path="path" @update:model-value="update" />
+    <StructureField v-else-if="type === 'structure'" :model-value="modelValue" :field="field" :errors="errors" :path="path" :model="model" @update:model-value="update" />
 
-    <ObjectField v-else-if="type === 'object'" :model-value="modelValue" :field="field" :errors="errors" :path="path" @update:model-value="update" />
+    <ObjectField v-else-if="type === 'object'" :model-value="modelValue" :field="field" :errors="errors" :path="path" :model="model" @update:model-value="update" />
 
     <PickerField v-else-if="type === 'pagepicker' || type === 'userpicker'" :id="id" :model-value="modelValue" :field="field" @update:model-value="update" />
 
-    <template v-else-if="['blocks', 'layout'].includes(type)">
-      <pre class="input code">{{ json || "—" }}</pre>
-      <small class="field-help">The {{ type }} editor is not available yet.</small>
-    </template>
+    <BlocksField v-else-if="type === 'blocks'" :model-value="modelValue" :field="field" :errors="errors" :path="path" :model="model" @update:model-value="update" />
 
-    <p v-else-if="['filepicker', 'filelist'].includes(type)" class="field-help">Files are not supported yet.</p>
+    <LayoutField v-else-if="type === 'layout'" :model-value="modelValue" :field="field" :errors="errors" :path="path" :model="model" @update:model-value="update" />
+
+    <FilePicker v-else-if="type === 'filepicker'" :model-value="modelValue" :field="field" :model="model" @update:model-value="update" />
 
     <!-- unknown types and dynamic options -->
     <input v-else :id="id" v-model="text" class="input" type="text" :disabled="field.disabled">

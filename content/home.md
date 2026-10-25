@@ -1,5 +1,5 @@
 ---
 title: Welcome
-template: framework
+type: framework
 ---
 ## Hello and welcome

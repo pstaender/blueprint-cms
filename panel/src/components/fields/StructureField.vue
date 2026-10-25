@@ -10,6 +10,7 @@ const props = defineProps({
   field: { type: Object, required: true },
   errors: { type: Object, default: () => ({}) },
   path: { type: String, required: true },
+  model: { type: Object, default: null },
 });
 const emit = defineEmits(["update:modelValue"]);
 
@@ -38,7 +39,7 @@ const move = (index, offset) => change((copy) => copy.splice(index + offset, 0, 
           <button type="button" class="icon-button" title="Remove" @click="remove(index)"><Icon name="trash" /></button>
         </span>
       </legend>
-      <FieldList :fields="field.fields || {}" :values="row" :errors="errors" :prefix="`${path}.${index}.`" />
+      <FieldList :fields="field.fields || {}" :values="row" :errors="errors" :prefix="`${path}.${index}.`" :model="model" />
     </fieldset>
     <p v-if="!rows.length" class="empty">No entries yet</p>
     <button v-if="canAdd" type="button" class="button button-small" @click="add"><Icon name="plus" /> Add</button>

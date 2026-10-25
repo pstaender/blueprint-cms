@@ -12,7 +12,7 @@ Every field is a method of its model (page, site, user, structure row, object fi
 
 The field definition comes from the model's [blueprint](../../01_blueprints/page.md). Data that isn't defined in the blueprint works too: it is treated as `text` (or as a list for arrays).
 
-Model methods win over fields with the same name (e.g. `url`, `template`, `children`). Use `field()` for those:
+Model methods win over fields with the same name (e.g. `url`, `type`, `children`). Use `field()` for those:
 
 ```php
 <?= $page->field("url") ?>
@@ -34,7 +34,10 @@ Echoing a field value (or `esc($value)`, which doesn't escape it twice) outputs:
 | `toggle` | `true` / `false` |
 | `select`, `radio`, `toggles`, `checkboxes`, `multiselect`, `tags` | option labels, comma separated |
 | `pagepicker` / `userpicker` | page titles / user names (or emails), comma separated |
-| `password`, `structure`, `object`, `blocks`, `layout` | nothing, use the methods below |
+| `filepicker` | file urls, comma separated |
+| `blocks` | the rendered blocks (`site/templates/blocks/{type}.php`), hidden blocks are skipped |
+| `layout` | the rendered rows (`site/templates/blocks/layout.php`) |
+| `password`, `structure`, `object` | nothing, use the methods below |
 
 ```yaml
 publishedAt:
@@ -55,8 +58,11 @@ publishedAt:
 | `toArray()` | list, comma separated strings are split |
 | `toCollection()` | `Collection` of `FieldValue`s (structure: of `Values`) |
 | `toValues()` | nested fields of an object field |
-| `toPages()`, `toPage()` | pages of a `pagepicker` (values are page ids) |
-| `toUsers()`, `toUser()` | users of a `userpicker` (values are emails or uids) |
+| `toPages()`, `toPage()` | pages of a `pagepicker` (`page://uid` or page paths) |
+| `toUsers()`, `toUser()` | users of a `userpicker` (`user://uid`, emails or uids) |
+| `toFiles()`, `toFile()` | [`File`](../../../../src/File.php)s of a `filepicker` (`file://uid`, filenames of the page or `blog/cover.jpg`) |
+| `toBlocks()` | `Collection` of [`Block`](../../../../src/Block.php)s |
+| `toLayouts()` | `Collection` of [`Layout`](../../../../src/Layout.php)s |
 | `labels()` | option labels of the selected values |
 | `type()`, `field` | field type and definition ([`Field`](../../../../src/Field.php)) |
 

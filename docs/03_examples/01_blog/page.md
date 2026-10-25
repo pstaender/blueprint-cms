@@ -6,15 +6,15 @@ title: Blog
 ```
 content/
   01_blog/
-    page.md                    template: blog
+    page.md                    type: blog
     01_hello-world/
-      page.md                  template: article
+      page.md                  type: article
 ```
 
 ```md
 ---
 title: Hello world
-template: article
+type: article
 date: 2026-10-25
 ---
 The first article.

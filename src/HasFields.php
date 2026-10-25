@@ -20,7 +20,15 @@ trait HasFields
         $values = $this->data()->toArray();
         $value = $values[$name] ?? ($field !== null ? $values[$field->name] ?? null : null);
 
-        return new FieldValue($field?->name ?? $name, $value, $field);
+        return new FieldValue($field?->name ?? $name, $value, $field, $this->fieldModel());
+    }
+
+    /**
+     * The model that field values belong to, e.g. to find the files of a filepicker.
+     */
+    protected function fieldModel(): object
+    {
+        return $this;
     }
 
     public function __call(string $name, array $arguments): FieldValue

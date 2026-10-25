@@ -189,9 +189,39 @@ class Page
         return str_ends_with($file, ".php") && is_file($file) ? $file : null;
     }
 
-    public function template(): string
+    public const DEFAULT_TYPE = "page";
+
+    /**
+     * The page type (`type` in the data), chooses the blueprint (pages/{type}.yml)
+     * and the template (templates/{type}.php → page.php → default.php).
+     */
+    public function type(): string
     {
-        return (string) ($this->data()->template ?? "default");
+        $type = $this->data()->type;
+
+        return is_string($type) && preg_match('/^[\w-]+$/', $type) ? $type : self::DEFAULT_TYPE;
+    }
+
+    public function changeType(string $type): void
+    {
+        if (!preg_match('/^[\w-]+$/', $type)) {
+            throw new \InvalidArgumentException("Invalid page type \"$type\"");
+        }
+
+        $this->update(["type" => $type === self::DEFAULT_TYPE ? null : $type]);
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, File>
+     */
+    public function files(): Collection
+    {
+        return new Collection(File::scan($this));
+    }
+
+    public function file(string $filename): ?File
+    {
+        return $this->files()->first(fn(File $file) => $file->filename() === $filename);
     }
 
     /**
@@ -253,6 +283,44 @@ class Page
         return $this->num !== null;
     }
 
+    public function uid(): ?string
+    {
+        $uid = $this->data()->uid;
+
+        return is_string($uid) && $uid !== "" ? $uid : null;
+    }
+
+    /**
+     * Renames the slug and keeps the status (draft prefix, number).
+     */
+    public function changeSlug(string $slug): self
+    {
+        self::validateSlug($slug);
+
+        if ($this->isHome()) {
+            throw new \LogicException("The slug of the home page can't be changed");
+        }
+
+        if ($slug === $this->slug) {
+            return $this;
+        }
+
+        if ($this->siblings()->contains(fn(self $page) => $page->slug === $slug)) {
+            throw new \InvalidArgumentException("A page with the slug \"$slug\" already exists");
+        }
+
+        $prefix = $this->isDraft ? "." : ($this->isListed() ? sprintf("%02d_", $this->num) : "");
+
+        return $this->moveTo($prefix . $slug);
+    }
+
+    private static function validateSlug(string $slug): void
+    {
+        if (!preg_match('/^[a-z0-9][a-z0-9_-]*$/', $slug)) {
+            throw new \InvalidArgumentException("The slug may only contain a-z, 0-9, - and _");
+        }
+    }
+
     public function status(): string
     {
         return $this->isDraft ? "draft" : ($this->isListed() ? "listed" : "unlisted");
@@ -276,6 +344,7 @@ class Page
         }
 
         $data = array_filter([...$this->readData(), ...$values], fn($value) => $value !== null);
+        $data = ["uid" => $data["uid"] ?? Uid::generate(), ...$data];
 
         if (!$this->isFolder()) {
             ContentFile::write($this->root, $data);
@@ -335,9 +404,7 @@ class Page
      */
     public static function create(?self $parent, string $slug, array $data): self
     {
-        if (!preg_match('/^[a-z0-9][a-z0-9_-]*$/', $slug)) {
-            throw new \InvalidArgumentException("The slug may only contain a-z, 0-9, - and _");
-        }
+        self::validateSlug($slug);
 
         $dir = $parent === null ? App::instance()->contentDir() : $parent->root;
 
@@ -351,7 +418,7 @@ class Page
             throw new \InvalidArgumentException("A page with the slug \"$slug\" already exists");
         }
 
-        ContentFile::write("$dir/.$slug/page.json", $data);
+        ContentFile::write("$dir/.$slug/page.json", [...$data, "uid" => Uid::generate()]);
 
         return self::fromPath("$dir/.$slug", $parent);
     }

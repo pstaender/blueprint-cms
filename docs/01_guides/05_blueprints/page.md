@@ -5,10 +5,11 @@ A blueprint describes the **data structure** of a model (its fields) and its **p
 
 | Model | Blueprint |
 |---|---|
-| page | `site/blueprints/pages/{template}.yml` |
+| page | `site/blueprints/pages/{type}.yml` |
 | site | `site/blueprints/site.yml` |
 | user | `site/blueprints/users/{role}.yml` |
 | file | `site/blueprints/files/{template}.yml` |
+| block | `site/blueprints/blocks/{type}.yml` |
 
 ## Fields first, layout second
 
@@ -59,13 +60,15 @@ fields:
     type: date
 ```
 
+`fields: true` in a tab or column shows all fields that aren't placed anywhere else.
+
 All [layout rules](../../02_reference/01_blueprints/01_layout/page.md) and [field types](../../02_reference/02_fields/page.md).
 
 ## Which blueprint does a page use?
 
-The page's `template` decides:
+The page's `type` decides (default: `page`):
 
-1. `site/blueprints/pages/{template}.yml`
+1. `site/blueprints/pages/{type}.yml`
 2. the page blueprint with `default: true`
 3. `site/blueprints/pages/default.yml`
 4. the core [`src/blueprints/pages/default.yml`](../../../src/blueprints/pages/default.yml)
@@ -73,7 +76,7 @@ The page's `template` decides:
 ```md
 ---
 title: Hello world
-template: article
+type: article
 ---
 ```
 

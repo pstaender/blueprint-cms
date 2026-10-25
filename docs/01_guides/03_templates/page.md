@@ -1,7 +1,7 @@
 ---
 title: Templates
 ---
-Templates are plain php files in `site/templates/`. A page uses the template named in its `template` data (`default` otherwise):
+Templates are plain php files in `site/templates/`, one per page type. A page with `type: article` uses `article.php`:
 
 ```php
 <?php // site/templates/article.php ?>
@@ -12,7 +12,7 @@ Templates are plain php files in `site/templates/`. A page uses the template nam
 <?php partial("footer") ?>
 ```
 
-Lookup: `site/templates/{template}.php` → `site/templates/default.php` → [`src/views/default.php`](../../../src/views/default.php).
+Lookup: `site/templates/{type}.php` → `page.php` → `default.php` → [`src/views/default.php`](../../../src/views/default.php).
 
 Templates get `$page` and `$site`. Field methods like `$page->date()` return values that are formatted and escaped by their [field type](../../02_reference/02_fields/02_field-methods/page.md). `$page->data()` is raw: use `esc()` for output and `md()` for markdown.
 
@@ -31,6 +31,17 @@ If it returns an array, the array is merged into the page data and the page is r
 <?php
 return ["title" => "Computed title", "template" => "article"];
 ```
+
+## Blocks
+
+Echoing a `blocks` field renders every block with `site/templates/blocks/{type}.php` (core: [`src/views/blocks/`](../../../src/views/blocks)). The snippet gets `$block`:
+
+```php
+<?php // site/templates/blocks/heading.php ?>
+<h2 class="headline"><?= $block->text() ?></h2>
+```
+
+See [Blocks](../../02_reference/01_blueprints/06_blocks/page.md).
 
 ## Partials
 

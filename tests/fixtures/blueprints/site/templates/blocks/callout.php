@@ -1,0 +1,1 @@
+<aside><?= $block->text() ?></aside>

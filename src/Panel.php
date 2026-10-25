@@ -32,7 +32,13 @@ class Panel
         ["GET", "#^/pages/([^/]+)$#", "getPage"],
         ["PATCH", "#^/pages/([^/]+)$#", "updatePage"],
         ["DELETE", "#^/pages/([^/]+)$#", "deletePage"],
+        ["GET", "#^/pages/([^/]+)/children$#", "pageChildren"],
         ["POST", "#^/pages/([^/]+)/children$#", "createPage"],
+        ["GET", "#^/pages/([^/]+)/files$#", "listFiles"],
+        ["POST", "#^/pages/([^/]+)/files$#", "uploadFile"],
+        ["GET", "#^/pages/([^/]+)/files/([^/]+)$#", "getFile"],
+        ["PATCH", "#^/pages/([^/]+)/files/([^/]+)$#", "updateFile"],
+        ["DELETE", "#^/pages/([^/]+)/files/([^/]+)$#", "deleteFile"],
         ["GET", "#^/blueprints/pages$#", "pageBlueprints"],
         ["GET", "#^/users$#", "listUsers"],
         ["POST", "#^/users$#", "createUser"],
@@ -210,8 +216,13 @@ class Panel
         return self::json($this->pageDetails($this->findPage($id)));
     }
 
+    private function pageChildren(ServerRequestInterface $request, string $id): ResponseInterface
+    {
+        return self::json($this->findPage($id)->allChildren()->map($this->pageSummary(...))->values()->all());
+    }
+
     /**
-     * Body: {"data": {...}} to save fields, {"status": "listed"} and/or {"num": 2} to change the status/position.
+     * Body: {"data": {...}} to save fields, {"slug": "…"}, {"type": "…"}, {"status": "listed"} and/or {"num": 2}.
      */
     private function updatePage(ServerRequestInterface $request, string $id): ResponseInterface
     {
@@ -220,6 +231,14 @@ class Panel
 
         if (isset($input["data"]) && is_array($input["data"])) {
             $page->update($this->validatedValues($page->blueprint(), $page->data()->toArray(), $input["data"]));
+        }
+
+        if (isset($input["type"]) && $input["type"] !== $page->type()) {
+            $page->changeType((string) $input["type"]);
+        }
+
+        if (isset($input["slug"]) && $input["slug"] !== $page->slug) {
+            $page = $page->changeSlug((string) $input["slug"]);
         }
 
         if (isset($input["status"]) && $input["status"] !== $page->status()) {
@@ -244,14 +263,14 @@ class Panel
     }
 
     /**
-     * Body: {"slug": "new-page", "title": "New page", "template": "article"}, creates a draft.
+     * Body: {"slug": "new-page", "title": "New page", "type": "article"}, creates a draft.
      */
     private function createPage(ServerRequestInterface $request, ?string $parentId = null): ResponseInterface
     {
         $parent = $parentId === null ? null : $this->findPage($parentId);
         $input = self::input($request);
         $title = trim((string) ($input["title"] ?? ""));
-        $template = (string) ($input["template"] ?? "default");
+        $type = (string) ($input["type"] ?? Page::DEFAULT_TYPE);
 
         if ($title === "") {
             throw new ApiError("The title is required", 422, ["errors" => ["title" => ["Title is required"]]]);
@@ -260,7 +279,7 @@ class Panel
         $slug = (string) ($input["slug"] ?? "");
         $page = Page::create($parent, $slug !== "" ? $slug : self::slug($title), array_filter([
             "title" => $title,
-            "template" => $template === "default" ? null : $template,
+            "type" => $type === Page::DEFAULT_TYPE ? null : $type,
         ]));
         $this->app->refreshSite();
 
@@ -272,7 +291,7 @@ class Panel
         $blueprints = array_map(function (string $name) {
             $blueprint = Blueprint::load($name);
 
-            return ["template" => basename($name), "title" => $blueprint->title(), "icon" => $blueprint->get("icon")];
+            return ["type" => basename($name), "title" => $blueprint->title(), "icon" => $blueprint->get("icon")];
         }, Blueprint::names("pages"));
 
         return self::json($blueprints);
@@ -289,11 +308,13 @@ class Panel
         return [
             "id" => self::panelId($page),
             "path" => $page->id(),
+            "uid" => $page->uid(),
+            "ref" => $page->uid() !== null ? "page://" . $page->uid() : $page->id(),
             "title" => (string) $page->title()->value(),
             "status" => $page->status(),
             "num" => $page->num,
             "url" => $page->url(),
-            "template" => $page->template(),
+            "type" => $page->type(),
             "icon" => $page->blueprint()->get("icon"),
             "hasChildren" => $page->allChildren()->isNotEmpty(),
         ];
@@ -316,6 +337,93 @@ class Panel
             "data" => $page->data()->toArray(),
             "breadcrumb" => $breadcrumb,
             "children" => $page->allChildren()->map($this->pageSummary(...))->all(),
+            "files" => $page->files()->map($this->fileSummary(...))->all(),
+        ];
+    }
+
+    // Files
+
+    private function listFiles(ServerRequestInterface $request, string $id): ResponseInterface
+    {
+        return self::json($this->findPage($id)->files()->map($this->fileSummary(...))->values()->all());
+    }
+
+    /**
+     * The body is the file itself, e.g. POST /pages/blog/files?filename=cover.jpg&template=image
+     */
+    private function uploadFile(ServerRequestInterface $request, string $id): ResponseInterface
+    {
+        $page = $this->findPage($id);
+        $query = $request->getQueryParams();
+        $template = (string) ($query["template"] ?? "");
+
+        if ($template !== "" && !preg_match('/^[\w-]+$/', $template)) {
+            throw new ApiError("Invalid file template", 400);
+        }
+
+        $body = $request->getBody();
+        $contents = $body->detach() ?? (string) $body;
+        $file = File::create($page, (string) ($query["filename"] ?? ""), $contents, $template !== "" ? ["template" => $template] : []);
+
+        return self::json($this->fileDetails($file), 201);
+    }
+
+    private function getFile(ServerRequestInterface $request, string $id, string $filename): ResponseInterface
+    {
+        return self::json($this->fileDetails($this->findFile($id, $filename)));
+    }
+
+    /**
+     * Body: {"data": {...}} and/or {"name": "new-name"} (without extension).
+     */
+    private function updateFile(ServerRequestInterface $request, string $id, string $filename): ResponseInterface
+    {
+        $file = $this->findFile($id, $filename);
+        $input = self::input($request);
+
+        if (isset($input["data"]) && is_array($input["data"])) {
+            $file->update($this->validatedValues($file->blueprint(), $file->data()->toArray(), $input["data"]));
+        }
+
+        if (isset($input["name"]) && $input["name"] !== $file->name()) {
+            $file = $file->changeName((string) $input["name"]);
+        }
+
+        return self::json($this->fileDetails($file));
+    }
+
+    private function deleteFile(ServerRequestInterface $request, string $id, string $filename): ResponseInterface
+    {
+        $this->findFile($id, $filename)->delete();
+
+        return new Response(204);
+    }
+
+    private function findFile(string $id, string $filename): File
+    {
+        return $this->findPage($id)->file($filename) ?? throw new ApiError("File \"$filename\" not found", 404);
+    }
+
+    private function fileSummary(File $file): array
+    {
+        return [
+            ...$file->toArray(),
+            "page" => self::panelId($file->page),
+            "ref" => $file->uid() !== null ? "file://" . $file->uid() : $file->filename(),
+        ];
+    }
+
+    private function fileDetails(File $file): array
+    {
+        return [
+            ...$this->fileSummary($file),
+            "pageTitle" => (string) $file->page->title()->value(),
+            "breadcrumb" => [
+                ...$this->pageDetails($file->page)["breadcrumb"],
+                ["id" => self::panelId($file->page), "title" => (string) $file->page->title()->value()],
+            ],
+            "blueprint" => $file->blueprint()->toArray(),
+            "data" => $file->data()->toArray(),
         ];
     }
 
@@ -333,7 +441,7 @@ class Panel
 
     private function listUsers(): ResponseInterface
     {
-        return self::json(User::all()->map(fn(User $user) => $user->toArray())->values()->all());
+        return self::json(User::all()->map(fn(User $user) => [...$user->toArray(), "ref" => "user://" . $user->uid()])->values()->all());
     }
 
     private function getUser(ServerRequestInterface $request, string $uid): ResponseInterface

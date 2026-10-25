@@ -8,7 +8,7 @@ Flat file CMS inspired by Kirby. PHP >= 8.3, namespace `Blueprint\` → `src/`. 
 - `composer test` (Pest, tests in `tests/`)
 - `composer serve` → dev server on http://localhost:8000 (`public/index.php` is the front controller)
 - `composer panel:build` (Vue + Vite in `panel/` → `public/panel/`, gitignored), `composer panel:dev` (vite on :5173/panel/, proxies the API to :8000)
-- `bin/blueprint user:create <email> [role]`, `user:password <email>`, `user:list`
+- `bin/blueprint user:create <email> [role]`, `user:password <email>`, `user:list`, `content:uids`
 
 ## Architecture
 
@@ -18,21 +18,25 @@ Flat file CMS inspired by Kirby. PHP >= 8.3, namespace `Blueprint\` → `src/`. 
   1. `content/redirects.json` (`{"301": {"from": "to"}}`)
   2. `Site::find($path)` resolves the slug path to a `Page`, else 404 (`site/templates/404.php`)
   3. canonical url redirect (301): pages with published children end with `/`, others don't; `/home` → `/`
-  4. render: the page's own php file (`page.php` / `{slug}.php`) if present – its output is the response, unless it returns an array, which is merged into the page data and rendered with the template. Otherwise `site/templates/{template}.php` → `default.php` → `src/views/default.php`.
-- `Page` – a folder with `page.json`/`page.md`/`page.content.md`/`page.php`, or a `{slug}.md`/`{slug}.php` file. `01_blog` → num 1, slug `blog`; leading `.` = draft (only visible for a logged in user). Folder pages win over file pages with the same slug. Data merge order: `page.json` < `page.md` front matter < `page.content.md` (as `content`).
+  4. render: the page's own php file (`page.php` / `{slug}.php`) if present – its output is the response, unless it returns an array, which is merged into the page data and rendered with the template. Otherwise `site/templates/{type}.php` → `page.php` → `default.php` → `src/views/default.php`.
+  5. no page → a file of the parent page (`/blog/cover.jpg`), served with safe headers (only images/media/pdf/text inline, `nosniff`, CSP sandbox).
+- `Page` – a folder with `page.json`/`page.md`/`page.content.md`/`page.php`, or a `{slug}.md`/`{slug}.php` file. `01_blog` → num 1, slug `blog`; leading `.` = draft (only visible for a logged in user). Folder pages win over file pages with the same slug. Data merge order: `page.json` < `page.md` front matter < `page.content.md` (as `content`). `type` (data, default `page`) chooses blueprint + template. Writes: `update`, `changeStatus`, `changeNum`, `changeSlug`, `changeType`, `create`, `delete`; every write adds a `uid`.
+- `File` – other files in a page folder (not `.md`/`.php`/content/meta/hidden), data in `{filename}.json` (`uid`, `template` → `files/{template}.yml`, `accept` rules on upload).
+- `Uid` – 10 char ids for pages, files, users; references `page://uid`, `file://uid`, `user://uid` (pickers store them, `FieldValue::toPages/toFiles/toUsers` resolve them and legacy paths/filenames).
+- `Block`/`Layout`/`LayoutColumn` – blocks/layout field content (Kirby format). Fieldsets from `blocks/{type}.yml` (core in `src/blueprints/blocks`), normalized into the field's `fieldsets`; rendering via `App::renderSnippet("blocks/{type}")` → `site/templates/blocks/` or `src/views/blocks/`.
 - `Data` – read-only, raw (unescaped) data: maps become `Data` (object/array access, missing keys → `null`), lists stay arrays.
 - `ContentFile` – reads json and markdown with yaml front matter (body → `content`).
 - `Site` – `content/site.json` + root pages. `User` – `content/users.json`, current user from the session (`$_SESSION["blueprint.user"]` = uid; panel login is not implemented yet).
 - `Redirect` exception – thrown by `redirect()`, turned into a response by `App`.
 - `Blueprint` – `site/blueprints/{name}.{yml,yaml,php}`, falls back to core blueprints in `src/blueprints/`. Names are paths: `pages/article`, `site`, `users/editor`, `custom-fields/seo`. `Page::blueprint()`: `pages/{template}` → blueprint with `default: true` → `pages/default`; `User::blueprint()`: `users/{role}` (role defaults to `user`) → `users/user` → `users/default`; `Site::blueprint()`: `site`. Also `fields()`, `field()`, `tabs()`, `defaults()`, `validate($data)`, `toArray()`.
-- `BlueprintNormalizer` – raw props → tabs → columns → fields (Kirby v6 style: root `fields` are definitions referenced by name from tabs/columns when a layout exists; sections → fields; groups spliced; `extends`; string shortcuts). Invalid fields become `info` error fields instead of exceptions.
+- `BlueprintNormalizer` – raw props → tabs → columns → fields (Kirby v6 style: root `fields` are definitions referenced by name from tabs/columns when a layout exists; `fields: true` in a tab/column = all unused definitions; sections → fields; groups spliced; `extends`; string shortcuts; blocks/layout `fieldsets` and `layouts`). Invalid fields become `info` error fields instead of exceptions.
 - `Field` – a blueprint field definition (`name`, `type`, props, `validate()`).
 - `FieldValue` – field methods of models (`HasFields` trait on `Page`, `Site`, `User`, `Values`): `$page->createdAt()` is formatted + escaped by field type when echoed; other calls go to Carbon/Collection/Stringable (string results are wrapped again, so they stay escaped). Raw values stay in `data()`. Model methods win over field names, use `field("url")`. `Values` = structure rows / object fields.
 - Global helpers in `src/helpers.php`: `page()`, `site()`, `user()`, `md()`, `esc()`, `dd()`, `redirect()`, `partial()` (`site/templates/partials/`), `static_file_url()` (mtime from `public/`).
 - Templates get `$page` and `$site`; field methods are already escaped (`esc()` doesn't double-escape them), raw `data()` must be `esc()`ed, `md()` for markdown.
 
 - `Panel` – serves `public/panel/index.html` for all `/panel/*` urls and the REST API under `/panel/api` (own regex routing, see `Panel::ROUTES`; page ids use `+` for `/`). Session login (`Session`, `$_SESSION["blueprint.user"]`) + `X-CSRF-Token` for changes; validation by blueprint (422). Writes via `Page::update/changeStatus/changeNum/create/delete`, `Site::update`, `User::create/update/delete`. Docs: `docs/02_reference/07_panel-api`.
-- Panel frontend (`panel/src`): `App.vue` (login / sidebar + view), `views/` (Site, Page, Users, User), `components/ModelForm.vue` (tabs → columns), `FieldList.vue` (field grid + `when`), `FieldInput.vue` (one native input per field type), `fields/` (structure, object, picker, pagelist), `api.js` (fetch client + session state). Keep form fields simple and native.
+- Panel frontend (`panel/src`): `App.vue` (login / sidebar + view), `views/` (Site, Page, File, Users, User), `components/ModelForm.vue` (tabs → columns), `FieldList.vue` (field grid + `when`), `FieldInput.vue` (one native input per field type), `fields/` (structure, object, pickers, page/file lists, blocks, layout), `PageTree.vue` (sidebar tree), `sortable.js` (native drag & drop), `files.js` (file store + uploads as raw request body), `api.js` (fetch client + session state). Keep form fields simple and native.
 
 ## Guidelines
 
@@ -40,4 +44,4 @@ Modern PHP, keep it simple, flat class structure, camelCase, self-explaining nam
 
 ## Not implemented yet
 
-Panel: files, blocks/layout editors, sorting by drag & drop; blocks/fieldsets normalization, file models, plugins, controllers, models, routes in `site/`, sqlite/postgres.
+Translations, site files, sorting files, plugins, controllers, models, routes in `site/`, sqlite/postgres.

@@ -13,6 +13,16 @@ const paths = {
   down: "M12 5v14M6 13l6 6 6-6",
   close: "M6 6l12 12M18 6L6 18",
   check: "M5 12l5 5 9-10",
+  chevron: "M9 6l6 6-6 6",
+  grip: "M9 6h.01M9 12h.01M9 18h.01M15 6h.01M15 12h.01M15 18h.01",
+  eye: "M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 15a3 3 0 100-6 3 3 0 000 6z",
+  hidden: "M3 3l18 18M10.6 5.1A10 10 0 0112 5c6 0 10 7 10 7a17 17 0 01-3 3.8M6.6 6.6A17 17 0 002 12s4 7 10 7a10 10 0 005.4-1.6M9.9 9.9a3 3 0 004.2 4.2",
+  copy: "M8 8h12v12H8zM16 8V4H4v12h4",
+  upload: "M12 16V4M7 9l5-5 5 5M4 16v4h16v-4",
+  file: "M6 3h8l4 4v14H6zM14 3v4h4M9 13h6M9 17h6",
+  image: "M4 5h16v14H4zM4 16l5-5 4 4 3-3 4 4M15 9h.01",
+  settings: "M4 7h10M18 7h2M4 17h2M10 17h10M14 5v4M6 15v4",
+  blocks: "M4 4h16v6H4zM4 14h16v6H4z",
 };
 
 defineProps({ name: { type: String, required: true } });

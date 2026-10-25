@@ -1,0 +1,9 @@
+title: Gallery
+icon: images
+fields:
+  images:
+    type: filepicker
+    accept: image/*
+    uploads: image
+  caption:
+    type: text

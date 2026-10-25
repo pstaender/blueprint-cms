@@ -1,0 +1,10 @@
+title: Image
+accept:
+  mime: image/*
+fields:
+  alt:
+    label: Alternative text
+    type: text
+  caption:
+    type: textarea
+    size: small

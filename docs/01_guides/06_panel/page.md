@@ -27,11 +27,12 @@ Then log in at http://localhost:8000/panel.
 
 - edit the site, pages and users with the fields of their blueprints (⌘/Ctrl + S saves)
 - validation by the blueprint, errors are shown below the fields
-- create pages (as drafts), change their status (draft, unlisted, listed), delete them
-- `pagelist` fields list subpages, `pagepicker`/`userpicker` are native selects
+- a nested page tree in the sidebar (expandable, listed pages sortable by drag & drop)
+- create pages (as drafts), change their status (draft, unlisted, listed), slug and type, sort and delete them
+- `pagelist` fields list subpages (sortable), `pagepicker`/`userpicker` are native selects
+- files: upload, edit their data, rename, delete; `filelist` and `filepicker` (sortable selection)
+- block and layout editors: add, hide, duplicate, sort (drag the handle) and remove blocks and rows
 - create users, change email, role and password
-
-Files, blocks and layouts can't be edited yet.
 
 ## Development
 

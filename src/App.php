@@ -7,6 +7,7 @@ namespace Blueprint;
 use Dumbo\Context;
 use Dumbo\Dumbo;
 use Nyholm\Psr7\Response;
+use Nyholm\Psr7\Stream;
 use Nyholm\Psr7\ServerRequest;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -154,7 +155,9 @@ class App
             $page = $this->site()->find($path);
 
             if ($page === null) {
-                return $this->notFoundResponse();
+                $file = $this->findFile($path);
+
+                return $file === null ? $this->notFoundResponse() : $this->fileResponse($file);
             }
 
             if ($page->url() !== $path) {
@@ -189,11 +192,11 @@ class App
             $page->mergeData($result);
         }
 
-        return $this->renderTemplate($page->template(), ["page" => $page]);
+        return $this->renderTemplate($page->type(), ["page" => $page]);
     }
 
     /**
-     * Renders site/templates/{name}.php, falls back to the default template.
+     * Renders site/templates/{name}.php, falls back to page.php and default.php.
      */
     public function renderTemplate(string $name, array $variables = []): string
     {
@@ -204,13 +207,32 @@ class App
     {
         $dir = $this->siteDir() . "/templates";
 
-        foreach ([$name, "default"] as $template) {
+        foreach ([$name, Page::DEFAULT_TYPE, "default"] as $template) {
             if (preg_match('/^[\w-]+$/', $template) && is_file("$dir/$template.php")) {
                 return "$dir/$template.php";
             }
         }
 
         return __DIR__ . "/views/default.php";
+    }
+
+    /**
+     * Renders site/templates/{name}.php or the core src/views/{name}.php, e.g. "blocks/heading".
+     * Missing snippets render nothing (a comment in debug mode).
+     */
+    public function renderSnippet(string $name, array $variables = []): string
+    {
+        if (!preg_match('#^[\w-]+(/[\w-]+)*$#', $name)) {
+            return "";
+        }
+
+        foreach ([$this->siteDir() . "/templates/$name.php", __DIR__ . "/views/$name.php"] as $file) {
+            if (is_file($file)) {
+                return $this->capture($file, $variables + ["page" => Page::current(), "site" => $this->site()])[0];
+            }
+        }
+
+        return $this->isDebug() ? "<!-- snippet $name not found -->" : "";
     }
 
     /**
@@ -250,6 +272,36 @@ class App
                 ob_end_clean();
             }
         }
+    }
+
+    /**
+     * Files are served under their page's url, e.g. /blog/cover.jpg.
+     */
+    private function findFile(string $path): ?File
+    {
+        $path = trim($path, "/");
+        $dir = dirname($path);
+
+        if ($dir === "." || $dir === "") {
+            return null;
+        }
+
+        return $this->site()->find($dir)?->file(basename($path));
+    }
+
+    private function fileResponse(File $file): ResponseInterface
+    {
+        $mime = $file->mime();
+        $isInline = in_array($mime, File::INLINE_MIMES, true);
+
+        return new Response(200, [
+            "Content-Type" => $mime,
+            "Content-Length" => (string) $file->size(),
+            "Content-Disposition" => ($isInline ? "inline" : "attachment") . "; filename=\"" . $file->filename() . "\"",
+            "X-Content-Type-Options" => "nosniff",
+            "Content-Security-Policy" => "default-src 'none'; sandbox",
+            "Last-Modified" => gmdate("D, d M Y H:i:s", (int) filemtime($file->root)) . " GMT",
+        ], Stream::create(fopen($file->root, "rb")));
     }
 
     private function notFoundResponse(): ResponseInterface

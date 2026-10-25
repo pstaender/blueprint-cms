@@ -41,7 +41,7 @@ class User
         $user = new self(new Data([
             ...$data,
             "email" => $email,
-            "uid" => bin2hex(random_bytes(5)),
+            "uid" => Uid::generate(),
             "role" => $role,
             "password" => self::hashPassword($password),
         ]));
@@ -68,6 +68,14 @@ class User
         ContentFile::write(self::file(), array_map(fn(self $user) => $user->data->toArray(), array_values($users)));
     }
 
+    /**
+     * Users without uid (written by hand) are identified by their email.
+     */
+    private function isSame(self $user): bool
+    {
+        return $this->uid() !== "" ? $user->uid() === $this->uid() : $user->email() === $this->email();
+    }
+
     public function verifyPassword(string $password): bool
     {
         $hash = $this->data->password;
@@ -85,7 +93,7 @@ class User
      */
     public function update(array $values): self
     {
-        $data = array_filter([...$this->data->toArray(), ...$values, "uid" => $this->uid()], fn($value) => $value !== null);
+        $data = array_filter([...$this->data->toArray(), ...$values, "uid" => $this->uid() ?: Uid::generate()], fn($value) => $value !== null);
         $email = (string) ($data["email"] ?? "");
 
         if ($email === "" || (($other = self::find($email)) !== null && $other->uid() !== $this->uid())) {
@@ -93,14 +101,14 @@ class User
         }
 
         $updated = new self(new Data($data));
-        self::saveAll(self::all()->map(fn(self $user) => $user->uid() === $this->uid() ? $updated : $user)->all());
+        self::saveAll(self::all()->map(fn(self $user) => $this->isSame($user) ? $updated : $user)->all());
 
         return $updated;
     }
 
     public function delete(): void
     {
-        self::saveAll(self::all()->reject(fn(self $user) => $user->uid() === $this->uid())->all());
+        self::saveAll(self::all()->reject(fn(self $user) => $this->isSame($user))->all());
     }
 
     /**

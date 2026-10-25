@@ -1,0 +1,6 @@
+title: Markdown
+icon: markdown
+fields:
+  text:
+    label: Markdown
+    type: textarea

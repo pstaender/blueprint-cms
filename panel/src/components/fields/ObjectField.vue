@@ -9,6 +9,7 @@ const props = defineProps({
   field: { type: Object, required: true },
   errors: { type: Object, default: () => ({}) },
   path: { type: String, required: true },
+  model: { type: Object, default: null },
 });
 const emit = defineEmits(["update:modelValue"]);
 
@@ -19,6 +20,6 @@ watch(values, () => emit("update:modelValue", { ...values }), { deep: true });
 
 <template>
   <fieldset class="structure-row">
-    <FieldList :fields="field.fields || {}" :values="values" :errors="errors" :prefix="`${path}.`" />
+    <FieldList :fields="field.fields || {}" :values="values" :errors="errors" :prefix="`${path}.`" :model="model" />
   </fieldset>
 </template>

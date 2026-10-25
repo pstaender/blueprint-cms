@@ -14,14 +14,27 @@ class Values
 {
     use HasFields;
 
-    private readonly Data $data;
+    protected readonly Data $data;
 
     /**
      * @param array<string, Field> $fields
      */
-    public function __construct(array $values, private readonly array $fields = [])
+    public function __construct(array $values, private readonly array $fields = [], private readonly ?object $model = null)
     {
         $this->data = new Data($values);
+    }
+
+    /**
+     * The page, site, user or file the values belong to.
+     */
+    public function model(): ?object
+    {
+        return $this->model;
+    }
+
+    protected function fieldModel(): object
+    {
+        return $this->model ?? $this;
     }
 
     public function data(): Data

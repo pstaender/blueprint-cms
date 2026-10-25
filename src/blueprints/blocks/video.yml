@@ -1,0 +1,9 @@
+title: Video
+icon: video
+fields:
+  url:
+    label: Video url
+    type: url
+    help: YouTube, Vimeo or a video file url
+  caption:
+    type: text

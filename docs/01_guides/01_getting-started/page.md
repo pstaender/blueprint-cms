@@ -24,13 +24,15 @@ public/             document root, index.php is the front controller
 site/
   blueprints/       data structures and panel views
     custom-fields/  reusable field definitions
-    pages/          page blueprints, one per template
+    pages/          page blueprints, one per page type
+    blocks/         block types of blocks/layout fields
     files/          file blueprints
     users/          user blueprints, one per role
     site.yml        the site blueprint
   config/           site config (overridden by config/)
-  templates/        php templates
+  templates/        php templates, one per page type
     partials/       partials, see partial()
+    blocks/         block snippets, e.g. heading.php
 ```
 
 ## Request lifecycle

@@ -1,0 +1,9 @@
+title: Quote
+icon: quote
+fields:
+  text:
+    label: Quote
+    type: textarea
+    size: small
+  citation:
+    type: text

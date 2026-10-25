@@ -14,7 +14,11 @@ const { values, errors, message, saving, isDirty, reset, submit } = useEditing(a
   if (session.site) session.site.title = site.value.title;
 });
 
-const model = computed(() => site.value && { id: null, children: site.value.children, canHaveChildren: true });
+async function reloadChildren() {
+  site.value.children = (await api.get("/site")).children;
+}
+
+const model = computed(() => site.value && { id: null, children: site.value.children, canHaveChildren: true, reload: reloadChildren });
 const hasPageList = computed(() => Object.values(site.value?.blueprint.fields ?? {}).some((field) => field.type === "pagelist"));
 
 onMounted(async () => {
@@ -31,6 +35,6 @@ onMounted(async () => {
       </template>
     </ViewHeader>
     <ModelForm :blueprint="site.blueprint" :values="values" :errors="errors" :model="model" />
-    <PageItems v-if="!hasPageList" :pages="site.children" :parent="model" />
+    <PageItems v-if="!hasPageList" :pages="site.children" :parent="model" @sorted="reloadChildren" />
   </div>
 </template>

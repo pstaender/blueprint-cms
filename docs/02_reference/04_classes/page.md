@@ -22,17 +22,18 @@ Singleton: `App::create(Config $config)`, `App::instance()`.
 | `url()` | e.g. `/blog/newest_entry`, `/blog/` |
 | `data()` | raw data as [`Data`](../../../src/Data.php) |
 | `title()` | the `title` field, falls back to the slug |
-| `template()` | |
+| `type()`, `uid()` | page type (default `page`), unique id |
+| `files()`, `file($filename)` | the page's [`File`](../../../src/File.php)s |
 | `field($name)`, `$page->{field}()` | [field values](../02_fields/02_field-methods/page.md) |
 | `blueprint()` | the page's [`Blueprint`](../../../src/Blueprint.php) |
 | `children()`, `drafts()`, `allChildren()`, `child($slug)`, `hasChildren()` | collections ([illuminate/support](https://laravel.com/docs/collections)) |
 | `isHome()`, `isListed()`, `isFolder()`, `status()`, `isEditable()` | |
-| `update($values)`, `changeStatus($status)`, `changeNum($position)`, `delete()`, `Page::create($parent, $slug, $data)` | write to the content folder |
+| `update($values)`, `changeStatus($status)`, `changeNum($position)`, `changeSlug($slug)`, `changeType($type)`, `delete()`, `Page::create($parent, $slug, $data)` | write to the content folder (and add a uid) |
 | `Page::current()`, `Page::find($path)` | |
 
 ## [`Site`](../../../src/Site.php)
 
-`data()`, `update($values)`, `blueprint()`, `field($name)`, field methods, `children()`, `allChildren()`, `homePage()`, `find($path, $includeDrafts = null)`.
+`data()`, `update($values)`, `blueprint()`, `field($name)`, field methods, `children()`, `allChildren()`, `index()` (all pages), `homePage()`, `find($path, $includeDrafts = null)`, `findByUid($uid)`, `findFileByUid($uid)`.
 
 ## [`User`](../../../src/User.php)
 
@@ -53,6 +54,18 @@ Converts raw blueprint props into tabs → columns → fields, see [Layout](../0
 ## [`Field`](../../../src/Field.php)
 
 A field definition of a blueprint: `name`, `type`, `props`, `label()`, `get($key)`, `hasValue()`, `isRequired()`, `fields()`, `defaultValue()`, `staticOptions()`, `validate($value)`, `toArray()`.
+
+## [`File`](../../../src/File.php)
+
+A file in a page folder: `filename()`, `name()`, `extension()`, `type()` (image, video, audio, document, archive, other), `mime()`, `size()`, `dimensions()`, `url()`, `id()`, `uid()`, `template()`, `data()`, `blueprint()`, field methods, `update($values)`, `changeName($name)`, `delete()`, `File::create($page, $filename, $contents, $data)`.
+
+## [`Block`](../../../src/Block.php), [`Layout`](../../../src/Layout.php), [`LayoutColumn`](../../../src/LayoutColumn.php)
+
+Blocks have `id()`, `type()`, `isHidden()`, `render()` and field methods for their content. Layouts have `columns()`, columns have `width()`, `span()` and `blocks()`.
+
+## [`Uid`](../../../src/Uid.php)
+
+`Uid::generate()`, `Uid::parse("page://abc")`.
 
 ## [`FieldValue`](../../../src/FieldValue.php)
 

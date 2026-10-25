@@ -1,0 +1,16 @@
+fields:
+  title: text
+  intro: textarea
+  seo: custom-fields/seo
+  date: date
+  extra: text
+
+tabs:
+  content:
+    columns:
+      - width: 2/3
+        fields: [title, intro]
+      - width: 1/3
+        fields: true
+  meta:
+    fields: [date]

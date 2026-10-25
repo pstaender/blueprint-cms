@@ -20,11 +20,14 @@ export class ApiError extends Error {
   }
 }
 
-async function request(method, path, data) {
+async function request(method, path, data, file) {
   const headers = { Accept: "application/json" };
 
   if (data !== undefined) {
     headers["Content-Type"] = "application/json";
+  }
+  if (file) {
+    headers["Content-Type"] = file.type || "application/octet-stream";
   }
   if (method !== "GET" && session.csrf) {
     headers["X-CSRF-Token"] = session.csrf;
@@ -34,7 +37,7 @@ async function request(method, path, data) {
     method,
     headers,
     credentials: "same-origin",
-    body: data === undefined ? undefined : JSON.stringify(data),
+    body: file ?? (data === undefined ? undefined : JSON.stringify(data)),
   });
 
   const body = response.status === 204 ? null : await response.json().catch(() => null);
@@ -57,6 +60,11 @@ export const api = {
   post: (path, data) => request("POST", path, data ?? {}),
   patch: (path, data) => request("PATCH", path, data ?? {}),
   delete: (path) => request("DELETE", path),
+  // the request body is the file itself
+  upload: (pageId, file, template) => {
+    const query = new URLSearchParams({ filename: file.name, ...(template ? { template } : {}) });
+    return request("POST", `/pages/${pageId}/files?${query}`, undefined, file);
+  },
 };
 
 export async function loadSession() {

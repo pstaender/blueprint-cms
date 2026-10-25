@@ -21,6 +21,13 @@ use Illuminate\Support\Str;
  */
 class BlueprintNormalizer
 {
+    /**
+     * Block types of blocks and layout fields without `fieldsets`, see src/blueprints/blocks/.
+     */
+    public const DEFAULT_FIELDSETS = ["heading", "text", "list", "image", "gallery", "quote", "code", "markdown", "video", "line"];
+
+    public const DEFAULT_LAYOUTS = ["1/1", "1/2, 1/2", "1/3, 2/3", "2/3, 1/3", "1/3, 1/3, 1/3"];
+
     public const SECTION_FIELDS = [
         "files" => "filelist",
         "info" => "info",
@@ -34,10 +41,16 @@ class BlueprintNormalizer
     /** @var array<string, array> all fields placed in the layout, keyed by lowercase name */
     private array $fields = [];
 
+    /** @var array<string, true> lowercase names of the definitions used in the layout */
+    private array $used = [];
+
     /**
      * @param Closure(string): ?array $find returns the raw props of a blueprint file, e.g. "custom-fields/seo"
      */
-    public function __construct(private readonly Closure $find)
+    /**
+     * @param string[] $fieldsetParents block types being normalized, to stop recursive fieldsets
+     */
+    public function __construct(private readonly Closure $find, private readonly array $fieldsetParents = [])
     {
     }
 
@@ -48,6 +61,7 @@ class BlueprintNormalizer
     {
         $this->definitions = [];
         $this->fields = [];
+        $this->used = [];
 
         $props = $this->extend($props);
         $props["name"] = $name;
@@ -59,10 +73,11 @@ class BlueprintNormalizer
                 $this->definitions[strtolower($field["name"])] = $field;
             }
             unset($props["fields"]);
+            $this->used = [];
         }
 
         $props = $this->wrapColumnsInTab($this->wrapFieldsInColumn($this->convertSections($props)));
-        $props["tabs"] = $this->normalizeTabs($props["tabs"] ?? []);
+        $props["tabs"] = $this->placeUnusedFields($this->normalizeTabs($props["tabs"] ?? []));
         $props["fields"] = array_column($this->fields, null, "name");
 
         return $props;
@@ -196,6 +211,39 @@ class BlueprintNormalizer
         return $normalized;
     }
 
+    /**
+     * `fields: true` in a tab or column gets all field definitions that aren't used anywhere else,
+     * in the order of the definitions. Only the first of these columns gets them.
+     */
+    private function placeUnusedFields(array $tabs): array
+    {
+        $isPlaced = false;
+
+        foreach ($tabs as $tabName => $tab) {
+            foreach ($tab["columns"] as $index => $column) {
+                if (!($column["unusedFields"] ?? false)) {
+                    continue;
+                }
+
+                unset($tabs[$tabName]["columns"][$index]["unusedFields"]);
+
+                if ($isPlaced) {
+                    continue;
+                }
+
+                $unused = array_filter(
+                    $this->definitions,
+                    fn(array $field, string $name) => !isset($this->used[$name]) && !isset($this->fields[$name]),
+                    ARRAY_FILTER_USE_BOTH,
+                );
+                $tabs[$tabName]["columns"][$index]["fields"] = $this->place($this->expand(array_values($unused)));
+                $isPlaced = true;
+            }
+        }
+
+        return $tabs;
+    }
+
     private function normalizeColumns(mixed $columns): array
     {
         $normalized = [];
@@ -206,11 +254,13 @@ class BlueprintNormalizer
             }
 
             $props = $this->convertSections($props);
+            $unusedFields = ($props["fields"] ?? null) === true;
 
             $normalized[] = [
                 ...$props,
                 "width" => $props["width"] ?? "1/1",
-                "fields" => $this->place($this->expand($props["fields"] ?? [])),
+                "fields" => $unusedFields ? [] : $this->place($this->expand($props["fields"] ?? [])),
+                ...($unusedFields ? ["unusedFields" => true] : []),
             ];
         }
 
@@ -287,12 +337,14 @@ class BlueprintNormalizer
             }
 
             if (is_int($key) && is_string($props)) {
+                $this->used[strtolower($props)] = true;
                 $resolved[] = $this->definitions[strtolower($props)]
                     ?? self::errorField($props, "The field \"$props\" is not defined in the blueprint's fields");
                 continue;
             }
 
             if ($props === true || $props === null) {
+                $this->used[strtolower((string) $key)] = true;
                 $props = $this->definitions[strtolower((string) $key)] ?? [];
             } elseif (is_string($props)) {
                 // `title: text` sets the type, `seo: custom-fields/seo` extends a blueprint file
@@ -324,6 +376,17 @@ class BlueprintNormalizer
             $props["fields"] = array_column($this->expand($props["fields"]), null, "name");
         }
 
+        if ($type === "blocks" || $type === "layout") {
+            $props["fieldsets"] = $this->normalizeFieldsets($props["fieldsets"] ?? null);
+        }
+
+        if ($type === "layout") {
+            $props["layouts"] = array_map(
+                fn($layout) => array_map("trim", is_array($layout) ? $layout : explode(",", (string) $layout)),
+                array_values((array) ($props["layouts"] ?? self::DEFAULT_LAYOUTS)),
+            );
+        }
+
         if ($type === "group") {
             $when = $props["when"] ?? null;
             $fields = $props["fields"] ?? [];
@@ -342,6 +405,66 @@ class BlueprintNormalizer
             "label" => $props["label"] ?? self::label($name),
             "width" => $props["width"] ?? "1/1",
         ];
+    }
+
+    /**
+     * Block types of a blocks/layout field: `[heading, text]` (site/blueprints/blocks/{type}.yml or core),
+     * a map with inline or extended definitions, or groups (`{type: group, label, fieldsets: [...]}`).
+     *
+     * @return array<string, array> {type, label, icon, group, fields, tabs} by type
+     */
+    private function normalizeFieldsets(mixed $fieldsets, ?string $group = null): array
+    {
+        $normalized = [];
+
+        foreach (is_array($fieldsets) ? $fieldsets : self::DEFAULT_FIELDSETS as $key => $props) {
+            $type = is_int($key) ? (string) (is_string($props) ? $props : $props["type"] ?? $key) : $key;
+
+            if ($props === false) {
+                continue;
+            }
+
+            if (is_array($props) && ($props["type"] ?? null) === "group") {
+                $normalized = [...$normalized, ...$this->normalizeFieldsets($props["fieldsets"] ?? [], $props["label"] ?? self::label($type))];
+                continue;
+            }
+
+            try {
+                $props = match (true) {
+                    is_array($props) => self::merge(($this->find)("blocks/$type") ?? [], $props),
+                    is_string($props) && is_string($key) => $this->extend($props),
+                    default => ($this->find)("blocks/$type") ?? throw new \InvalidArgumentException("Block type \"$type\" not found"),
+                };
+
+                if (in_array($type, $this->fieldsetParents, true)) {
+                    throw new \InvalidArgumentException("The block type \"$type\" can't contain itself");
+                }
+
+                $label = $props["title"] ?? $props["label"] ?? $props["name"] ?? self::label($type);
+                unset($props["name"]);
+                $blueprint = (new self($this->find, [...$this->fieldsetParents, $type]))->normalize($props, "blocks/$type");
+
+                $normalized[$type] = [
+                    "type" => $type,
+                    "label" => (string) $label,
+                    "icon" => $props["icon"] ?? null,
+                    "group" => $group,
+                    "fields" => $blueprint["fields"],
+                    "tabs" => $blueprint["tabs"],
+                ];
+            } catch (\Throwable $error) {
+                $normalized[$type] = [
+                    "type" => $type,
+                    "label" => self::label($type),
+                    "icon" => null,
+                    "group" => $group,
+                    "fields" => ["error" => self::errorField("error", $error->getMessage())],
+                    "tabs" => [],
+                ];
+            }
+        }
+
+        return $normalized;
     }
 
     /**

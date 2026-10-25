@@ -30,7 +30,7 @@ Data of a folder page is merged in this order (later wins):
 ```md
 ---
 title: About us
-template: article
+type: article
 tags: [team, company]
 ---
 ## We are …
@@ -43,6 +43,25 @@ tags: [team, company]
 ```
 
 `page.php` is executed when the page is rendered, see [Templates](../03_templates/page.md).
+
+`type` chooses the [blueprint](../05_blueprints/page.md) and the [template](../03_templates/page.md) of the page (default: `page`). The panel adds a `uid` to every page, file and user it saves, references between them use it (`page://uid`), so they survive renamed slugs. Existing content gets uids with `bin/blueprint content:uids`.
+
+## Files
+
+Other files in a page folder belong to the page, their data lives in `{filename}.json`:
+
+```
+content/01_blog/
+  page.md
+  cover.jpg          → /blog/cover.jpg
+  cover.jpg.json     {"uid": "…", "alt": "…"}
+```
+
+```php
+<?php foreach ($page->files() as $file): ?>
+  <img src="<?= esc($file->url()) ?>" alt="<?= $file->alt() ?>">
+<?php endforeach ?>
+```
 
 ## Site, users and redirects
 

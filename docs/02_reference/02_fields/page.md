@@ -74,12 +74,12 @@ $field->validate("x");   // ["Date is not a valid date value"]
 
 | Type | | Main options |
 |---|---|---|
-| `pagepicker` | select pages | `query`, `min`, `max`, `multiple` |
-| `filepicker` | select files | `query`, `uploads`, `min`, `max`, `multiple` |
-| `userpicker` | select users | `query`, `min`, `max`, `multiple` |
+| `pagepicker` | select pages, stores `page://uid` | `min`, `max`, `multiple` |
+| `filepicker` | select (sortable) and upload files of the page, stores `file://uid` | `accept` (e.g. `image/*`), `uploads` (file template), `min`, `max`, `multiple` |
+| `userpicker` | select users, stores `user://uid` | `min`, `max`, `multiple` |
 | `link` | link to a page, file, url, email, … | `options` |
-| `pagelist` | subpages of the model (display only) | `template`, `layout` (`list`, `cards`, `table`), `status`, `limit` |
-| `filelist` | files of the model (display only) | `template`, `layout`, `limit` |
+| `pagelist` | subpages of the model (display only), sortable | `template` (page type filter), `layout` (`list`, `cards`, `table`), `status` |
+| `filelist` | files of the page with uploads (display only) | `template` (file template filter), `layout`, `uploads` |
 
 Legacy names: `pages` → `pagepicker`, `files` → `filepicker`, `users` → `userpicker`.
 
@@ -91,8 +91,8 @@ Legacy names: `pages` → `pagepicker`, `files` → `filepicker`, `users` → `u
 | `object` | one map with nested `fields` | `fields` |
 | `entries` | list of single values | `field`, `min`, `max` |
 | `list` | html list | `marks` |
-| `blocks` | block editor | `fieldsets`, `min`, `max` |
-| `layout` | grid of blocks | `layouts`, `fieldsets` |
+| `blocks` | block editor, see [Blocks](../01_blueprints/06_blocks/page.md) | `fieldsets`, `min`, `max` |
+| `layout` | rows of columns with blocks | `layouts` (e.g. `["1/1", "1/2, 1/2"]`), `fieldsets` |
 
 ```yaml
 links:

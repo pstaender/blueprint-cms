@@ -87,7 +87,7 @@ it("updates pages and keeps data that isn't in the blueprint", function () {
     expect($status)->toBe(200)
         ->and($page["data"]["title"])->toBe("New title")
         ->and($page["data"]["price"])->toBe(3)
-        ->and($page["data"]["template"])->toBe("showcase")
+        ->and($page["data"]["type"])->toBe("showcase")
         ->and($page["data"]["undefinedField"])->toBe("<i>not in blueprint</i>");
 
     [$status, $result] = api($this->app, "PATCH", "/pages/about", ["data" => ["title" => ""]], $csrf);
@@ -97,11 +97,11 @@ it("updates pages and keeps data that isn't in the blueprint", function () {
 it("creates, publishes, sorts and deletes pages", function () {
     $csrf = login($this->app);
 
-    [$status, $page] = api($this->app, "POST", "/site/children", ["title" => "Über uns!", "template" => "article"], $csrf);
+    [$status, $page] = api($this->app, "POST", "/site/children", ["title" => "Über uns!", "type" => "article"], $csrf);
     expect($status)->toBe(201)
         ->and($page["id"])->toBe("uber-uns")
         ->and($page["status"])->toBe("draft")
-        ->and($page["template"])->toBe("article")
+        ->and($page["type"])->toBe("article")
         ->and(is_file("$this->dir/content/.uber-uns/page.json"))->toBeTrue();
 
     [, $page] = api($this->app, "PATCH", "/pages/uber-uns", ["status" => "listed"], $csrf);
@@ -152,4 +152,54 @@ it("doesn't handle /panel when the panel is disabled", function () {
     expect($app->request("/panel")->getStatusCode())->toBe(404)
         ->and($app->request("/panel/api/session", "POST")->getStatusCode())->toBe(405)
         ->and($app->request("/about")->getStatusCode())->toBe(200);
+});
+
+it("changes slug and type of pages", function () {
+    $csrf = login($this->app);
+    [$status, $page] = api($this->app, "PATCH", "/pages/about", ["slug" => "about-us", "type" => "article"], $csrf);
+
+    expect($status)->toBe(200)
+        ->and($page["id"])->toBe("about-us")
+        ->and($page["type"])->toBe("article")
+        ->and($page["blueprint"]["name"])->toBe("pages/article")
+        ->and($page["uid"])->toMatch('/^[a-z0-9]{10}$/')
+        ->and($page["ref"])->toBe("page://" . $page["uid"])
+        ->and(api($this->app, "PATCH", "/pages/showcase", ["slug" => "about-us"], $csrf)[0])->toBe(400);
+});
+
+it("lists children for the page tree", function () {
+    login($this->app);
+    [$status, $children] = api($this->app, "GET", "/pages/builder/children");
+
+    expect($status)->toBe(200)->and($children)->toBe([]);
+});
+
+it("uploads, updates and deletes files", function () {
+    $csrf = login($this->app);
+    $png = file_get_contents("$this->dir/content/builder/photo.png");
+
+    $response = $this->app->request("/panel/api/pages/builder/files?filename=New%20Image.PNG&template=image", "POST", null, ["X-CSRF-Token" => $csrf]);
+    expect($response->getStatusCode())->toBe(400);
+
+    $request = (new Nyholm\Psr7\ServerRequest("POST", "/panel/api/pages/builder/files?filename=New%20Image.PNG&template=image", ["X-CSRF-Token" => $csrf], $png))
+        ->withQueryParams(["filename" => "New Image.PNG", "template" => "image"]);
+    $response = $this->app->handle($request);
+    $file = json_decode(body($response), true);
+
+    expect($response->getStatusCode())->toBe(201)
+        ->and($file["filename"])->toBe("new-image.png")
+        ->and($file["template"])->toBe("image")
+        ->and($file["ref"])->toBe("file://" . $file["uid"])
+        ->and($file["blueprint"]["name"])->toBe("files/image");
+
+    [$status, $file] = api($this->app, "PATCH", "/pages/builder/files/new-image.png", ["data" => ["alt" => "Alt"], "name" => "renamed"], $csrf);
+    expect($status)->toBe(200)
+        ->and($file["filename"])->toBe("renamed.png")
+        ->and($file["data"]["alt"])->toBe("Alt");
+
+    [, $page] = api($this->app, "GET", "/pages/builder");
+    expect(array_column($page["files"], "filename"))->toContain("renamed.png");
+
+    expect(api($this->app, "DELETE", "/pages/builder/files/renamed.png", csrf: $csrf)[0])->toBe(204)
+        ->and(api($this->app, "GET", "/pages/builder/files/renamed.png")[0])->toBe(404);
 });

@@ -6,6 +6,7 @@ import { useEditing } from "../editing.js";
 import ModelForm from "../components/ModelForm.vue";
 import ViewHeader from "../components/ViewHeader.vue";
 import PageItems from "../components/PageItems.vue";
+import FileList from "../components/fields/FileList.vue";
 import Dialog from "../components/Dialog.vue";
 import Icon from "../components/Icon.vue";
 import StatusDot from "../components/StatusDot.vue";
@@ -14,8 +15,11 @@ const props = defineProps({ id: { type: String, required: true } });
 const router = useRouter();
 const page = ref(null);
 const loadError = ref(null);
-const deleting = ref(false);
+const dialog = ref(null);
 const busy = ref(false);
+const dialogError = ref(null);
+const settings = ref({ slug: "", type: "" });
+const types = ref([]);
 
 const { values, errors, message, saving, isDirty, reset, submit } = useEditing(async (data) => {
   load(await api.patch(`/pages/${props.id}`, { data }));
@@ -26,6 +30,11 @@ function load(data) {
   reset(data.data);
 }
 
+async function reloadChildren() {
+  page.value.children = await api.get(`/pages/${props.id}/children`);
+}
+
+const model = computed(() => page.value && { ...page.value, reload: reloadChildren });
 const breadcrumb = computed(() => [
   { to: "/site", title: "Site" },
   ...(page.value?.breadcrumb ?? []).map((item) => ({ to: `/pages/${item.id}`, title: item.title })),
@@ -35,7 +44,7 @@ const statuses = computed(() => {
   if (page.value?.isHome) delete status.draft;
   return status;
 });
-const hasPageList = computed(() => Object.values(page.value?.blueprint.fields ?? {}).some((field) => field.type === "pagelist"));
+const fieldTypes = computed(() => Object.values(page.value?.blueprint.fields ?? {}).map((field) => field.type));
 
 async function changeStatus(event) {
   busy.value = true;
@@ -51,16 +60,32 @@ async function changeStatus(event) {
   }
 }
 
-async function remove() {
+async function openSettings() {
+  settings.value = { slug: page.value.path.split("/").pop(), type: page.value.type };
+  dialogError.value = null;
+  dialog.value = "settings";
+  types.value = await api.get("/blueprints/pages");
+  if (!types.value.some((type) => type.type === settings.value.type)) {
+    types.value.push({ type: settings.value.type, title: `${settings.value.type} (no blueprint)` });
+  }
+}
+
+async function submitDialog() {
   busy.value = true;
+  dialogError.value = null;
   try {
-    await api.delete(`/pages/${props.id}`);
-    deleting.value = false;
-    const parent = page.value.breadcrumb.at(-1);
-    router.push(parent ? `/pages/${parent.id}` : "/site");
+    if (dialog.value === "delete") {
+      await api.delete(`/pages/${props.id}`);
+      dialog.value = null;
+      const parent = page.value.breadcrumb.at(-1);
+      return router.push(parent ? `/pages/${parent.id}` : "/site");
+    }
+    const updated = await api.patch(`/pages/${props.id}`, settings.value);
+    dialog.value = null;
+    if (updated.id !== props.id) return router.replace(`/pages/${updated.id}`);
+    load(updated);
   } catch (e) {
-    message.value = { type: "negative", text: e.message };
-    deleting.value = false;
+    dialogError.value = e.message;
   } finally {
     busy.value = false;
   }
@@ -95,17 +120,42 @@ onMounted(async () => {
             <option v-for="(status, key) in statuses" :key="key" :value="key">{{ status.label }}</option>
           </select>
         </label>
-        <button v-if="!page.isHome" type="button" class="button" title="Delete" @click="deleting = true"><Icon name="trash" /></button>
+        <button type="button" class="button" title="Slug and type" :disabled="isDirty" @click="openSettings"><Icon name="settings" /></button>
+        <button v-if="!page.isHome" type="button" class="button" title="Delete" @click="dialog = 'delete'"><Icon name="trash" /></button>
       </template>
     </ViewHeader>
 
     <p v-if="!page.isEditable" class="notice notice-info">This page is rendered by a php file and can't be edited.</p>
-    <ModelForm v-else :blueprint="page.blueprint" :values="values" :errors="errors" :model="page" />
+    <ModelForm v-else :blueprint="page.blueprint" :values="values" :errors="errors" :model="model" />
 
-    <PageItems v-if="!hasPageList && page.children.length" label="Subpages" :pages="page.children" :parent="page" />
+    <PageItems v-if="!fieldTypes.includes('pagelist') && page.children.length" label="Subpages" :pages="page.children" :parent="model" @sorted="reloadChildren" />
+    <FileList v-if="!fieldTypes.includes('filelist') && page.files.length" :field="{ label: 'Files', type: 'filelist' }" :model="model" />
 
-    <Dialog v-model:open="deleting" title="Delete page" submit-label="Delete" danger :busy="busy" @submit="remove">
-      <p>Do you really want to delete <strong>{{ page.title }}</strong><template v-if="page.hasChildren"> and all its subpages</template>?</p>
+    <Dialog
+      :open="dialog !== null"
+      :title="dialog === 'delete' ? 'Delete page' : 'Slug and type'"
+      :submit-label="dialog === 'delete' ? 'Delete' : 'Save'"
+      :danger="dialog === 'delete'"
+      :busy="busy"
+      @update:open="dialog = $event ? dialog : null"
+      @submit="submitDialog"
+    >
+      <p v-if="dialogError" class="notice notice-negative">{{ dialogError }}</p>
+      <p v-if="dialog === 'delete'">Do you really want to delete <strong>{{ page.title }}</strong><template v-if="page.hasChildren"> and all its subpages</template>?</p>
+      <template v-else>
+        <label class="field">
+          <span class="field-label">Slug</span>
+          <input v-model="settings.slug" class="input" type="text" pattern="[a-z0-9][a-z0-9_\-]*" :disabled="page.isHome" required>
+          <small class="field-help">{{ page.url.replace(/[^/]+\/?$/, "") }}{{ settings.slug }}</small>
+        </label>
+        <label class="field">
+          <span class="field-label">Type</span>
+          <select v-model="settings.type" class="input">
+            <option v-for="type in types" :key="type.type" :value="type.type">{{ type.title }}</option>
+          </select>
+          <small class="field-help">Chooses the blueprint (pages/{{ settings.type }}.yml) and the template.</small>
+        </label>
+      </template>
     </Dialog>
   </div>
 </template>

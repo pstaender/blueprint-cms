@@ -1,0 +1,17 @@
+{
+  "type": "builder",
+  "uid": "builder001",
+  "title": "Builder",
+  "body": [
+    {"id": "b1", "type": "heading", "isHidden": false, "content": {"level": "h3", "text": "Hello <World>"}},
+    {"id": "b2", "type": "text", "isHidden": true, "content": {"text": "Hidden"}},
+    {"id": "b3", "type": "text", "isHidden": false, "content": {"text": "Some **text**"}},
+    {"id": "b4", "type": "image", "content": {"image": ["photo.png"], "alt": "A photo"}}
+  ],
+  "grid": [
+    {"id": "l1", "columns": [
+      {"id": "c1", "width": "1/2", "blocks": [{"id": "g1", "type": "callout", "content": {"text": "Note & more"}}]},
+      {"id": "c2", "width": "1/2", "blocks": [{"id": "g2", "type": "heading", "content": {"level": "h2", "text": "Side"}}]}
+    ]}
+  ]
+}

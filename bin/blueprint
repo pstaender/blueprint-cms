@@ -18,6 +18,7 @@ Usage:
   bin/blueprint user:create <email> [role]   creates a user, asks for the password
   bin/blueprint user:password <email|uid>    sets a new password
   bin/blueprint user:list
+  bin/blueprint content:uids                 adds a uid to all pages, files and users without one
 
 TXT;
 
@@ -51,6 +52,28 @@ try {
             foreach (User::all() as $user) {
                 echo "{$user->uid()}  {$user->email()}  {$user->role()}", PHP_EOL;
             }
+            break;
+        case "content:uids":
+            $count = 0;
+            foreach (site()->index() as $page) {
+                if ($page->uid() === null && $page->isEditable()) {
+                    $page->update([]);
+                    $count++;
+                }
+                foreach ($page->files() as $file) {
+                    if ($file->uid() === null) {
+                        $file->update([]);
+                        $count++;
+                    }
+                }
+            }
+            foreach (User::all() as $user) {
+                if ($user->uid() === "") {
+                    $user->update([]);
+                    $count++;
+                }
+            }
+            echo "Added $count uids", PHP_EOL;
             break;
         default:
             echo $usage;

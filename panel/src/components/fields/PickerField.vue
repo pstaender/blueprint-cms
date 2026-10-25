@@ -3,7 +3,8 @@ import { ref, computed, onMounted } from "vue";
 import { api } from "../../api.js";
 import { toList } from "../../fields.js";
 
-// pagepicker (values: page paths) and userpicker (values: emails) as native select.
+// pagepicker and userpicker as native select, values are references (page://uid, user://uid).
+// Older values (page paths, emails) are still recognized and replaced by references on change.
 const props = defineProps({
   id: String,
   modelValue: { default: null },
@@ -16,12 +17,19 @@ const isMultiple = computed(() => props.field.multiple !== false && props.field.
 
 onMounted(async () => {
   items.value = props.field.type === "userpicker"
-    ? (await api.get("/users")).map((user) => ({ value: user.email, text: user.name || user.email }))
-    : (await api.get("/pages")).map((page) => ({ value: page.path, text: `${page.title} (${page.path})` }));
+    ? (await api.get("/users")).map((user) => ({ value: user.ref, aliases: [user.email, user.uid], text: user.name || user.email }))
+    : (await api.get("/pages")).map((page) => ({ value: page.ref, aliases: [page.path], text: `${page.title} (${page.path})` }));
 });
 
+function normalize(value) {
+  return items.value.find((item) => item.value === value || item.aliases.includes(value))?.value ?? value;
+}
+
 const selected = computed({
-  get: () => (isMultiple.value ? toList(props.modelValue) : toList(props.modelValue)[0] ?? ""),
+  get: () => {
+    const values = toList(props.modelValue).map(normalize);
+    return isMultiple.value ? values : values[0] ?? "";
+  },
   set: (value) => {
     const list = Array.isArray(value) ? value : value ? [value] : [];
     emit("update:modelValue", list.length ? list : null);

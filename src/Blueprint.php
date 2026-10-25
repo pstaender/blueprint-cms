@@ -83,12 +83,12 @@ class Blueprint
     }
 
     /**
-     * The blueprint of a page is chosen by its template (`pages/{template}`), falls back to the
+     * The blueprint of a page is chosen by its type (`pages/{type}`), falls back to the
      * page blueprint with `default: true` and then to `pages/default`.
      */
     public static function forPage(Page $page): self
     {
-        $name = "pages/" . $page->template();
+        $name = "pages/" . $page->type();
 
         if (self::file($name, includeCore: false) === null) {
             $name = self::defaultName("pages") ?? "pages/default";
@@ -285,6 +285,11 @@ class Blueprint
                 $errors[$prefix . $name] = $messages;
             }
 
+            if (is_array($value) && in_array($field->type, ["blocks", "layout"], true)) {
+                $errors += self::validateBlocks($field, $value, $prefix . $name);
+                continue;
+            }
+
             if (!is_array($value) || $field->fields() === []) {
                 continue;
             }
@@ -294,6 +299,38 @@ class Blueprint
             foreach ($rows as $index => $row) {
                 $rowPrefix = $prefix . $name . "." . ($field->type === "structure" ? "$index." : "");
                 $errors += is_array($row) ? self::validateFields($field->fields(), $row, $rowPrefix) : [];
+            }
+        }
+
+        return $errors;
+    }
+
+    /**
+     * Blocks: "{field}.{index}.{name}", layouts: "{field}.{row}.{column}.{index}.{name}".
+     */
+    private static function validateBlocks(Field $field, array $value, string $path): array
+    {
+        $fieldsets = $field->fieldsets();
+        $errors = [];
+        $blocks = [];
+
+        if ($field->type === "layout") {
+            foreach ($value as $row => $layout) {
+                foreach ((array) ($layout["columns"] ?? []) as $column => $props) {
+                    foreach ((array) ($props["blocks"] ?? []) as $index => $block) {
+                        $blocks["$path.$row.$column.$index."] = $block;
+                    }
+                }
+            }
+        } else {
+            foreach ($value as $index => $block) {
+                $blocks["$path.$index."] = $block;
+            }
+        }
+
+        foreach ($blocks as $prefix => $block) {
+            if (is_array($block) && !($block["isHidden"] ?? false) && isset($fieldsets[$block["type"] ?? ""])) {
+                $errors += self::validateFields($fieldsets[$block["type"]], (array) ($block["content"] ?? []), $prefix);
             }
         }
 

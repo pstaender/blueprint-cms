@@ -1,7 +1,7 @@
 ---
 title: Page blueprints
 ---
-`site/blueprints/pages/{template}.yml` – chosen by the page's `template` data, see [Blueprints guide](../../../01_guides/05_blueprints/page.md).
+`site/blueprints/pages/{type}.yml` – chosen by the page's `type` (default `page`), see [Blueprints guide](../../../01_guides/05_blueprints/page.md).
 
 ```yaml
 title: Article
@@ -29,9 +29,9 @@ fields:
 
 ## default
 
-`default: true` marks the blueprint that is used when no `pages/{template}` blueprint exists. Lookup:
+`default: true` marks the blueprint that is used when no `pages/{type}` blueprint exists. Lookup:
 
-1. `pages/{template}`
+1. `pages/{type}`
 2. the first page blueprint with `default: true`
 3. `pages/default` (site, then [core](../../../../src/blueprints/pages/default.yml))
 
