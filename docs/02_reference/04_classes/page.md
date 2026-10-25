@@ -45,7 +45,7 @@ Read-only data: `$data->title`, `$data["title"]`, `$data->get("some.nested")`, `
 
 ## [`Blueprint`](../../../src/Blueprint.php)
 
-`Blueprint::load(...$names)`, `Blueprint::forPage($page)`, `Blueprint::find($name)`, `Blueprint::names($folder)`, `name`, `type()`, `title()`, `props()`, `get($key)`, `fields()`, `field($name)`, `tabs()`, `tab($name = null)`, `defaults()`, `validate($data)`, `toArray()`.
+`Blueprint::load(...$names)`, `Blueprint::forPage($page)`, `Blueprint::forType($type)`, `Blueprint::find($name)`, `Blueprint::names($folder)`, `name`, `type()`, `title()`, `props()`, `get($key)`, `fields()`, `field($name)`, `tabs()`, `tab($name = null)`, `defaults()`, `validate($data)`, `toArray()`.
 
 ## [`BlueprintNormalizer`](../../../src/BlueprintNormalizer.php)
 

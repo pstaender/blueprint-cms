@@ -88,7 +88,15 @@ class Blueprint
      */
     public static function forPage(Page $page): self
     {
-        $name = "pages/" . $page->type();
+        return self::forType($page->type());
+    }
+
+    /**
+     * The blueprint of a page type, see forPage().
+     */
+    public static function forType(string $type): self
+    {
+        $name = "pages/$type";
 
         if (self::file($name, includeCore: false) === null) {
             $name = self::defaultName("pages") ?? "pages/default";

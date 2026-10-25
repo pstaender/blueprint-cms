@@ -288,15 +288,25 @@ class Panel
         return self::json($this->pageDetails($this->findPage(self::panelId($page))), 201);
     }
 
+    /**
+     * The page types. `page` and `default` are only listed separately if both blueprints exist in
+     * site/blueprints/pages, otherwise `default` is just the fallback of `page`.
+     */
     private function pageBlueprints(): ResponseInterface
     {
-        $blueprints = array_map(function (string $name) {
-            $blueprint = Blueprint::load($name);
+        $types = array_map("basename", Blueprint::names("pages"));
+        $hasBoth = Blueprint::file("pages/page", includeCore: false) !== null
+            && Blueprint::file("pages/default", includeCore: false) !== null;
 
-            return ["type" => basename($name), "title" => $blueprint->title(), "icon" => $blueprint->get("icon")];
-        }, Blueprint::names("pages"));
+        if (!$hasBoth) {
+            $types = array_unique([Page::DEFAULT_TYPE, ...array_diff($types, ["default", Page::DEFAULT_TYPE])]);
+        }
 
-        return self::json($blueprints);
+        return self::json(array_values(array_map(function (string $type) {
+            $blueprint = Blueprint::forType($type);
+
+            return ["type" => $type, "title" => $blueprint->title(), "icon" => $blueprint->get("icon")];
+        }, $types)));
     }
 
     private function findPage(string $id): Page

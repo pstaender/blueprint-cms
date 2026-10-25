@@ -35,6 +35,8 @@ fields:
 2. the first page blueprint with `default: true`
 3. `pages/default` (site, then [core](../../../../src/blueprints/pages/default.yml))
 
+`page` and `default` are one type in the panel (`page`), unless both `pages/page.yml` and `pages/default.yml` exist in `site/blueprints`.
+
 ## status
 
 The status of a page is defined by its folder name:

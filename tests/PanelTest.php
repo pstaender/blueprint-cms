@@ -238,3 +238,18 @@ it("keeps a role that has no blueprint anymore", function () {
     expect(User::roles())->toBe(["user"])
         ->and(api($this->app, "PATCH", "/users/$uid", ["role" => "editor", "data" => ["name" => "Panel"]], $csrf)[0])->toBe(200);
 });
+
+it("lists page and default as one type unless both blueprints exist", function () {
+    login($this->app);
+    $types = fn() => array_column(api($this->app, "GET", "/blueprints/pages")[1], "type");
+
+    expect($types()[0])->toBe("page")
+        ->and($types())->toContain("article", "builder")
+        ->not->toContain("default");
+
+    file_put_contents("$this->dir/site/blueprints/pages/page.yml", "title: Page\n");
+    expect($types())->not->toContain("default");
+
+    file_put_contents("$this->dir/site/blueprints/pages/default.yml", "title: Default\n");
+    expect($types())->toContain("page", "default");
+});
