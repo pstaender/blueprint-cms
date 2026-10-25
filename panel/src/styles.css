@@ -719,8 +719,18 @@ select[multiple].input {
 }
 
 .drag-hint {
-  opacity: 0.35;
+  color: var(--color-text-dimmed);
   cursor: grab;
+}
+
+/* the dots are zero-length lines, the stroke width is their size */
+.icon-grip {
+  stroke-width: 3.25;
+}
+
+.drag-handle:hover,
+.item:hover .drag-hint {
+  color: var(--color-text);
 }
 
 .is-dragging {
