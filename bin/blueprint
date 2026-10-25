@@ -77,8 +77,10 @@ try {
             echo "Added $count uids", PHP_EOL;
             break;
         case "media:clear":
-            $files = glob(App::instance()->publicDir() . Blueprint\ImageOptimizer::URL_PATH . "/*.avif") ?: [];
+            $dir = App::instance()->publicDir() . Blueprint\ImageOptimizer::URL_PATH;
+            $files = glob("$dir/*/*.avif") ?: [];
             array_map("unlink", $files);
+            array_map("rmdir", glob("$dir/*", GLOB_ONLYDIR) ?: []);
             echo "Deleted " . count($files) . " optimized images", PHP_EOL;
             break;
         default:

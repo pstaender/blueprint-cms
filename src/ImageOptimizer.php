@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Blueprint;
 
 /**
- * Converts content images to AVIF and caches them in public/media/images/{hash}.avif.
+ * Converts content images to AVIF and caches them in public/media/images/{hash}/{name}.avif
+ * (the original filename, e.g. `/media/images/7abed…/cover.avif` for cover.jpg).
  * Based on the ImageOptimizer of minimaxcms.
  *
  * The hash covers the image's SHA-256, `maxFileSize` and `quality`, so a changed image or other
@@ -71,8 +72,9 @@ class ImageOptimizer
         $maxFileSize = $maxFileSize === null ? null : max(1, $maxFileSize);
 
         $hash = hash("sha256", hash_file("sha256", $source) . "|$maxFileSize|$quality");
-        $url = self::URL_PATH . "/$hash.avif";
-        $target = $this->publicDir . $url;
+        $name = $file->name() . ".avif";
+        $url = self::URL_PATH . "/$hash/" . rawurlencode($name);
+        $target = $this->publicDir . self::URL_PATH . "/$hash/$name";
 
         if (is_file($target)) {
             return $url;

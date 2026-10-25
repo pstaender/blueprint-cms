@@ -82,7 +82,7 @@ function partial(string $name, array $variables = [], bool $return = false): ?st
 }
 
 /**
- * The url of a content image converted to AVIF and cached in public/media/images/, e.g. /media/images/7abed….avif.
+ * The url of a content image converted to AVIF and cached in public/media/images/, e.g. /media/images/7abed…/hello.avif.
  * The file is a File, an url (`/blog/hello.jpg`), path (`blog/hello.jpg`), reference (`file://uid`) or filename
  * of the current page. Returns the file's url if it can't be converted (no Imagick/GD with AVIF, not an image,
  * not used anywhere) or already is a small WebP/AVIF (auto mode), unknown files are returned unchanged.

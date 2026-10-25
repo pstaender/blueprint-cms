@@ -12,7 +12,7 @@ return [
 ];
 ```
 
-Every local `<img>` in the rendered html of a page (`/blog/hello.jpg`) now points to its optimized version, e.g. `/media/images/7abed….avif`.
+Every local `<img>` in the rendered html of a page (`/blog/hello.jpg`) now points to its optimized version, e.g. `/media/images/7abed…/hello.avif` (the hash, then the original filename).
 
 ## In templates
 
@@ -33,7 +33,7 @@ Every local `<img>` in the rendered html of a page (`/blog/hello.jpg`) now point
 
 ## Cache
 
-Optimized images are stored in `public/media/images/{hash}.avif` (gitignored). The hash covers the image content and the settings, so a changed image gets a new url and stale files are never served. To remove old files:
+Optimized images are stored in `public/media/images/{hash}/{filename}.avif` (gitignored). The hash covers the image content and the settings, so a changed image gets a new url and stale files are never served. To remove old files:
 
 ```sh
 bin/blueprint media:clear

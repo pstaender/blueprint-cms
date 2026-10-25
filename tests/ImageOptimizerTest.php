@@ -13,7 +13,7 @@ it("converts used images to cached AVIF files", function () {
     $url = optimized_content_image(page("builder")->file("photo.png"));
     $file = "$this->dir/public$url";
 
-    expect($url)->toMatch('#^/media/images/[0-9a-f]{64}\.avif$#')
+    expect($url)->toMatch('#^/media/images/[0-9a-f]{64}/photo\.avif$#')
         ->and(substr((string) file_get_contents($file), 4, 8))->toBe("ftypavif")
         ->and(optimized_content_image("/builder/photo.png"))->toBe($url)
         ->and(optimized_content_image("builder/photo.png"))->toBe($url)
@@ -38,7 +38,7 @@ it("keeps files that can't or mustn't be converted", function () {
 it("replaces local images in html", function () {
     $html = optimized_content_images('<p><img src="/builder/photo.png" alt="x"> <img src="https://example.com/a.png"> <img src="/nope.png"></p>');
 
-    expect($html)->toMatch('#<img src="/media/images/[0-9a-f]{64}\.avif" alt="x">#')
+    expect($html)->toMatch('#<img src="/media/images/[0-9a-f]{64}/photo\.avif" alt="x">#')
         ->toContain('<img src="https://example.com/a.png">')
         ->toContain('<img src="/nope.png">');
 })->skip(!ImageOptimizer::isSupported(), "no AVIF support");
@@ -50,5 +50,5 @@ it("optimizes all images of rendered pages with optimizeContentImages", function
 
     $app = createApp($this->dir, ["optimizeContentImages" => true]);
 
-    expect(body($app->request("/builder")))->toMatch('#src="/media/images/[0-9a-f]{64}\.avif"#');
+    expect(body($app->request("/builder")))->toMatch('#src="/media/images/[0-9a-f]{64}/photo\.avif"#');
 })->skip(!ImageOptimizer::isSupported(), "no AVIF support");
