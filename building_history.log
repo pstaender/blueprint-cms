@@ -175,3 +175,10 @@
   Not in blueprints or panel forms (hidden), but field methods treat the dates as `datetime` fields
   (`SystemFields::field()`) unless the blueprint defines a field with that name. Replacing a file updates its
   `modifiedAt`. Hand-written content without them gets them with the next write.
+- The site gets `createdAt`/`modifiedAt` too (`SystemFields::applyDates()`, no uid). Blueprints can show the dates as
+  read-only fields (`type: datetime, disabled: true`, examples in site/blueprints/site.yml and pages/page.yml);
+  the panel API never saves `disabled` fields.
+
+2026-10-25 – Content independent tests
+- Tests never read the project's content/site folders (they change while working on the site): `createApp()` needs a
+  project dir, the routing tests use the `tests/fixtures/website` fixture.

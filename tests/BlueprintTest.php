@@ -121,7 +121,7 @@ it("chooses page blueprints by template and falls back to the core default", fun
 });
 
 it("falls back to the page blueprint marked as default", function () {
-    createApp();
+    createApp(WEBSITE_PROJECT);
 
     expect(page("blog/newest_entry")->blueprint()->name)->toBe("pages/page");
 });
@@ -135,7 +135,7 @@ it("loads site and user blueprints", function () {
 });
 
 it("falls back to the core user blueprint", function () {
-    createApp();
+    createApp(WEBSITE_PROJECT);
 
     expect(User::find("admin")->blueprint()->name)->toBe("users/default");
 });

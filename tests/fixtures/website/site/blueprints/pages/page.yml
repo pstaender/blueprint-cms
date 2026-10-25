@@ -1,0 +1,6 @@
+title: Page
+default: true
+
+fields:
+  title: text
+  content: textarea

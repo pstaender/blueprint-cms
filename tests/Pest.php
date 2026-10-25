@@ -5,11 +5,11 @@ use Blueprint\Config;
 use Blueprint\User;
 use Psr\Http\Message\ResponseInterface;
 
-const PROJECT_ROOT = __DIR__ . "/..";
+const WEBSITE_PROJECT = __DIR__ . "/fixtures/website";
 const FIXTURE_PROJECT = __DIR__ . "/fixtures/project";
 const BLUEPRINT_PROJECT = __DIR__ . "/fixtures/blueprints";
 
-function createApp(string $projectDir = PROJECT_ROOT, array $config = []): App
+function createApp(string $projectDir, array $config = []): App
 {
     User::setCurrent(null);
     $_SESSION = [];

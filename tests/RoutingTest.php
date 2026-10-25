@@ -3,7 +3,7 @@
 use Blueprint\User;
 use Blueprint\Data;
 
-beforeEach(fn() => $this->app = createApp());
+beforeEach(fn() => $this->app = createApp(WEBSITE_PROJECT));
 
 it("serves the home page at /", function () {
     $response = $this->app->request("/");
@@ -76,8 +76,8 @@ it("responds with 404 for unknown pages", function () {
 });
 
 it("provides site, user and page helpers", function () {
-    expect(site()->data()->name)->toBeString()->not->toBeEmpty()
-        ->and(user("admin")->uid())->toBe("19qiajkmca")
+    expect(site()->data()->name)->toBe("Website fixture")
+        ->and(user("admin")->uid())->toBe("adminuid00000001")
         ->and(user())->toBeNull()
         ->and(page("blog")->url())->toBe("/blog/")
         ->and(page("blog")->num)->toBeInt()
