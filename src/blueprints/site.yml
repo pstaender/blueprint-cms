@@ -1,0 +1,7 @@
+title: Site
+
+fields:
+  name:
+    type: text
+  pages:
+    type: pagelist

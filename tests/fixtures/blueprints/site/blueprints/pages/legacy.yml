@@ -1,0 +1,13 @@
+sections:
+  content:
+    type: fields
+    fields:
+      title: text
+      text:
+        type: textarea
+  children:
+    headline: Subpages
+    type: pages
+    template: article
+  invalid:
+    type: unknown

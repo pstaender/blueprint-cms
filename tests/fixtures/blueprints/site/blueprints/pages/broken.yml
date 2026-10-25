@@ -1,0 +1,12 @@
+fields:
+  title:
+    type: text
+
+tabs:
+  main:
+    fields:
+      - title
+      - missing
+      - Title
+      - wrong:
+          type: nope

@@ -1,0 +1,10 @@
+title: Article
+icon: 📝
+
+fields:
+  title:
+    type: text
+  content:
+    type: textarea
+  date:
+    type: date

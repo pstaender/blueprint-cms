@@ -16,6 +16,7 @@ class ContentFile
         return match (pathinfo($file, PATHINFO_EXTENSION)) {
             "json" => self::readJson($file),
             "md" => self::parseMarkdown(file_get_contents($file)),
+            "yml", "yaml" => self::readYaml($file),
             default => [],
         };
     }
@@ -27,6 +28,11 @@ class ContentFile
         }
 
         return (array) json_decode(file_get_contents($file), true, flags: JSON_THROW_ON_ERROR);
+    }
+
+    public static function readYaml(string $file): array
+    {
+        return is_file($file) ? (array) Yaml::parseFile($file) : [];
     }
 
     /**

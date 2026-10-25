@@ -1,0 +1,8 @@
+type: group
+fields:
+  seoTitle:
+    label: SEO title
+    type: text
+    maxlength: 60
+  seoDescription:
+    type: textarea

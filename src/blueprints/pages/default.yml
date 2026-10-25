@@ -1,0 +1,8 @@
+title: Page
+
+fields:
+  title:
+    type: text
+    required: true
+  content:
+    type: textarea

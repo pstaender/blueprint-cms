@@ -1,0 +1,5 @@
+title: Website
+fields:
+  name:
+    type: text
+    required: true

@@ -26,3 +26,31 @@
 - Errors: debug=true shows class/message/file/trace, otherwise a plain 500 page; 404 uses site/templates/404.php.
 - Tests: Pest against the real content/ (routing spec) plus tests/fixtures/project for page.php,
   redirect(), config merging and slug collisions (the real content/01_blog/page.php calls exit()).
+
+2026-10-25 – Blueprints
+- Followed Kirby v6/develop (src/Blueprint/Normalizer.php): root `fields` are definitions as soon as there is a
+  layout (tabs/columns/sections); tabs and columns reference them by name. Every blueprint is normalized into
+  tabs -> columns -> fields (loose fields -> one 1/1 column, loose columns -> `main` tab). Legacy sections are
+  converted to fields (pages -> pagelist, files -> filelist, fields section -> its fields), groups are spliced.
+  Unreferenced definitions are ignored, like in Kirby.
+- Split: Blueprint (loading, lookup, accessors, validation), BlueprintNormalizer (pure array transformation,
+  gets a `find` closure for `extends`), Field (one field definition). The user asked for Blueprint\Field as the
+  name of the definition class, so the planned per-model value object ($page->createdAt()) needs another
+  name (e.g. FieldValue).
+- Invalid fields (unknown type, missing reference, duplicate name, missing extends) become red `info` fields
+  instead of exceptions, so one typo doesn't break the panel view (Kirby behaviour).
+- Deviations from Kirby: `title: text` (string that is a field type) sets the type instead of extending; a list
+  of references can contain inline definitions (`- text: {type: textarea}`); `title: true` with an existing
+  root definition uses that definition. Labels: "seoTitle" -> "Seo title".
+- Lookup: site/blueprints/{name}.{yml,yaml,php}, then core blueprints in src/blueprints/ (pages/default, site,
+  users/default, files/default). Page blueprint: pages/{template} -> page blueprint with `default: true`
+  (from the user's example page.yml) -> pages/default. User blueprint: users/{role} -> users/default.
+- Raw blueprint files are cached by absolute path (static), so tests with different projects don't collide.
+- Validation (required, min/max, minlength/maxlength, pattern, email/url/date/time, static options, nested
+  structure/object rows) is part of the blueprint, since blueprints are the data structure definition.
+- options/status normalization per model type, no i18n yet.
+- Planned (user note): every blueprint field becomes a model method returning a formatted, escaped value object
+  ($page->createdAt(), ->isEmpty(), ->format()); raw values stay in $page->data(). Conflicts with existing Page
+  methods (title(), url(), template(), …) need to be resolved then.
+- Docs in docs/ (guides, reference, examples), structured as a content folder (NN_folder/page.md with a title in
+  the front matter), so the CMS can render them with contentFolder=docs. Links point to page.md files (GitHub).

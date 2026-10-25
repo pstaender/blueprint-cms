@@ -1,6 +1,6 @@
 # Blueprint CMS (BPCMS)
 
-Flat file CMS inspired by Kirby. PHP >= 8.3, namespace `Blueprint\` → `src/`. The original spec is in `first_prompt.md`, design decisions are logged in `building_history.log` (append to it when making architectural changes).
+Flat file CMS inspired by Kirby. PHP >= 8.3, namespace `Blueprint\` → `src/`. The original spec is in `first_prompt.md`, design decisions are logged in `building_history.log` (append to it when making architectural changes). User documentation lives in `docs/` (`01_guides`, `02_reference`, `03_examples`, structured like a content folder: `NN_name/page.md` with a `title` in the front matter) – update it together with code changes.
 
 ## Commands
 
@@ -22,6 +22,9 @@ Flat file CMS inspired by Kirby. PHP >= 8.3, namespace `Blueprint\` → `src/`. 
 - `ContentFile` – reads json and markdown with yaml front matter (body → `content`).
 - `Site` – `content/site.json` + root pages. `User` – `content/users.json`, current user from the session (`$_SESSION["blueprint.user"]` = uid; panel login is not implemented yet).
 - `Redirect` exception – thrown by `redirect()`, turned into a response by `App`.
+- `Blueprint` – `site/blueprints/{name}.{yml,yaml,php}`, falls back to core blueprints in `src/blueprints/`. Names are paths: `pages/article`, `site`, `users/editor`, `custom-fields/seo`. `Page::blueprint()`: `pages/{template}` → blueprint with `default: true` → `pages/default`; `User::blueprint()`: `users/{role}` → `users/default`; `Site::blueprint()`: `site`. Also `fields()`, `field()`, `tabs()`, `defaults()`, `validate($data)`, `toArray()`.
+- `BlueprintNormalizer` – raw props → tabs → columns → fields (Kirby v6 style: root `fields` are definitions referenced by name from tabs/columns when a layout exists; sections → fields; groups spliced; `extends`; string shortcuts). Invalid fields become `info` error fields instead of exceptions.
+- `Field` – a blueprint field definition (`name`, `type`, props, `validate()`). Planned: blueprint fields as model methods returning formatted/escaped value objects (`$page->createdAt()->format(...)`), raw values stay in `data()`.
 - Global helpers in `src/helpers.php`: `page()`, `site()`, `user()`, `md()`, `esc()`, `dd()`, `redirect()`, `partial()` (`site/templates/partials/`), `static_file_url()` (mtime from `public/`).
 - Templates get `$page` and `$site`; always `esc()` data in output, `md()` for markdown.
 
@@ -31,4 +34,4 @@ Modern PHP, keep it simple, flat class structure, camelCase, self-explaining nam
 
 ## Not implemented yet
 
-Panel (Vue + Vite), blueprints, plugins, controllers, models, routes in `site/`, file models, sqlite/postgres.
+Panel (Vue + Vite), field value methods on models, blocks/fieldsets normalization, file models, plugins, controllers, models, routes in `site/`, sqlite/postgres.

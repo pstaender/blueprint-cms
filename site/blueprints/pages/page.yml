@@ -1,0 +1,12 @@
+title: Page
+default: true
+
+fields:
+  title:
+    type: text
+  content:
+    type: textarea
+  seoDescription:
+    label: SEO description
+    type: textarea
+    size: large

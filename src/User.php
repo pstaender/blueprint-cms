@@ -60,6 +60,19 @@ class User
         self::$current = $user;
     }
 
+    public function role(): string
+    {
+        return (string) ($this->data->role ?? "default");
+    }
+
+    /**
+     * site/blueprints/users/{role}.yml, falls back to users/default.yml.
+     */
+    public function blueprint(): Blueprint
+    {
+        return Blueprint::load("users/" . $this->role(), "users/default");
+    }
+
     public function email(): string
     {
         return (string) $this->data->email;

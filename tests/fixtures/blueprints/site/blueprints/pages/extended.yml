@@ -1,0 +1,10 @@
+extends: pages/article
+title: Extended article
+status:
+  draft: Not ready
+  listed: true
+options:
+  delete: false
+  changeSlug:
+    admin: true
+    "*": false

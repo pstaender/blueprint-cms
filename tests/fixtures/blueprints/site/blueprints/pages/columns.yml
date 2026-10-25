@@ -1,0 +1,6 @@
+columns:
+  - width: 1/2
+    fields:
+      left:
+        type: text
+  - width: 1/2

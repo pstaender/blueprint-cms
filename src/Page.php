@@ -22,6 +22,7 @@ class Page
 
     private ?Data $data = null;
     private ?Collection $children = null;
+    private ?Blueprint $blueprint = null;
 
     public function __construct(
         public readonly string $root,
@@ -189,6 +190,14 @@ class Page
     public function template(): string
     {
         return (string) ($this->data()->template ?? "default");
+    }
+
+    /**
+     * See Blueprint::forPage() for how the blueprint is chosen.
+     */
+    public function blueprint(): Blueprint
+    {
+        return $this->blueprint ??= Blueprint::forPage($this);
     }
 
     public function title(): string

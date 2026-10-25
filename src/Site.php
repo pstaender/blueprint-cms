@@ -13,6 +13,7 @@ class Site
 {
     private ?Data $data = null;
     private ?Collection $children = null;
+    private ?Blueprint $blueprint = null;
 
     public function __construct(public readonly string $contentDir)
     {
@@ -21,6 +22,14 @@ class Site
     public function data(): Data
     {
         return $this->data ??= new Data(ContentFile::readJson("$this->contentDir/site.json"));
+    }
+
+    /**
+     * site/blueprints/site.yml
+     */
+    public function blueprint(): Blueprint
+    {
+        return $this->blueprint ??= Blueprint::load("site");
     }
 
     public function allChildren(): Collection

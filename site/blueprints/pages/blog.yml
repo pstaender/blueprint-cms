@@ -1,0 +1,41 @@
+title: Blog
+
+fields:
+  intro:
+    type: textarea
+  articles:
+    label: Articles
+    type: pagelist
+    template: article
+    layout: table
+  cover:
+    type: filepicker
+    max: 1
+  gallery:
+    label: Gallery
+    type: filelist
+    layout: cards
+  seoTitle:
+    label: SEO title
+    type: text
+  seoDescription:
+    label: SEO description
+    type: textarea
+
+tabs:
+  content:
+    label: Content
+    columns:
+      - width: 2/3
+        fields:
+          - intro
+          - articles
+      - width: 1/3
+        fields:
+          - cover
+          - gallery
+  seo:
+    label: SEO
+    fields:
+      - seoTitle
+      - seoDescription
