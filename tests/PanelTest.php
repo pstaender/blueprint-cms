@@ -167,7 +167,7 @@ it("changes slug and type of pages", function () {
         ->and($page["id"])->toBe("about-us")
         ->and($page["type"])->toBe("article")
         ->and($page["blueprint"]["name"])->toBe("pages/article")
-        ->and($page["uid"])->toMatch('/^[a-z0-9]{10}$/')
+        ->and($page["uid"])->toMatch('/^[a-z0-9]{16}$/')
         ->and($page["ref"])->toBe("page://" . $page["uid"])
         ->and(api($this->app, "PATCH", "/pages/showcase", ["slug" => "about-us"], $csrf)[0])->toBe(400);
 });

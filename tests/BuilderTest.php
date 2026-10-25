@@ -129,8 +129,8 @@ describe("changing content", function () {
         page("about")->update(["title" => "About"]);
         $created = Page::create(null, "new", ["title" => "New"]);
 
-        expect(page("about")->uid())->toMatch('/^[a-z0-9]{10}$/')
-            ->and($created->uid())->toMatch('/^[a-z0-9]{10}$/')
+        expect(page("about")->uid())->toMatch('/^[a-z0-9]{16}$/')
+            ->and($created->uid())->toMatch('/^[a-z0-9]{16}$/')
             ->and(site()->findByUid(page("about")->uid())->id())->toBe("about");
     });
 
@@ -166,7 +166,7 @@ describe("changing content", function () {
         $file = File::create(page("builder"), "Mein Foto (1).TXT", "hi", ["template" => "default"]);
 
         expect($file->filename())->toBe("mein-foto-1.txt")
-            ->and($file->uid())->toMatch('/^[a-z0-9]{10}$/')
+            ->and($file->uid())->toMatch('/^[a-z0-9]{16}$/')
             ->and(fn() => File::create(page("builder"), "evil.php", "<?php"))->toThrow(InvalidArgumentException::class)
             ->and(fn() => File::create(page("builder"), "x.md", "# x"))->toThrow(InvalidArgumentException::class)
             ->and(fn() => File::create(page("builder"), "notes.txt", "again"))->toThrow(InvalidArgumentException::class)
@@ -204,7 +204,7 @@ it("uses the type for templates with page.php and default.php as fallbacks", fun
 });
 
 it("generates uids", function () {
-    expect(Uid::generate())->toMatch('/^[a-z0-9]{10}$/')
+    expect(Uid::generate())->toMatch('/^[a-z0-9]{16}$/')
         ->and(Uid::parse("page://abc123"))->toBe(["page", "abc123"])
         ->and(Uid::parse("blog/entry"))->toBeNull();
 });
@@ -303,6 +303,6 @@ describe("content formats", function () {
             ->and(file_exists("$this->dir/content/02_note.md"))->toBeFalse()
             ->and(page("note")->data()->title)->toBe("Note")
             ->and(page("note")->data()->content)->toBe("Hello")
-            ->and(page("note")->uid())->toMatch('/^[a-z0-9]{10}$/');
+            ->and(page("note")->uid())->toMatch('/^[a-z0-9]{16}$/');
     });
 });

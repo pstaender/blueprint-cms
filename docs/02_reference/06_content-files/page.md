@@ -51,7 +51,7 @@ Files are served under the page url: `/blog/cover.jpg`, but **only if they are u
 
 ```json
 [
-  {"email": "admin", "uid": "19qiajkmca", "role": "admin", "password": "$2y$12$…"}
+  {"email": "admin", "uid": "19qiajkmcaw3x8bp", "role": "admin", "password": "$2y$12$…"}
 ]
 ```
 
