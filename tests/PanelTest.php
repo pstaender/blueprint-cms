@@ -108,8 +108,13 @@ it("creates, publishes, sorts and deletes pages", function () {
     expect($page["status"])->toBe("listed")->and($page["num"])->toBe(1);
 
     [, $child] = api($this->app, "POST", "/pages/uber-uns/children", ["title" => "Team", "slug" => "team"], $csrf);
-    expect($child["id"])->toBe("uber-uns+team")
-        ->and(is_file("$this->dir/content/01_uber-uns/.team/page.json"))->toBeTrue();
+    expect($child["id"])->toBe("uber-uns/team")
+        ->and(is_file("$this->dir/content/01_uber-uns/.team/page.json"))->toBeTrue()
+        ->and(api($this->app, "GET", "/pages/uber-uns/team")[1]["breadcrumb"][0]["id"])->toBe("uber-uns")
+        ->and(api($this->app, "GET", "/pages/uber-uns/team/files")[1])->toBe([])
+        ->and(api($this->app, "GET", "/pages/uber-uns/team/children")[1])->toBe([])
+        ->and(api($this->app, "DELETE", "/pages/uber-uns/team/files", csrf: $csrf)[0])->toBe(405)
+        ->and(api($this->app, "POST", "/pages/uber-uns/children", ["title" => "Files"], $csrf)[0])->toBe(422);
 
     api($this->app, "PATCH", "/pages/about", ["status" => "listed"], $csrf);
     [, $about] = api($this->app, "PATCH", "/pages/about", ["num" => 1], $csrf);

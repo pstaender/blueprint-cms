@@ -12,14 +12,18 @@ use Psr\Http\Message\ServerRequestInterface;
  * The admin panel: a Vue app (built into public/panel/) and its REST API under /panel/api.
  * It is independent of the page rendering, App only hands /panel requests to it when `panel` is enabled.
  *
- * Page ids in urls use "+" instead of "/", e.g. /panel/api/pages/blog+newest_entry.
+ * Page ids in urls are slug paths, e.g. /panel/api/pages/blog/newest_entry/files. The slugs "children" and
+ * "files" are reserved, they would be ambiguous.
  */
 class Panel
 {
     public const PATH = "/panel";
 
+    public const RESERVED_SLUGS = ["children", "files"];
+
     /**
      * [method, path regex, handler]; the handler gets the request and the regex matches.
+     * The first matching path wins (other methods → 405), so subroutes come before the page routes.
      */
     private const ROUTES = [
         ["POST", "#^/session$#", "login"],
@@ -29,18 +33,18 @@ class Panel
         ["PATCH", "#^/site$#", "updateSite"],
         ["POST", "#^/site/children$#", "createPage"],
         ["GET", "#^/pages$#", "listPages"],
-        ["GET", "#^/pages/([^/]+)$#", "getPage"],
-        ["PATCH", "#^/pages/([^/]+)$#", "updatePage"],
-        ["DELETE", "#^/pages/([^/]+)$#", "deletePage"],
-        ["GET", "#^/pages/([^/]+)/children$#", "pageChildren"],
-        ["POST", "#^/pages/([^/]+)/children$#", "createPage"],
-        ["GET", "#^/pages/([^/]+)/files$#", "listFiles"],
-        ["POST", "#^/pages/([^/]+)/files$#", "uploadFile"],
-        ["PATCH", "#^/pages/([^/]+)/files$#", "sortFiles"],
-        ["GET", "#^/pages/([^/]+)/files/([^/]+)$#", "getFile"],
-        ["PATCH", "#^/pages/([^/]+)/files/([^/]+)$#", "updateFile"],
-        ["PUT", "#^/pages/([^/]+)/files/([^/]+)$#", "replaceFile"],
-        ["DELETE", "#^/pages/([^/]+)/files/([^/]+)$#", "deleteFile"],
+        ["GET", "#^/pages/(.+?)/children$#", "pageChildren"],
+        ["POST", "#^/pages/(.+?)/children$#", "createPage"],
+        ["GET", "#^/pages/(.+?)/files$#", "listFiles"],
+        ["POST", "#^/pages/(.+?)/files$#", "uploadFile"],
+        ["PATCH", "#^/pages/(.+?)/files$#", "sortFiles"],
+        ["GET", "#^/pages/(.+?)/files/([^/]+)$#", "getFile"],
+        ["PATCH", "#^/pages/(.+?)/files/([^/]+)$#", "updateFile"],
+        ["PUT", "#^/pages/(.+?)/files/([^/]+)$#", "replaceFile"],
+        ["DELETE", "#^/pages/(.+?)/files/([^/]+)$#", "deleteFile"],
+        ["GET", "#^/pages/(.+)$#", "getPage"],
+        ["PATCH", "#^/pages/(.+)$#", "updatePage"],
+        ["DELETE", "#^/pages/(.+)$#", "deletePage"],
         ["GET", "#^/blueprints/pages$#", "pageBlueprints"],
         ["GET", "#^/roles$#", "listRoles"],
         ["GET", "#^/users$#", "listUsers"],
@@ -80,14 +84,14 @@ class Panel
     private function dispatch(ServerRequestInterface $request, string $path): ResponseInterface
     {
         $method = $request->getMethod();
-        $allowed = false;
+        $matched = null;
 
         foreach (self::ROUTES as [$routeMethod, $pattern, $handler]) {
-            if (!preg_match($pattern, $path, $matches)) {
+            if (($matched !== null && $pattern !== $matched) || !preg_match($pattern, $path, $matches)) {
                 continue;
             }
 
-            $allowed = true;
+            $matched = $pattern;
 
             if ($routeMethod !== $method) {
                 continue;
@@ -100,7 +104,7 @@ class Panel
             return $this->$handler($request, ...array_slice($matches, 1));
         }
 
-        throw new ApiError($allowed ? "Method not allowed" : "Not found", $allowed ? 405 : 404);
+        throw new ApiError($matched !== null ? "Method not allowed" : "Not found", $matched !== null ? 405 : 404);
     }
 
     /**
@@ -245,7 +249,7 @@ class Panel
         }
 
         if (isset($input["slug"]) && $input["slug"] !== $page->slug) {
-            $page = $page->changeSlug((string) $input["slug"]);
+            $page = $page->changeSlug(self::unreservedSlug((string) $input["slug"]));
         }
 
         if (isset($input["status"]) && $input["status"] !== $page->status()) {
@@ -258,7 +262,7 @@ class Panel
 
         $this->app->refreshSite();
 
-        return self::json($this->pageDetails($this->findPage(self::panelId($page))));
+        return self::json($this->pageDetails($this->findPage($page->id())));
     }
 
     private function deletePage(ServerRequestInterface $request, string $id): ResponseInterface
@@ -284,13 +288,13 @@ class Panel
         }
 
         $slug = (string) ($input["slug"] ?? "");
-        $page = Page::create($parent, $slug !== "" ? $slug : self::slug($title), array_filter([
+        $page = Page::create($parent, self::unreservedSlug($slug !== "" ? $slug : self::slug($title)), array_filter([
             "title" => $title,
             "type" => $type === Page::DEFAULT_TYPE ? null : $type,
         ]));
         $this->app->refreshSite();
 
-        return self::json($this->pageDetails($this->findPage(self::panelId($page))), 201);
+        return self::json($this->pageDetails($this->findPage($page->id())), 201);
     }
 
     /**
@@ -316,14 +320,14 @@ class Panel
 
     private function findPage(string $id): Page
     {
-        return $this->app->site()->find(str_replace("+", "/", $id), includeDrafts: true)
+        return $this->app->site()->find($id, includeDrafts: true)
             ?? throw new ApiError("Page \"$id\" not found", 404);
     }
 
     private function pageSummary(Page $page): array
     {
         return [
-            "id" => self::panelId($page),
+            "id" => $page->id(),
             "path" => $page->id(),
             "uid" => $page->uid(),
             "ref" => $page->uid() !== null ? "page://" . $page->uid() : $page->id(),
@@ -342,7 +346,7 @@ class Panel
         $breadcrumb = [];
 
         for ($parent = $page->parent; $parent !== null; $parent = $parent->parent) {
-            array_unshift($breadcrumb, ["id" => self::panelId($parent), "title" => (string) $parent->title()->value()]);
+            array_unshift($breadcrumb, ["id" => $parent->id(), "title" => (string) $parent->title()->value()]);
         }
 
         return [
@@ -462,7 +466,7 @@ class Panel
     {
         return [
             ...$file->toArray(),
-            "page" => self::panelId($file->page),
+            "page" => $file->page->id(),
             "ref" => $file->uid() !== null ? "file://" . $file->uid() : $file->filename(),
         ];
     }
@@ -474,16 +478,23 @@ class Panel
             "pageTitle" => (string) $file->page->title()->value(),
             "breadcrumb" => [
                 ...$this->pageDetails($file->page)["breadcrumb"],
-                ["id" => self::panelId($file->page), "title" => (string) $file->page->title()->value()],
+                ["id" => $file->page->id(), "title" => (string) $file->page->title()->value()],
             ],
             "blueprint" => $file->blueprint()->toArray(),
             "data" => $file->data()->toArray(),
         ];
     }
 
-    private static function panelId(Page $page): string
+    /**
+     * "children" and "files" would be ambiguous in page urls (/pages/blog/files).
+     */
+    private static function unreservedSlug(string $slug): string
     {
-        return str_replace("/", "+", $page->id());
+        if (in_array($slug, self::RESERVED_SLUGS, true)) {
+            throw new ApiError("The slug \"$slug\" is reserved", 422, ["errors" => ["slug" => ["\"$slug\" is reserved"]]]);
+        }
+
+        return $slug;
     }
 
     private static function slug(string $title): string

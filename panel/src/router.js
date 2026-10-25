@@ -10,8 +10,9 @@ export default createRouter({
   routes: [
     { path: "/", redirect: "/site" },
     { path: "/site", component: SiteView },
-    { path: "/pages/:id", component: PageView, props: true },
-    { path: "/pages/:id/files/:filename", component: FileView, props: true },
+    // page ids are slug paths: /pages/blog/newest_entry/files/cover.jpg
+    { path: "/pages/:id(.+)/files/:filename", component: FileView, props: true },
+    { path: "/pages/:id(.+)", component: PageView, props: true },
     { path: "/users", component: UsersView },
     { path: "/users/:uid", component: UserView, props: true },
     { path: "/:pathMatch(.*)*", redirect: "/site" },

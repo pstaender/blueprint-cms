@@ -162,3 +162,9 @@
 2026-10-25 – Optimized image urls with the original filename
 - `public/media/images/{hash}/{filename}.avif` instead of `{hash}.avif`: readable urls (and downloads) keep the
   image's name, the hash folder still makes them unique and cache-safe. `media:clear` deletes the hash folders.
+
+2026-10-25 – Page ids with slashes in the panel
+- Panel and API urls use the slug path (`/panel/pages/blog/newest_entry`, `/panel/api/pages/blog/newest_entry/files`)
+  instead of Kirby's `+`: readable and identical to the page id. Routes with suffixes (`/children`, `/files`,
+  `/files/{filename}`) come first with a non-greedy page id; the first matching path decides (other methods → 405,
+  so `DELETE /pages/blog/files` never deletes a page). The slugs `children` and `files` are reserved in the panel.

@@ -5,7 +5,7 @@ A JSON REST API under `/panel/api`, implemented in [`src/Panel.php`](../../../sr
 
 - All endpoints except the login need a session (cookie, `HttpOnly`, `SameSite=Lax`).
 - Changes (`POST`, `PATCH`, `DELETE`) need the `X-CSRF-Token` header with the token from the login/session response.
-- Page ids in urls use `+` instead of `/`: `blog/newest_entry` → `blog+newest_entry`.
+- Page ids are slug paths with `/` (unlike Kirby's `+`): `/pages/blog/newest_entry/files`. The slugs `children` and `files` are reserved (422 when creating or renaming a page), they would be ambiguous. The panel uses the same urls: `/panel/pages/blog/newest_entry`.
 - Errors: `{"error": "message"}` with status 400, 401, 403, 404, 405 or 422 (validation, with `"errors": {"field": ["message"]}`).
 
 | Method | Path | Body | |
