@@ -5,6 +5,7 @@ import { api } from "../api.js";
 import ViewHeader from "../components/ViewHeader.vue";
 import Dialog from "../components/Dialog.vue";
 import Icon from "../components/Icon.vue";
+import RoleInput from "../components/RoleInput.vue";
 
 const router = useRouter();
 const users = ref([]);
@@ -66,10 +67,7 @@ onMounted(async () => {
         <span class="field-label">Password</span>
         <input v-model="form.password" class="input" type="password" minlength="8" autocomplete="new-password" required>
       </label>
-      <label class="field">
-        <span class="field-label">Role</span>
-        <input v-model="form.role" class="input" type="text" pattern="[\w\-]+">
-      </label>
+      <RoleInput v-model="form.role" />
     </Dialog>
   </div>
 </template>

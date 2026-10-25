@@ -6,7 +6,7 @@ use Blueprint\User;
 beforeEach(function () {
     $this->dir = copyProject(BLUEPRINT_PROJECT);
     $this->app = createApp($this->dir);
-    User::create("panel@example.com", "secret-password", "admin");
+    User::create("panel@example.com", "secret-password", "editor");
 });
 
 afterEach(fn() => removeProject($this->dir));
@@ -216,4 +216,25 @@ it("sorts files", function () {
 
     [, $files] = api($this->app, "PATCH", "/pages/builder/files", ["sort" => ["notes.txt"]], $csrf);
     expect(array_column($files, "filename"))->toBe(["notes.txt", "photo.png"]);
+});
+
+it("lists the roles and only accepts existing roles", function () {
+    $csrf = login($this->app);
+    [$status, $roles] = api($this->app, "GET", "/roles");
+    $uid = User::find("panel@example.com")->uid();
+
+    expect($status)->toBe(200)
+        ->and($roles)->toBe([["name" => "user", "title" => "User"], ["name" => "editor", "title" => "Editor"]])
+        ->and(api($this->app, "POST", "/users", ["email" => "x@example.com", "password" => "long-enough", "role" => "boss"], $csrf)[0])->toBe(400)
+        ->and(api($this->app, "PATCH", "/users/$uid", ["role" => "boss"], $csrf)[0])->toBe(400)
+        ->and(api($this->app, "PATCH", "/users/$uid", ["role" => "user"], $csrf)[1]["role"])->toBe("user");
+});
+
+it("keeps a role that has no blueprint anymore", function () {
+    $csrf = login($this->app);
+    unlink("$this->dir/site/blueprints/users/editor.yml");
+    $uid = User::find("panel@example.com")->uid();
+
+    expect(User::roles())->toBe(["user"])
+        ->and(api($this->app, "PATCH", "/users/$uid", ["role" => "editor", "data" => ["name" => "Panel"]], $csrf)[0])->toBe(200);
 });

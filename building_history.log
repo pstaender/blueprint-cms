@@ -118,3 +118,8 @@
   files 1..n and keeps the rest after them, only changed meta files are written. API: PATCH /pages/{id}/files
   {"sort": [...]}. Filtered file lists move a file to its target's position in the full list.
 - site/blueprints/pages/page.yml: 2/3 column with all other fields (`fields: true`) + 1/3 column with a filelist.
+
+2026-10-25 – Roles
+- Roles = `user` + the user blueprints (site/blueprints/users/*.yml without default). Creating/updating a user
+  only accepts those; the current role stays valid when its blueprint is gone (no lockout by deleting a file).
+  Panel: RoleInput is a select, or just the role's title when `user` is the only role. No built-in admin role.

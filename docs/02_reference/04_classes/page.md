@@ -37,7 +37,7 @@ Singleton: `App::create(Config $config)`, `App::instance()`.
 
 ## [`User`](../../../src/User.php)
 
-`User::all()`, `User::find($emailOrUid)`, `User::current()`, `email()`, `uid()`, `role()`, `blueprint()`, `data()`, `field($name)`, field methods, `User::create()`, `verifyPassword()`, `changePassword()`, `update()`, `delete()`, `toArray()` (without password).
+`User::all()`, `User::find($emailOrUid)`, `User::current()`, `email()`, `uid()`, `role()`, `blueprint()`, `data()`, `field($name)`, field methods, `User::create()`, `User::roles()`, `verifyPassword()`, `changePassword()`, `update()`, `delete()`, `toArray()` (without password).
 
 ## [`Data`](../../../src/Data.php)
 

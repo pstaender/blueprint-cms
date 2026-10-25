@@ -7,6 +7,7 @@ import ModelForm from "../components/ModelForm.vue";
 import ViewHeader from "../components/ViewHeader.vue";
 import Dialog from "../components/Dialog.vue";
 import Icon from "../components/Icon.vue";
+import RoleInput from "../components/RoleInput.vue";
 
 const props = defineProps({ uid: { type: String, required: true } });
 const router = useRouter();
@@ -94,10 +95,7 @@ onMounted(async () => load(await api.get(`/users/${props.uid}`)));
           <span class="field-label">Email</span>
           <input v-model="form.email" class="input" type="text" required>
         </label>
-        <label class="field">
-          <span class="field-label">Role</span>
-          <input v-model="form.role" class="input" type="text" pattern="[\w\-]+" required>
-        </label>
+        <RoleInput v-model="form.role" />
       </template>
       <label v-else-if="dialog === 'password'" class="field">
         <span class="field-label">New password</span>

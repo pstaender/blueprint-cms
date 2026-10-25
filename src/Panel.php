@@ -41,6 +41,7 @@ class Panel
         ["PATCH", "#^/pages/([^/]+)/files/([^/]+)$#", "updateFile"],
         ["DELETE", "#^/pages/([^/]+)/files/([^/]+)$#", "deleteFile"],
         ["GET", "#^/blueprints/pages$#", "pageBlueprints"],
+        ["GET", "#^/roles$#", "listRoles"],
         ["GET", "#^/users$#", "listUsers"],
         ["POST", "#^/users$#", "createUser"],
         ["GET", "#^/users/([^/]+)$#", "getUser"],
@@ -457,6 +458,17 @@ class Panel
 
     // Users
 
+    /**
+     * [{name, title}], the title comes from the role's blueprint.
+     */
+    private function listRoles(): ResponseInterface
+    {
+        return self::json(array_map(fn(string $role) => [
+            "name" => $role,
+            "title" => Blueprint::file("users/$role") !== null ? Blueprint::load("users/$role")->title() : ucfirst($role),
+        ], User::roles()));
+    }
+
     private function listUsers(): ResponseInterface
     {
         return self::json(User::all()->map(fn(User $user) => [...$user->toArray(), "ref" => "user://" . $user->uid()])->values()->all());
@@ -478,7 +490,7 @@ class Panel
         $user = User::create(
             (string) ($input["email"] ?? ""),
             (string) ($input["password"] ?? ""),
-            (string) (($input["role"] ?? "") ?: "user"),
+            (string) (($input["role"] ?? "") ?: User::DEFAULT_ROLE),
         );
 
         return $this->getUser($request, $user->uid())->withStatus(201);

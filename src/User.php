@@ -32,11 +32,36 @@ class User
         return App::instance()->contentDir() . "/users.json";
     }
 
-    public static function create(string $email, string $password, string $role = "user", array $data = []): self
+    public const DEFAULT_ROLE = "user";
+
+    /**
+     * The available roles: `user` and every user blueprint (site/blueprints/users/{role}.yml) except `default`.
+     *
+     * @return string[]
+     */
+    public static function roles(): array
+    {
+        $roles = array_map("basename", Blueprint::names("users"));
+        $roles = array_diff($roles, ["default", self::DEFAULT_ROLE]);
+        sort($roles);
+
+        return [self::DEFAULT_ROLE, ...$roles];
+    }
+
+    private static function validateRole(string $role): void
+    {
+        if (!in_array($role, self::roles(), true)) {
+            throw new \InvalidArgumentException("The role \"$role\" doesn't exist (" . implode(", ", self::roles()) . ")");
+        }
+    }
+
+    public static function create(string $email, string $password, string $role = self::DEFAULT_ROLE, array $data = []): self
     {
         if (trim($email) === "" || self::find($email) !== null) {
             throw new \InvalidArgumentException("The email is empty or already taken");
         }
+
+        self::validateRole($role);
 
         $user = new self(new Data([
             ...$data,
@@ -93,6 +118,11 @@ class User
      */
     public function update(array $values): self
     {
+        // the current role stays valid, even if its blueprint was removed
+        if (isset($values["role"]) && $values["role"] !== $this->role()) {
+            self::validateRole((string) $values["role"]);
+        }
+
         $data = array_filter([...$this->data->toArray(), ...$values, "uid" => $this->uid() ?: Uid::generate()], fn($value) => $value !== null);
         $email = (string) ($data["email"] ?? "");
 
@@ -164,7 +194,7 @@ class User
 
     public function role(): string
     {
-        return (string) ($this->data->role ?? "user");
+        return (string) ($this->data->role ?? self::DEFAULT_ROLE);
     }
 
     /**

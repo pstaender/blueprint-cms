@@ -29,6 +29,7 @@ A JSON REST API under `/panel/api`, implemented in [`src/Panel.php`](../../../sr
 | `PATCH` | `/pages/{id}/files/{filename}` | `{data?, name?}` | save fields, rename (without extension) |
 | `DELETE` | `/pages/{id}/files/{filename}` | | delete the file and its data |
 | `GET` | `/blueprints/pages` | | page types: `[{type, title, icon}]` |
+| `GET` | `/roles` | | `[{name, title}]`, see [roles](../01_blueprints/04_users/page.md#roles) |
 | `GET` | `/users` | | all users (without passwords) |
 | `POST` | `/users` | `{email, password, role?}` | create a user |
 | `GET` | `/users/{uid}` | | user data, `role`, `blueprint` |
