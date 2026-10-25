@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Blueprint\App;
 use Blueprint\FieldValue;
+use Blueprint\File;
 use Blueprint\Page;
 use Blueprint\Redirect;
 use Blueprint\Site;
@@ -31,9 +32,17 @@ function user(?string $emailOrUid = null): ?User
     return $emailOrUid === null ? User::current() : User::find($emailOrUid);
 }
 
-function md(?string $markdown): string
+/**
+ * Markdown to html (inline html allowed). Relative file links like `![](hello.jpg)` point to the
+ * files of the given (or current) page.
+ */
+function md(?string $markdown, ?Page $page = null): string
 {
-    return $markdown === null || $markdown === "" ? "" : MarkdownExtra::defaultTransform($markdown);
+    if ($markdown === null || $markdown === "") {
+        return "";
+    }
+
+    return File::resolveUrls(MarkdownExtra::defaultTransform($markdown), $page ?? Page::current());
 }
 
 /**

@@ -57,6 +57,8 @@ content/01_blog/
   cover.jpg.json     {"uid": "…", "alt": "…"}
 ```
 
+Files are only public when they are used in the content, e.g. as `![hello](hello.jpg)` in a textarea (relative links are resolved to `/blog/hello.jpg`) or picked in a `filepicker`. In the panel, drag a file from a file list (or from your computer) into a textarea to insert such a link.
+
 ```php
 <?php foreach ($page->files() as $file): ?>
   <img src="<?= esc($file->url()) ?>" alt="<?= $file->alt() ?>">

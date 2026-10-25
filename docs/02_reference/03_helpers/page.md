@@ -11,7 +11,7 @@ Global functions for templates, defined in [`src/helpers.php`](../../../src/help
 | `user()` | the logged in user or `null` |
 | `user("admin")` | a user by email/username or uid |
 | `esc($value)` | escapes for html output |
-| `md($markdown)` | markdown (Markdown Extra) to html |
+| `md($markdown, $page = null)` | markdown (Markdown Extra) to html, relative file links (`hello.jpg`, `blog/hello.jpg`) point to the files of `$page` (default: the current page) |
 | `partial("head", $vars = [], $return = false)` | renders `site/templates/partials/head.php` |
 | `static_file_url("/assets/app.css")` | `/assets/app.css?1700000000` (modification time of the file in `public/`) |
 | `redirect("/test", 302)` | stops rendering and redirects |

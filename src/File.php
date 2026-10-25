@@ -345,6 +345,66 @@ class File
         }
     }
 
+    /**
+     * Only used files are public: their filename appears in the data of their page, or they are
+     * referenced from any page or the site (`file://uid` or `blog/cover.jpg`).
+     */
+    public function isUsed(): bool
+    {
+        if (preg_match(self::referencePattern($this->filename()), self::dataString($this->page->data()))) {
+            return true;
+        }
+
+        $patterns = [self::referencePattern($this->id())];
+
+        if ($this->uid() !== null) {
+            $patterns[] = self::referencePattern("file://" . $this->uid());
+        }
+
+        foreach ([site()->data(), ...site()->index()->map(fn(Page $page) => $page->data())] as $data) {
+            $string = self::dataString($data);
+
+            foreach ($patterns as $pattern) {
+                if (preg_match($pattern, $string)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private static function referencePattern(string $reference): string
+    {
+        return '#(?<![\w.\-/])' . preg_quote($reference, "#") . '(?![\w.\-/])#';
+    }
+
+    private static function dataString(Data $data): string
+    {
+        return (string) json_encode($data->toArray(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    }
+
+    /**
+     * Replaces relative file links in html (e.g. from markdown) with the file urls:
+     * `hello.jpg` (a file of the page) → /blog/hello.jpg, `blog/hello.jpg` → /blog/hello.jpg.
+     */
+    public static function resolveUrls(string $html, ?Page $page): string
+    {
+        return (string) preg_replace_callback('/\b(src|href)="([^"]+)"/', function (array $matches) use ($page) {
+            $reference = rawurldecode(html_entity_decode($matches[2], ENT_QUOTES | ENT_HTML5));
+
+            if (preg_match('#^([a-z][a-z0-9+.\-]*:|/|\#|\?|\.)#i', $reference)) {
+                return $matches[0];
+            }
+
+            $file = str_contains($reference, "/")
+                ? site()->find(dirname($reference), includeDrafts: true)?->file(basename($reference))
+                : $page?->file($reference);
+
+            return $file === null ? $matches[0] : $matches[1] . '="' . esc($file->url()) . '"';
+        }, $html);
+    }
+
     public function toArray(): array
     {
         return [
@@ -358,6 +418,7 @@ class File
             "size" => $this->size(),
             "dimensions" => $this->dimensions(),
             "template" => $this->template(),
+            "isUsed" => $this->isUsed(),
         ];
     }
 }

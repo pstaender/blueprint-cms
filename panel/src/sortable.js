@@ -4,8 +4,9 @@ import { ref } from "vue";
  * Native drag & drop sorting. `bind(index)` returns the attributes for an item, `handle(index)` for its
  * drag handle (with `useHandle`, items are only draggable from their handle, so inputs stay selectable).
  * Nested lists work independently, every list only reacts to its own items.
+ * `dragData(index)` adds data for other drop targets, e.g. `{"application/x-blueprint-file": "…"}`.
  */
-export function useSortable(onMove, { useHandle = false } = {}) {
+export function useSortable(onMove, { useHandle = false, dragData = null } = {}) {
   const dragging = ref(null);
   const over = ref(null);
   const armed = ref(null);
@@ -29,8 +30,12 @@ export function useSortable(onMove, { useHandle = false } = {}) {
         if (useHandle && armed.value !== index) return;
         event.stopPropagation();
         dragging.value = index;
-        event.dataTransfer.effectAllowed = "move";
-        event.dataTransfer.setData("text/plain", String(index));
+        event.dataTransfer.effectAllowed = dragData ? "copyMove" : "move";
+        // a custom type, inputs would insert text/plain on drop
+        event.dataTransfer.setData("application/x-blueprint-sort", String(index));
+        for (const [type, data] of Object.entries(dragData?.(index) ?? {})) {
+          event.dataTransfer.setData(type, data);
+        }
       },
       onDragover(event) {
         if (dragging.value === null) return;

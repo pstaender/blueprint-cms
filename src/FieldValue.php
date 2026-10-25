@@ -90,7 +90,7 @@ class FieldValue implements \IteratorAggregate, \Countable, \JsonSerializable, \
 
         $type = $this->type();
         $output = match ($type) {
-            "textarea" => self::markdown((string) $this->value),
+            "textarea" => File::resolveUrls(self::markdown((string) $this->value), $this->page()),
             "writer", "list" => (string) $this->value,
             "date", "time" => $this->toDate()?->format($this->dateFormat()) ?? "",
             "toggle" => $this->toBool() ? "true" : "false",
@@ -218,13 +218,7 @@ class FieldValue implements \IteratorAggregate, \Countable, \JsonSerializable, \
      */
     public function toFiles(): Collection
     {
-        $page = match (true) {
-            $this->model instanceof Page => $this->model,
-            $this->model instanceof File => $this->model->page,
-            $this->model instanceof Values && $this->model->model() instanceof Page => $this->model->model(),
-            $this->model instanceof Values && $this->model->model() instanceof File => $this->model->model()->page,
-            default => null,
-        };
+        $page = $this->page();
 
         return (new Collection($this->toArray()))
             ->map(function ($reference) use ($page) {
@@ -354,6 +348,20 @@ class FieldValue implements \IteratorAggregate, \Countable, \JsonSerializable, \
         return is_string($result) || $result instanceof Stringable
             ? new self($this->name, (string) $result, new Field(["name" => $this->name, "type" => "text"]), $this->model)
             : $result;
+    }
+
+    /**
+     * The page of the model, e.g. for the files of a filepicker or links in markdown.
+     */
+    private function page(): ?Page
+    {
+        $model = $this->model instanceof Values ? $this->model->model() : $this->model;
+
+        return match (true) {
+            $model instanceof Page => $model,
+            $model instanceof File => $model->page,
+            default => null,
+        };
     }
 
     private function dateFormat(): string

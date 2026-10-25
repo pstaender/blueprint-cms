@@ -97,6 +97,7 @@ onMounted(async () => {
         <template v-if="file.dimensions"><dt>Dimensions</dt><dd>{{ file.dimensions.width }} × {{ file.dimensions.height }}</dd></template>
         <dt>Template</dt><dd>{{ file.template }}</dd>
         <dt>Url</dt><dd><a :href="file.url" target="_blank">{{ file.url }}</a></dd>
+        <dt>Public</dt><dd>{{ file.isUsed ? "yes" : "no, only used files are public (link it in a textarea or pick it in a field)" }}</dd>
       </dl>
     </div>
 

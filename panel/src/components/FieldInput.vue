@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from "vue";
+import { ref, computed } from "vue";
 import { options, toList } from "../fields.js";
 import StructureField from "./fields/StructureField.vue";
 import ObjectField from "./fields/ObjectField.vue";
@@ -9,6 +9,7 @@ import FileList from "./fields/FileList.vue";
 import FilePicker from "./fields/FilePicker.vue";
 import BlocksField from "./fields/BlocksField.vue";
 import LayoutField from "./fields/LayoutField.vue";
+import { FILE_DRAG_TYPE, markdownLink, uploadFiles } from "../files.js";
 
 // One blueprint field as native form element(s).
 const props = defineProps({
@@ -65,6 +66,43 @@ const list = computed({
   set: (value) => update(value.length ? value : null),
 });
 
+// files dropped on a textarea (from a file list or the computer) are inserted as markdown links
+const textarea = ref(null);
+const isDropTarget = ref(false);
+
+function onDragover(event) {
+  const types = [...event.dataTransfer.types];
+  if (type.value !== "textarea" || (!types.includes(FILE_DRAG_TYPE) && !(types.includes("Files") && props.model?.id))) return;
+  event.preventDefault();
+  isDropTarget.value = true;
+}
+
+async function onDrop(event) {
+  isDropTarget.value = false;
+  const data = event.dataTransfer.getData(FILE_DRAG_TYPE);
+  let files = data ? [JSON.parse(data)] : [];
+
+  if (!data && event.dataTransfer.files.length && props.model?.id) {
+    event.preventDefault();
+    files = (await uploadFiles(props.model.id, event.dataTransfer.files)).uploaded;
+  } else if (data) {
+    event.preventDefault();
+  } else {
+    return;
+  }
+
+  insert(files.map((file) => markdownLink(file, props.model?.id)).join("\n"));
+}
+
+function insert(snippet) {
+  const value = String(props.modelValue ?? "");
+  const position = textarea.value?.selectionStart ?? value.length;
+  const before = value.slice(0, position);
+  const after = value.slice(position);
+  const separator = before === "" || /\s$/.test(before) ? "" : " ";
+  update(before + separator + snippet + after);
+}
+
 const tags = computed({
   get: () => toList(props.modelValue).join(", "),
   set: (value) => update(toList(value)),
@@ -117,8 +155,9 @@ const entries = computed({
 
     <input v-else-if="type === 'time'" :id="id" v-model="time" class="input" type="time" :required="field.required" :disabled="field.disabled">
 
-    <textarea v-else-if="['textarea', 'writer', 'list'].includes(type)" :id="id" v-model="text" class="input textarea"
-      :class="`textarea-${field.size || 'medium'}`" :placeholder="field.placeholder" :minlength="field.minlength"
+    <textarea v-else-if="['textarea', 'writer', 'list'].includes(type)" :id="id" ref="textarea" v-model="text" class="input textarea"
+      :class="[`textarea-${field.size || 'medium'}`, { 'is-file-drop': isDropTarget }]" @dragover="onDragover"
+      @dragleave="isDropTarget = false" @drop="onDrop" :placeholder="field.placeholder" :minlength="field.minlength"
       :maxlength="field.maxlength" :required="field.required" :disabled="field.disabled"></textarea>
 
     <label v-else-if="type === 'toggle'" class="choice">

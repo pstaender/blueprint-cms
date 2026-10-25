@@ -275,7 +275,7 @@ class App
     }
 
     /**
-     * Files are served under their page's url, e.g. /blog/cover.jpg.
+     * Files are served under their page's url, e.g. /blog/cover.jpg, if they are used (see File::isUsed()).
      */
     private function findFile(string $path): ?File
     {
@@ -286,7 +286,10 @@ class App
             return null;
         }
 
-        return $this->site()->find($dir)?->file(basename($path));
+        $file = $this->site()->find($dir)?->file(basename($path));
+
+        // unused files are only visible in the panel
+        return $file !== null && (User::current() !== null || $file->isUsed()) ? $file : null;
     }
 
     private function fileResponse(File $file): ResponseInterface

@@ -27,7 +27,7 @@ Echoing a field value (or `esc($value)`, which doesn't escape it twice) outputs:
 | Type | Output |
 |---|---|
 | `text`, `email`, `url`, `number`, … | escaped value |
-| `textarea` | markdown as html, inline html in the markdown is escaped (use `md($page->data()->text)` to allow html) |
+| `textarea` | markdown as html, inline html in the markdown is escaped (use `md($page->data()->text)` to allow html); relative file links like `![](hello.jpg)` point to the page's files |
 | `writer`, `list` | the html as it is (trusted editor content) |
 | `date` | `Y-m-d`, `Y-m-d H:i` with `time: true`, or the field's `format` (PHP date format) |
 | `time` | `H:i` or `format` |

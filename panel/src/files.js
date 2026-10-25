@@ -55,6 +55,16 @@ export function acceptOf(field) {
   return accept?.mime ?? (field.type === "filepicker" && field.image ? "image/*" : undefined);
 }
 
+// files dragged from file lists carry their data with this type
+export const FILE_DRAG_TYPE = "application/x-blueprint-file";
+
+// `![hello](hello.jpg)` for images, `[report](report.pdf)` for other files, other pages' files with their path
+export function markdownLink(file, pageId) {
+  const target = file.page === pageId ? file.filename : file.id;
+  const name = file.filename.replace(/\.[^.]+$/, "");
+  return file.type === "image" ? `![${name}](${target})` : `[${name}](${target})`;
+}
+
 export function formatSize(bytes) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;

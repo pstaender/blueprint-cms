@@ -29,7 +29,7 @@ content/01_blog/
   cover.jpg.json      {"uid": "k2c9…", "template": "image", "alt": "…"}
 ```
 
-Files are served under the page url: `/blog/cover.jpg`. They are sorted by `sort` in their data (set by dragging them in the panel, `$page->sortFiles([...])`), then by filename. `template` chooses the [file blueprint](../01_blueprints/05_files/page.md).
+Files are served under the page url: `/blog/cover.jpg`, but **only if they are used**: their filename appears in the data of their page (e.g. `![hello](hello.jpg)` in a textarea), or they are referenced from any page or the site (`file://uid` from a picker, or `blog/hello.jpg`). Unused files are only visible for logged in users (the panel). They are sorted by `sort` in their data (set by dragging them in the panel, `$page->sortFiles([...])`), then by filename. `template` chooses the [file blueprint](../01_blueprints/05_files/page.md).
 
 ## content/site.json
 

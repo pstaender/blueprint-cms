@@ -208,3 +208,53 @@ it("generates uids", function () {
         ->and(Uid::parse("page://abc123"))->toBe(["page", "abc123"])
         ->and(Uid::parse("blog/entry"))->toBeNull();
 });
+
+describe("file access and links", function () {
+    it("only serves files that are used, except for logged in users", function () {
+        expect($this->app->request("/builder/photo.png")->getStatusCode())->toBe(200)
+            ->and(page("builder")->file("photo.png")->isUsed())->toBeTrue()
+            ->and(page("builder")->file("notes.txt")->isUsed())->toBeFalse()
+            ->and($this->app->request("/builder/notes.txt")->getStatusCode())->toBe(404);
+
+        \Blueprint\User::setCurrent(\Blueprint\User::find("editor1"));
+
+        expect($this->app->request("/builder/notes.txt")->getStatusCode())->toBe(200);
+    });
+
+    it("counts references from other pages", function () {
+        $dir = copyProject(BLUEPRINT_PROJECT);
+
+        try {
+            createApp($dir);
+            $notes = page("builder")->file("notes.txt");
+            $notes->update([]);
+
+            page("about")->update(["text" => "see builder/notes.txt"]);
+            expect(page("builder")->file("notes.txt")->isUsed())->toBeTrue();
+
+            page("about")->update(["text" => null, "files" => ["file://" . $notes->uid()]]);
+            expect(page("builder")->file("notes.txt")->isUsed())->toBeTrue();
+
+            page("about")->update(["files" => null, "text" => "see mybuilder/notes.txt and notes.txt.bak"]);
+            expect(page("builder")->file("notes.txt")->isUsed())->toBeFalse();
+        } finally {
+            removeProject($dir);
+        }
+    });
+
+    it("resolves relative file links in markdown", function () {
+        $html = md("![Photo](photo.png) [Notes](builder/notes.txt) [Missing](missing.png) [Abs](/x.png) [Web](https://example.com/photo.png)", page("builder"));
+
+        expect($html)->toContain('src="/builder/photo.png"')
+            ->toContain('href="/builder/notes.txt"')
+            ->toContain('href="missing.png"')
+            ->toContain('href="/x.png"')
+            ->toContain('href="https://example.com/photo.png"');
+    });
+
+    it("resolves file links in textarea field values", function () {
+        $field = new \Blueprint\FieldValue("text", "![Photo](photo.png)", new \Blueprint\Field(["name" => "text", "type" => "textarea"]), page("builder"));
+
+        expect((string) $field)->toContain('<img src="/builder/photo.png" alt="Photo"');
+    });
+});

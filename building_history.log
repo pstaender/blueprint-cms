@@ -123,3 +123,14 @@
 - Roles = `user` + the user blueprints (site/blueprints/users/*.yml without default). Creating/updating a user
   only accepts those; the current role stays valid when its blueprint is gone (no lockout by deleting a file).
   Panel: RoleInput is a select, or just the role's title when `user` is the only role. No built-in admin role.
+
+2026-10-25 – File links in textareas, only used files are public
+- Panel: files dragged from a file list (custom drag type with the file's data) or from the computer (uploaded
+  first) onto a textarea insert `![name](file.jpg)` / `[name](file.pdf)` at the caret; other pages' files with
+  their path (`blog/file.jpg`). Sortable lists now use a custom drag type instead of text/plain, so inputs don't
+  get the item index inserted when something is dropped on them.
+- Relative links are stored (portable when slugs change), File::resolveUrls() turns `hello.jpg` /
+  `blog/hello.jpg` in rendered markdown into the file url (textarea field values and md()).
+- File::isUsed(): filename (with word boundaries) in the own page's data, or `file://uid` / `page/id/file`
+  in any page's or the site's data. Unused files are 404 for visitors, visible for logged in users (panel
+  previews). The check scans all pages only for files that aren't used on their own page.

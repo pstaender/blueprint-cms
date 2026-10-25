@@ -476,6 +476,11 @@ select[multiple].input {
   line-height: 1.6;
 }
 
+.textarea.is-file-drop {
+  border-color: var(--color-focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-focus) 30%, transparent);
+}
+
 .textarea-small {
   min-height: 80px;
 }

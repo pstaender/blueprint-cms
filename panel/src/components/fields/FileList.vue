@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from "vue";
-import { filesOf, uploadFiles, sortFiles, uploadTemplate, acceptOf } from "../../files.js";
+import { filesOf, uploadFiles, sortFiles, uploadTemplate, acceptOf, FILE_DRAG_TYPE } from "../../files.js";
 import { useSortable, move } from "../../sortable.js";
 import FileThumb from "../FileThumb.vue";
 import Icon from "../Icon.vue";
@@ -29,7 +29,7 @@ const { bind } = useSortable(async (from, to) => {
   } catch (e) {
     errors.value = [e.message];
   }
-});
+}, { dragData: (index) => ({ [FILE_DRAG_TYPE]: JSON.stringify(files.value[index]) }) });
 
 async function upload(event) {
   busy.value = true;
@@ -52,11 +52,12 @@ async function upload(event) {
     <p v-for="error in errors" :key="error" class="notice notice-negative">{{ error }}</p>
 
     <ul v-if="files.length" class="items" :class="`items-${field.layout || 'list'}`">
-      <li v-for="(file, index) in files" :key="file.filename" class="item" v-bind="bind(index)" title="Drag to sort">
+      <li v-for="(file, index) in files" :key="file.filename" class="item" v-bind="bind(index)" title="Drag to sort or into a textarea">
         <RouterLink :to="`/pages/${file.page}/files/${encodeURIComponent(file.filename)}`" class="item-link" draggable="false">
           <FileThumb :file="file" />
           <span class="item-title">{{ file.filename }}</span>
           <span class="item-info">{{ file.template !== "default" ? file.template : "" }}</span>
+          <span v-if="!file.isUsed" class="item-info" title="Only used files are public">not used</span>
         </RouterLink>
       </li>
     </ul>

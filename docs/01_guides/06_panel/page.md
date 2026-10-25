@@ -31,6 +31,7 @@ Then log in at http://localhost:8000/panel.
 - create pages (as drafts), change their status (draft, unlisted, listed), slug and type, sort and delete them
 - `pagelist` fields list subpages (sortable), `pagepicker`/`userpicker` are native selects
 - files: upload, sort by drag & drop, edit their data, rename, delete; `filelist` and `filepicker` (sortable selection)
+- drag a file from a file list or from your computer into a textarea: inserts `![name](file.jpg)` (images) or `[name](file.pdf)`; only used files are public, file lists mark unused ones
 - block and layout editors: add, hide, duplicate, sort (drag the handle) and remove blocks and rows
 - create users, change email, role and password
 

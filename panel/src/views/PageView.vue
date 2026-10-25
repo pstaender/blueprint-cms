@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { api } from "../api.js";
 import { useEditing } from "../editing.js";
+import { reloadFiles } from "../files.js";
 import ModelForm from "../components/ModelForm.vue";
 import ViewHeader from "../components/ViewHeader.vue";
 import PageItems from "../components/PageItems.vue";
@@ -23,6 +24,8 @@ const types = ref([]);
 
 const { values, errors, message, saving, isDirty, reset, submit } = useEditing(async (data) => {
   load(await api.patch(`/pages/${props.id}`, { data }));
+  // saving can change which files are used (public)
+  await reloadFiles(props.id);
 });
 
 function load(data) {
