@@ -1,0 +1,47 @@
+{
+    "name": "pstaender/blueprintcms",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Blueprint\\": "src/"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    },
+    "authors": [
+        {
+            "name": "Philipp Staender",
+            "email": "pstaender@mailbox.org"
+        }
+    ],
+    "require": {
+        "php": ">=8.3",
+        "notrab/dumbo": "^1.4",
+        "illuminate/support": "^13.38",
+        "michelf/php-markdown": "^2.0",
+        "symfony/yaml": "^7.4"
+    },
+    "require-dev": {
+        "pestphp/pest": "^4.7"
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "description": "Blueprint CMS – a flat file CMS inspired by Kirby",
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "pest",
+        "serve": [
+            "Composer\\Config::disableProcessTimeout",
+            "php -S localhost:8000 -t public public/index.php"
+        ]
+    }
+}

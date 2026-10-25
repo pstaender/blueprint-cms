@@ -1,0 +1,28 @@
+# Blueprint CMS – building history
+
+## 2026-10-25 – First task: routing content
+
+- Dependencies: notrab/dumbo (HTTP/PSR-7, router), illuminate/support (Collection, Arr), michelf/php-markdown,
+  symfony/yaml (front matter – not in the spec, but needed to parse yaml), pestphp/pest (dev).
+- Fixed public/index.php: PROJECT_DIR is now dirname(__DIR__), autoload path pointed outside the project.
+- Config: Config::load($dir) reads config.php + config.{hostname}.php (hostname sanitized, port stripped).
+  App::create() adds site/config as fallback, so the project config/ (deployment) overrides site/config (project code).
+- Routing: Dumbo only gets one catch-all route; content resolution happens in Site::find(). Dumbo's trailing-slash
+  removal is disabled, because the canonical url depends on the content: pages with published subpages end with "/"
+  (/blog -> /blog/), all others don't (/imprint/ -> /imprint). /home redirects to /. Query strings are kept.
+- Pages: folder page (page.json, page.md, page.content.md, page.php) or file page ({slug}.md / {slug}.php).
+  File pages are only .md/.php, which keeps site.json, users.json and redirects.json from becoming pages.
+  "NN_" prefix = sort number (listed page), "." prefix = draft. Folder pages win over file pages with the same slug.
+- page.php semantics (spec only showed an example that echoes + exits): it is the page's own renderer, executed at
+  render time only (never while scanning, because it may have side effects). Returning an array instead merges the
+  array into the page data and renders the normal template.
+- Data: nested maps -> Data objects (page()->data()->some->nested), lists -> arrays, missing keys -> null, so templates
+  don't fail on optional fields. Values are raw; escaping is the template's job (esc()).
+- Drafts are only resolved when User::current() is set. Sessions are only started if the client sends a session
+  cookie, so anonymous visitors don't get sessions. Panel login doesn't exist yet.
+- redirect() throws a Redirect exception, so it works from any depth of template/partial code.
+- Spec mentions both site/templates/snippets/ (folder structure) and partials (helper) – went with
+  site/templates/partials/ as the helper describes.
+- Errors: debug=true shows class/message/file/trace, otherwise a plain 500 page; 404 uses site/templates/404.php.
+- Tests: Pest against the real content/ (routing spec) plus tests/fixtures/project for page.php,
+  redirect(), config merging and slug collisions (the real content/01_blog/page.php calls exit()).
