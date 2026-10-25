@@ -6,10 +6,9 @@ fields:
     type: text
   content:
     type: textarea
-  seoDescription:
-    label: SEO description
-    type: textarea
-    size: large
+  metaIndex:
+    label: Meta Index
+    type: toggle
   files:
     label: Files
     type: filelist
@@ -24,4 +23,4 @@ tabs:
           - files
   meta:
     fields:
-      - seoDescription
+      - metaIndex
