@@ -1,4 +1,5 @@
 [
   {"email": "editor@example.com", "uid": "editor1", "role": "editor"},
-  {"email": "admin@example.com", "uid": "admin1"}
+  {"email": "admin@example.com", "uid": "admin1"},
+  {"email": "guest@example.com", "uid": "guest1", "role": "guest"}
 ]

@@ -61,11 +61,11 @@ fields:
 ```php
 <?php // site/templates/blog.php ?>
 <?php partial("head") ?>
-<h1><?= esc($page->title()) ?></h1>
-<?= md($page->data()->intro) ?>
+<h1><?= $page->title() ?></h1>
+<?= $page->intro() ?>
 
 <?php foreach ($page->children() as $article): ?>
-  <a href="<?= esc($article->url()) ?>"><?= esc($article->title()) ?></a>
+  <a href="<?= esc($article->url()) ?>"><?= $article->title() ?></a>
 <?php endforeach ?>
 <?php partial("footer") ?>
 ```
@@ -73,8 +73,8 @@ fields:
 ```php
 <?php // site/templates/article.php ?>
 <?php partial("head") ?>
-<h1><?= esc($page->title()) ?></h1>
-<time><?= esc($page->data()->date) ?></time>
-<?= md($page->data()->content) ?>
+<h1><?= $page->title() ?></h1>
+<time><?= $page->date()->format("d.m.Y") ?></time>
+<?= $page->content() ?>
 <?php partial("footer") ?>
 ```

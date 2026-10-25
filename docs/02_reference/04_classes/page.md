@@ -21,7 +21,9 @@ Singleton: `App::create(Config $config)`, `App::instance()`.
 | `id()` | slug path, e.g. `blog/newest_entry` |
 | `url()` | e.g. `/blog/newest_entry`, `/blog/` |
 | `data()` | raw data as [`Data`](../../../src/Data.php) |
-| `title()`, `template()` | |
+| `title()` | the `title` field, falls back to the slug |
+| `template()` | |
+| `field($name)`, `$page->{field}()` | [field values](../02_fields/02_field-methods/page.md) |
 | `blueprint()` | the page's [`Blueprint`](../../../src/Blueprint.php) |
 | `children()`, `drafts()`, `allChildren()`, `child($slug)`, `hasChildren()` | collections ([illuminate/support](https://laravel.com/docs/collections)) |
 | `isHome()`, `isListed()`, `isFolder()` | |
@@ -29,11 +31,11 @@ Singleton: `App::create(Config $config)`, `App::instance()`.
 
 ## [`Site`](../../../src/Site.php)
 
-`data()`, `blueprint()`, `children()`, `allChildren()`, `homePage()`, `find($path, $includeDrafts = null)`.
+`data()`, `blueprint()`, `field($name)`, field methods, `children()`, `allChildren()`, `homePage()`, `find($path, $includeDrafts = null)`.
 
 ## [`User`](../../../src/User.php)
 
-`User::all()`, `User::find($emailOrUid)`, `User::current()`, `email()`, `uid()`, `role()`, `blueprint()`, `data`.
+`User::all()`, `User::find($emailOrUid)`, `User::current()`, `email()`, `uid()`, `role()`, `blueprint()`, `data()`, `field($name)`, field methods.
 
 ## [`Data`](../../../src/Data.php)
 
@@ -50,6 +52,14 @@ Converts raw blueprint props into tabs → columns → fields, see [Layout](../0
 ## [`Field`](../../../src/Field.php)
 
 A field definition of a blueprint: `name`, `type`, `props`, `label()`, `get($key)`, `hasValue()`, `isRequired()`, `fields()`, `defaultValue()`, `staticOptions()`, `validate($value)`, `toArray()`.
+
+## [`FieldValue`](../../../src/FieldValue.php)
+
+The value of a field, see [Field methods](../02_fields/02_field-methods/page.md).
+
+## [`Values`](../../../src/Values.php)
+
+Structure rows and object fields with field methods. Field methods come from the [`HasFields`](../../../src/HasFields.php) trait.
 
 ## Others
 

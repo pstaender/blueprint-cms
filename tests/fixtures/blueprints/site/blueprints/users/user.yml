@@ -1,0 +1,4 @@
+title: User
+fields:
+  name:
+    type: text

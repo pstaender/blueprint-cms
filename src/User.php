@@ -11,6 +11,8 @@ use Illuminate\Support\Collection;
  */
 class User
 {
+    use HasFields;
+
     public const SESSION_KEY = "blueprint.user";
 
     private static ?User $current = null;
@@ -60,17 +62,27 @@ class User
         self::$current = $user;
     }
 
+    public function data(): Data
+    {
+        return $this->data;
+    }
+
+    protected function fieldDefinition(string $name): ?Field
+    {
+        return $this->blueprint()->field($name);
+    }
+
     public function role(): string
     {
-        return (string) ($this->data->role ?? "default");
+        return (string) ($this->data->role ?? "user");
     }
 
     /**
-     * site/blueprints/users/{role}.yml, falls back to users/default.yml.
+     * site/blueprints/users/{role}.yml, falls back to users/user.yml and then users/default.yml.
      */
     public function blueprint(): Blueprint
     {
-        return Blueprint::load("users/" . $this->role(), "users/default");
+        return Blueprint::load("users/" . $this->role(), "users/user", "users/default");
     }
 
     public function email(): string

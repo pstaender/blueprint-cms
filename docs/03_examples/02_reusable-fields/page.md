@@ -66,6 +66,6 @@ Output in a partial:
 
 ```php
 <?php // site/templates/partials/head.php ?>
-<title><?= esc($page->data()->seoTitle ?? $page->title()) ?></title>
-<meta name="description" content="<?= esc($page->data()->seoDescription) ?>">
+<title><?= $page->seoTitle()->or($page->title()) ?></title>
+<meta name="description" content="<?= $page->seoDescription()->stripTags() ?>">
 ```

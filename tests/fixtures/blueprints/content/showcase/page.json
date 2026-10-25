@@ -1,0 +1,25 @@
+{
+  "template": "showcase",
+  "title": "Fish & Chips <b>",
+  "createdAt": "2026-10-25",
+  "startsAt": "2026-10-25 18:30:00",
+  "publishedAt": "2026-01-02",
+  "opensAt": "09:15:00",
+  "text": "Some **bold** text <script>alert(1)</script>",
+  "html": "<p>Rich <strong>text</strong></p>",
+  "featured": "true",
+  "price": 9.5,
+  "category": "review",
+  "colors": ["red", "blue"],
+  "tags": "fish, chips, ",
+  "related": ["about", "missing"],
+  "author": ["editor1"],
+  "secret": "hunter2",
+  "links": [
+    {"label": "Example", "url": "https://example.com/?a=1&b=2"},
+    {"label": "Other", "url": "https://example.org"}
+  ],
+  "address": {"street": "Main Street 1", "city": "Berlin"},
+  "undefinedField": "<i>not in blueprint</i>",
+  "list": ["a", "b"]
+}

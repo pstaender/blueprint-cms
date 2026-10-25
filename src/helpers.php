@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Blueprint\App;
+use Blueprint\FieldValue;
 use Blueprint\Page;
 use Blueprint\Redirect;
 use Blueprint\Site;
@@ -35,8 +36,15 @@ function md(?string $markdown): string
     return $markdown === null || $markdown === "" ? "" : MarkdownExtra::defaultTransform($markdown);
 }
 
+/**
+ * Field values are already formatted and escaped, they are returned as they are.
+ */
 function esc(mixed $value): string
 {
+    if ($value instanceof FieldValue) {
+        return $value->toString();
+    }
+
     return htmlspecialchars((string) $value, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8");
 }
 

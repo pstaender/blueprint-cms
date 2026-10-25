@@ -6,6 +6,7 @@ title: Reference
   - [Pages](01_blueprints/02_pages/page.md) · [Site](01_blueprints/03_site/page.md) · [Users](01_blueprints/04_users/page.md) · [Files](01_blueprints/05_files/page.md)
 - [Fields](02_fields/page.md)
   - [Validation](02_fields/01_validation/page.md)
+  - [Field methods](02_fields/02_field-methods/page.md)
 - [Helpers](03_helpers/page.md)
 - [Classes](04_classes/page.md)
 - [Config options](05_config/page.md)

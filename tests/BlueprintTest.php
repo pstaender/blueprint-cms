@@ -4,8 +4,6 @@ use Blueprint\Blueprint;
 use Blueprint\Field;
 use Blueprint\User;
 
-const BLUEPRINT_PROJECT = __DIR__ . "/fixtures/blueprints";
-
 beforeEach(fn() => createApp(BLUEPRINT_PROJECT));
 
 it("places field definitions in tabs and columns by reference", function () {
@@ -131,7 +129,15 @@ it("falls back to the page blueprint marked as default", function () {
 it("loads site and user blueprints", function () {
     expect(site()->blueprint()->title())->toBe("Website")
         ->and(User::find("editor1")->blueprint()->name)->toBe("users/editor")
-        ->and(User::find("admin1")->blueprint()->name)->toBe("users/default");
+        ->and(User::find("admin1")->role())->toBe("user")
+        ->and(User::find("admin1")->blueprint()->name)->toBe("users/user")
+        ->and(User::find("guest1")->blueprint()->name)->toBe("users/user");
+});
+
+it("falls back to the core user blueprint", function () {
+    createApp();
+
+    expect(User::find("admin")->blueprint()->name)->toBe("users/default");
 });
 
 it("lists blueprint names and ignores invalid names", function () {

@@ -14,6 +14,8 @@ use Illuminate\Support\Collection;
  */
 class Page
 {
+    use HasFields;
+
     public const CONTENT_FILES = ["page.json", "page.md", "page.content.md", "page.php"];
     public const FILE_EXTENSIONS = ["md", "php"];
     public const HOME_SLUG = "home";
@@ -200,9 +202,17 @@ class Page
         return $this->blueprint ??= Blueprint::forPage($this);
     }
 
-    public function title(): string
+    /**
+     * The `title` field, falls back to the slug.
+     */
+    public function title(): FieldValue
     {
-        return (string) ($this->data()->title ?? $this->slug);
+        return $this->field("title")->or($this->slug);
+    }
+
+    protected function fieldDefinition(string $name): ?Field
+    {
+        return $this->blueprint()->field($name);
     }
 
     /**

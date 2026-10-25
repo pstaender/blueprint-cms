@@ -1,7 +1,11 @@
 ---
 title: User blueprints
 ---
-`site/blueprints/users/{role}.yml` – chosen by the user's `role` in `content/users.json` (`default` if not set), falls back to `users/default`.
+`site/blueprints/users/{role}.yml` – chosen by the user's `role` in `content/users.json` (`user` if not set). Lookup:
+
+1. `users/{role}`
+2. `users/user`
+3. `users/default` (site, then core)
 
 ```yaml
 # site/blueprints/users/editor.yml

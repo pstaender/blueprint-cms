@@ -11,6 +11,8 @@ use Illuminate\Support\Collection;
  */
 class Site
 {
+    use HasFields;
+
     private ?Data $data = null;
     private ?Collection $children = null;
     private ?Blueprint $blueprint = null;
@@ -30,6 +32,11 @@ class Site
     public function blueprint(): Blueprint
     {
         return $this->blueprint ??= Blueprint::load("site");
+    }
+
+    protected function fieldDefinition(string $name): ?Field
+    {
+        return $this->blueprint()->field($name);
     }
 
     public function allChildren(): Collection

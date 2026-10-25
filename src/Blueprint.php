@@ -40,6 +40,9 @@ class Blueprint
     /** @var array<string, array> raw props by file path */
     private static array $files = [];
 
+    /** @var array<string, Blueprint> normalized blueprints by file path */
+    private static array $loaded = [];
+
     private readonly array $props;
 
     /** @var array<string, Field> */
@@ -71,8 +74,8 @@ class Blueprint
     public static function load(string ...$names): self
     {
         foreach ($names as $name) {
-            if (($props = self::find($name)) !== null) {
-                return new self($name, $props);
+            if ($file = self::file($name)) {
+                return self::$loaded[$file] ??= new self($name, self::find($name));
             }
         }
 

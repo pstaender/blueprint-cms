@@ -54,3 +54,17 @@
   methods (title(), url(), template(), …) need to be resolved then.
 - Docs in docs/ (guides, reference, examples), structured as a content folder (NN_folder/page.md with a title in
   the front matter), so the CMS can render them with contentFolder=docs. Links point to page.md files (GitHub).
+
+2026-10-25 – User blueprint fallback, field methods
+- User role defaults to "user"; blueprint lookup users/{role} -> users/user -> users/default (core).
+- Field methods: HasFields trait (Page, Site, User, Values) with __call -> FieldValue. Model methods win over field
+  names (PHP only calls __call for undefined methods), field("url") is the escape hatch. Page::title() now returns a
+  FieldValue (falls back to the slug) – breaking, but consistent.
+- FieldValue echo = formatted by type + escaped. Exceptions: textarea renders markdown with no_markup (inline html
+  escaped, md() stays the raw variant), writer/list output their html as is (trusted editor content).
+  password/structure/object/blocks/layout output nothing.
+- Unknown methods are passed to illuminate/support: Carbon (date/time), Collection (lists), Stringable (rest).
+  String results are wrapped in a FieldValue again so chaining never leaks unescaped output; empty values return an
+  empty FieldValue so ->format() etc. don't fail. esc(FieldValue) returns it unchanged (no double escaping).
+- List entries get a single-value type (tags -> select etc.), structure rows and objects become Values.
+- Normalized blueprints are cached per file (static), since each page asks its blueprint for field definitions.

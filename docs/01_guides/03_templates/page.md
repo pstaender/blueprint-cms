@@ -6,14 +6,15 @@ Templates are plain php files in `site/templates/`. A page uses the template nam
 ```php
 <?php // site/templates/article.php ?>
 <?php partial("head") ?>
-<h1><?= esc($page->title()) ?></h1>
-<?= md($page->data()->content) ?>
+<h1><?= $page->title() ?></h1>
+<time><?= $page->date()->format("d.m.Y") ?></time>
+<?= $page->content() ?>
 <?php partial("footer") ?>
 ```
 
 Lookup: `site/templates/{template}.php` → `site/templates/default.php` → [`src/views/default.php`](../../../src/views/default.php).
 
-Templates get `$page` and `$site`. Data is raw: always use `esc()` for output and `md()` for markdown.
+Templates get `$page` and `$site`. Field methods like `$page->date()` return values that are formatted and escaped by their [field type](../../02_reference/02_fields/02_field-methods/page.md). `$page->data()` is raw: use `esc()` for output and `md()` for markdown.
 
 ## Page php files
 

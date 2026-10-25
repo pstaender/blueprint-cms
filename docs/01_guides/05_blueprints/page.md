@@ -114,9 +114,9 @@ $blueprint->toArray();                // everything, e.g. as JSON for the panel
 
 Classes: [`Blueprint`](../../../src/Blueprint.php), [`BlueprintNormalizer`](../../../src/BlueprintNormalizer.php), [`Field`](../../../src/Field.php).
 
-## Planned: fields as methods
+## Fields as methods
 
-Every field of a blueprint will become a method of its model, returning a formatted and escaped value object (built on illuminate/support):
+Every field of a blueprint is a method of its model, returning a formatted and escaped value:
 
 ```php
 <?= $page->createdAt() ?>                      <!-- formatted & escaped -->
@@ -124,4 +124,4 @@ Every field of a blueprint will become a method of its model, returning a format
 <?php if ($page->createdAt()->isEmpty()): ?>
 ```
 
-The raw value always stays available in `$page->data()->createdAt`.
+The raw value stays available in `$page->data()->createdAt`. See [Field methods](../../02_reference/02_fields/02_field-methods/page.md).

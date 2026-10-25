@@ -1,0 +1,42 @@
+title: Showcase
+
+fields:
+  title: text
+  createdAt:
+    type: date
+  startsAt:
+    type: date
+    time: true
+  publishedAt:
+    type: date
+    format: d.m.Y
+  opensAt: time
+  text: textarea
+  html: writer
+  featured: toggle
+  price: number
+  category:
+    type: select
+    options: {news: News, review: Review}
+  colors:
+    type: checkboxes
+    options:
+      - value: red
+        text: Red
+      - value: blue
+        text: Blue
+  tags: tags
+  related: pagepicker
+  author: userpicker
+  secret: password
+  links:
+    type: structure
+    fields:
+      label: text
+      url: url
+  address:
+    type: object
+    fields:
+      street: text
+      city: text
+  seoTitle: text

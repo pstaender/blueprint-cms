@@ -1,0 +1,1 @@
+<?= $page->title() ?>|<?= $page->createdAt()->format("d.m.Y") ?>
