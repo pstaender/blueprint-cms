@@ -161,7 +161,7 @@ const entries = computed({
       :maxlength="field.maxlength" :required="field.required" :disabled="field.disabled"></textarea>
 
     <label v-else-if="type === 'toggle'" class="choice">
-      <input :id="id" v-model="toggle" type="checkbox" :disabled="field.disabled">
+      <input :id="id" v-model="toggle" type="checkbox" role="switch" class="switch" :disabled="field.disabled">
       {{ Array.isArray(field.text) ? field.text[toggle ? 1 : 0] : field.text || (toggle ? "Yes" : "No") }}
     </label>
 

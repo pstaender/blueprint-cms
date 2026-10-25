@@ -530,6 +530,48 @@ select[multiple].input {
   accent-color: var(--color-primary);
 }
 
+/* A checkbox that looks like a toggle switch */
+
+.switch {
+  position: relative;
+  flex-shrink: 0;
+  width: 34px;
+  height: 20px;
+  margin: 0;
+  border-radius: 10px;
+  background: var(--color-border);
+  appearance: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.switch::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: transform 0.15s;
+}
+
+.switch:checked {
+  background: var(--color-text);
+}
+
+.switch:checked::before {
+  background: var(--color-surface);
+  transform: translateX(14px);
+}
+
+.switch:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 /* Structure */
 
 .structure {
