@@ -53,6 +53,7 @@ $field->validate("x");   // ["Date is not a valid date value"]
 | `number` | number | `min`, `max`, `step` |
 | `range` | slider | `min`, `max`, `step` |
 | `date` | date (and time) | `display`, `time`, `min`, `max` |
+| `datetime` | date and time (same as `date` with `time: true`) | `display`, `min`, `max` |
 | `time` | time | `display`, `step` |
 | `color` | color | `format`, `alpha`, `options` |
 

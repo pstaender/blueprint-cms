@@ -11,6 +11,7 @@ fields:
     type: date
     format: d.m.Y
   opensAt: time
+  meetsAt: datetime
   text: textarea
   html: writer
   featured: toggle

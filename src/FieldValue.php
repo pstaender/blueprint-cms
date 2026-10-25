@@ -92,7 +92,7 @@ class FieldValue implements \IteratorAggregate, \Countable, \JsonSerializable, \
         $output = match ($type) {
             "textarea" => File::resolveUrls(self::markdown((string) $this->value), $this->page()),
             "writer", "list" => (string) $this->value,
-            "date", "time" => $this->toDate()?->format($this->dateFormat()) ?? "",
+            "date", "datetime", "time" => $this->toDate()?->format($this->dateFormat()) ?? "",
             "toggle" => $this->toBool() ? "true" : "false",
             "select", "radio", "toggles", "checkboxes", "multiselect", "tags" => implode(", ", $this->labels()),
             "pagepicker" => $this->toPages()->map(fn(Page $page) => (string) $page->title())->implode(", "),
@@ -334,7 +334,7 @@ class FieldValue implements \IteratorAggregate, \Countable, \JsonSerializable, \
         }
 
         $target = match (true) {
-            in_array($this->type(), ["date", "time"], true) => $this->toDate(),
+            in_array($this->type(), Field::DATE_TYPES, true) => $this->toDate(),
             is_array($this->value) || in_array($this->type(), Field::LIST_TYPES, true) => $this->toCollection(),
             default => Str::of(self::stringify($this->value)),
         };
@@ -371,7 +371,7 @@ class FieldValue implements \IteratorAggregate, \Countable, \JsonSerializable, \
         return match (true) {
             is_string($format) => $format,
             $this->type() === "time" => "H:i",
-            $this->field?->get("time") !== null && $this->field?->get("time") !== false => "Y-m-d H:i",
+            $this->type() === "datetime", $this->field?->get("time") !== null && $this->field?->get("time") !== false => "Y-m-d H:i",
             default => "Y-m-d",
         };
     }

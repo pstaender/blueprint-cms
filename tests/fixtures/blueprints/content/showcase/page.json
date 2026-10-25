@@ -5,6 +5,7 @@
   "startsAt": "2026-10-25 18:30:00",
   "publishedAt": "2026-01-02",
   "opensAt": "09:15:00",
+  "meetsAt": "2026-11-02T14:05",
   "text": "Some **bold** text <script>alert(1)</script>",
   "html": "<p>Rich <strong>text</strong></p>",
   "featured": "true",

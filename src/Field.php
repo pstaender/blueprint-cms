@@ -13,7 +13,7 @@ use Illuminate\Support\Arr;
 class Field
 {
     public const TYPES = [
-        "blocks", "buttons", "checkboxes", "color", "date", "email", "entries", "filelist", "filepicker",
+        "blocks", "buttons", "checkboxes", "color", "date", "datetime", "email", "entries", "filelist", "filepicker",
         "gap", "headline", "hidden", "info", "layout", "line", "link", "list", "multiselect", "number",
         "object", "pagelist", "pagepicker", "password", "radio", "range", "select", "slug", "stats",
         "structure", "tags", "tel", "text", "textarea", "time", "toggle", "toggles", "url", "userpicker",
@@ -37,6 +37,8 @@ class Field
     /**
      * Fields whose value is a list, `min`/`max` limit the number of entries.
      */
+    public const DATE_TYPES = ["date", "datetime", "time"];
+
     public const LIST_TYPES = [
         "blocks", "checkboxes", "entries", "filepicker", "layout", "multiselect", "pagepicker", "structure",
         "tags", "userpicker",
@@ -171,7 +173,7 @@ class Field
         $isValid = match ($this->type) {
             "email" => filter_var($value, FILTER_VALIDATE_EMAIL) !== false,
             "url" => filter_var($value, FILTER_VALIDATE_URL) !== false,
-            "date" => strtotime($value) !== false,
+            "date", "datetime" => strtotime($value) !== false,
             "time" => preg_match('/^\d{1,2}:\d{2}(:\d{2})?$/', $value) === 1,
             "select", "radio", "toggles" => $this->staticOptions() === null || in_array($value, $this->staticOptions(), true),
             default => true,

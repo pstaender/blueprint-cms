@@ -33,6 +33,8 @@ it("formats dates and times", function () {
         ->and((string) $this->page->startsAt())->toBe("2026-10-25 18:30")
         ->and((string) $this->page->publishedAt())->toBe("02.01.2026")
         ->and((string) $this->page->opensAt())->toBe("09:15")
+        ->and((string) $this->page->meetsAt())->toBe("2026-11-02 14:05")
+        ->and((string) $this->page->meetsAt()->format("H:i"))->toBe("14:05")
         ->and((string) $this->page->createdAt()->format("Y.m.d"))->toBe("2026.10.25")
         ->and($this->page->createdAt()->toDate())->toBeInstanceOf(Carbon::class)
         ->and($this->page->createdAt()->isPast())->toBeTrue()

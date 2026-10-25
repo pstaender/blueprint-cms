@@ -42,13 +42,14 @@ const number = computed({
   set: (value) => update(value === "" ? null : Number(value)),
 });
 
-// date fields: "2026-10-25" or "2026-10-25 18:30" ↔ <input type=date|datetime-local>
+// date fields: "2026-10-25" or "2026-10-25 18:30" (datetime, date with `time: true`) ↔ <input type=date|datetime-local>
+const withTime = computed(() => type.value === "datetime" || Boolean(props.field.time));
 const date = computed({
   get: () => {
     const value = String(props.modelValue ?? "");
-    return props.field.time ? value.replace(" ", "T").slice(0, 16) : value.slice(0, 10);
+    return withTime.value ? value.replace(" ", "T").slice(0, 16) : value.slice(0, 10);
   },
-  set: (value) => update(props.field.time ? value.replace("T", " ") : value),
+  set: (value) => update(withTime.value ? value.replace("T", " ") : value),
 });
 
 const time = computed({
@@ -150,7 +151,7 @@ const entries = computed({
     <input v-else-if="type === 'number' || type === 'range'" :id="id" v-model="number" class="input"
       :type="type" :min="field.min" :max="field.max" :step="field.step ?? 'any'" :required="field.required" :disabled="field.disabled">
 
-    <input v-else-if="type === 'date'" :id="id" v-model="date" class="input" :type="field.time ? 'datetime-local' : 'date'"
+    <input v-else-if="type === 'date' || type === 'datetime'" :id="id" v-model="date" class="input" :type="withTime ? 'datetime-local' : 'date'"
       :required="field.required" :disabled="field.disabled">
 
     <input v-else-if="type === 'time'" :id="id" v-model="time" class="input" type="time" :required="field.required" :disabled="field.disabled">
