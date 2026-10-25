@@ -13,6 +13,7 @@ Global functions for templates, defined in [`src/helpers.php`](../../../src/help
 | `esc($value)` | escapes for html output |
 | `md($markdown, $page = null)` | markdown (Markdown Extra) to html, relative file links (`hello.jpg`, `blog/hello.jpg`) point to the files of `$page` (default: the current page) |
 | `partial("head", $vars = [], $return = false)` | renders `site/templates/partials/head.php` |
+| `snippet("head", $vars = [], $return = false)` | the same as `partial()`, for Kirby compatibility |
 | `static_file_url("/assets/app.css")` | `/assets/app.css?1700000000` (modification time of the file in `public/`) |
 | `redirect("/test", 302)` | stops rendering and redirects |
 | `dd(...$values)` | dumps the values and stops |

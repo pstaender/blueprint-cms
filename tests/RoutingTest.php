@@ -83,3 +83,16 @@ it("provides site, user and page helpers", function () {
         ->and(page("blog")->num)->toBeInt()
         ->and(site()->children()->map->slug->all())->toContain("blog", "about", "home", "imprint");
 });
+
+it("renders partials, also as Kirby snippets", function () {
+    Blueprint\Page::setCurrent(page("imprint"));
+    $html = "<p>Hello &lt;b&gt; from Imprint</p>\n";
+
+    expect(partial("greeting", ["name" => "<b>"], true))->toBe($html)
+        ->and(snippet("greeting", ["name" => "<b>"], true))->toBe($html);
+
+    ob_start();
+    snippet("greeting", ["name" => "x"]);
+
+    expect(ob_get_clean())->toContain("Hello x");
+});
