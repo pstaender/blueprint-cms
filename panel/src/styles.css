@@ -1059,6 +1059,16 @@ select[multiple].input {
   margin: 0;
 }
 
+.dialog-details summary {
+  color: var(--color-text-dimmed);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.dialog-details[open] summary {
+  margin-bottom: 12px;
+}
+
 .dialog-footer {
   display: flex;
   justify-content: flex-end;

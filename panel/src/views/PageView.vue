@@ -164,16 +164,19 @@ onMounted(async () => {
           </select>
           <small class="field-help">Chooses the blueprint (pages/{{ settings.type }}.yml) and the template.</small>
         </label>
-        <label v-if="page.isEditable" class="field">
-          <span class="field-label">Storage format</span>
-          <select v-model="settings.contentFormat" class="input">
-            <option v-for="format in contentFormats" :key="format.value" :value="format.value">{{ format.label }}</option>
-          </select>
-          <small class="field-help">
-            Stored as {{ contentFormats.find((format) => format.value === settings.contentFormat)?.files }}.
-            Changes only the files, not the content.
-          </small>
-        </label>
+        <details v-if="page.isEditable" class="dialog-details">
+          <summary>Advanced</summary>
+          <label class="field">
+            <span class="field-label">Storage format</span>
+            <select v-model="settings.contentFormat" class="input">
+              <option v-for="format in contentFormats" :key="format.value" :value="format.value">{{ format.label }}</option>
+            </select>
+            <small class="field-help">
+              Stored as {{ contentFormats.find((format) => format.value === settings.contentFormat)?.files }}.
+              Changes only the files, not the content.
+            </small>
+          </label>
+        </details>
       </template>
     </Dialog>
   </div>

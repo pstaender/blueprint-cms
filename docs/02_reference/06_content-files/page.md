@@ -11,7 +11,7 @@ title: Content files
 | `page.php` | renders the page, or returns data |
 | `{slug}.md`, `{slug}.php` | single file page |
 
-A page uses one of three storage formats, changeable in the panel (page settings → Storage format) or with `$page->changeContentFormat()`:
+A page uses one of three storage formats, changeable in the panel (page settings → Advanced → Storage format) or with `$page->changeContentFormat()`:
 
 | Format | Files | |
 |---|---|---|
