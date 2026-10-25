@@ -12,6 +12,7 @@ const BLUEPRINT_PROJECT = __DIR__ . "/fixtures/blueprints";
 function createApp(string $projectDir = PROJECT_ROOT, array $config = []): App
 {
     User::setCurrent(null);
+    $_SESSION = [];
     $values = Config::readFolder("$projectDir/config", hostname: "");
 
     return App::create(new Config(array_replace($values, $config), $projectDir));
@@ -20,4 +21,22 @@ function createApp(string $projectDir = PROJECT_ROOT, array $config = []): App
 function body(ResponseInterface $response): string
 {
     return (string) $response->getBody();
+}
+
+/**
+ * A copy of a fixture project in the temp dir, for tests that change files.
+ */
+function copyProject(string $source): string
+{
+    $target = sys_get_temp_dir() . "/bpcms-test-" . bin2hex(random_bytes(4));
+    exec("cp -R " . escapeshellarg($source) . " " . escapeshellarg($target));
+
+    return $target;
+}
+
+function removeProject(string $dir): void
+{
+    if (str_starts_with($dir, sys_get_temp_dir() . "/bpcms-test-")) {
+        exec("rm -rf " . escapeshellarg($dir));
+    }
 }

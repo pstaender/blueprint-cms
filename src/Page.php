@@ -252,4 +252,156 @@ class Page
     {
         return $this->num !== null;
     }
+
+    public function status(): string
+    {
+        return $this->isDraft ? "draft" : ($this->isListed() ? "listed" : "unlisted");
+    }
+
+    /**
+     * Pages rendered by a {slug}.php file have no data file to write to.
+     */
+    public function isEditable(): bool
+    {
+        return $this->isFolder() || str_ends_with($this->root, ".md");
+    }
+
+    /**
+     * Saves the data to the page's content files, `null` values are removed.
+     */
+    public function update(array $values): void
+    {
+        if (!$this->isEditable()) {
+            throw new \LogicException("The page \"{$this->id()}\" is a php file and can't be edited");
+        }
+
+        $data = array_filter([...$this->readData(), ...$values], fn($value) => $value !== null);
+
+        if (!$this->isFolder()) {
+            ContentFile::write($this->root, $data);
+        } else {
+            if (is_file("$this->root/page.content.md")) {
+                file_put_contents("$this->root/page.content.md", trim((string) ($data["content"] ?? "")) . "\n", LOCK_EX);
+                unset($data["content"]);
+            }
+
+            ContentFile::write(is_file("$this->root/page.md") ? "$this->root/page.md" : "$this->root/page.json", $data);
+        }
+
+        $this->data = null;
+    }
+
+    /**
+     * Renames the folder (or file): `.slug` (draft), `slug` (unlisted), `NN_slug` (listed).
+     * Listed pages keep their number, otherwise they are appended to the listed siblings.
+     */
+    public function changeStatus(string $status): self
+    {
+        if ($status === "draft" && $this->isHome()) {
+            throw new \LogicException("The home page can't be a draft");
+        }
+
+        $name = match ($status) {
+            "draft" => ".$this->slug",
+            "unlisted" => $this->slug,
+            "listed" => sprintf("%02d_%s", $this->isListed() ? $this->num : $this->nextNum(), $this->slug),
+            default => throw new \InvalidArgumentException("Invalid status \"$status\""),
+        };
+
+        return $this->moveTo($name);
+    }
+
+    /**
+     * Moves a listed page to the given position among its listed siblings and renumbers them.
+     */
+    public function changeNum(int $position): self
+    {
+        $siblings = $this->siblings()->filter(fn(self $page) => $page->isListed() && $page->root !== $this->root)->values();
+        $position = max(1, min($position, $siblings->count() + 1));
+        $siblings->splice($position - 1, 0, [$this]);
+
+        $moved = $this;
+
+        foreach ($siblings->values() as $index => $page) {
+            $renamed = $page->num === $index + 1 ? $page : $page->moveTo(sprintf("%02d_%s", $index + 1, $page->slug));
+            $moved = $page === $this ? $renamed : $moved;
+        }
+
+        return $moved;
+    }
+
+    /**
+     * Creates a draft below the given parent (null = root), e.g. `content/01_blog/.new-article/page.json`.
+     */
+    public static function create(?self $parent, string $slug, array $data): self
+    {
+        if (!preg_match('/^[a-z0-9][a-z0-9_-]*$/', $slug)) {
+            throw new \InvalidArgumentException("The slug may only contain a-z, 0-9, - and _");
+        }
+
+        $dir = $parent === null ? App::instance()->contentDir() : $parent->root;
+
+        if ($parent !== null && !$parent->isFolder()) {
+            throw new \LogicException("Subpages can only be created in folder pages");
+        }
+
+        $siblings = $parent === null ? App::instance()->site()->allChildren() : $parent->allChildren();
+
+        if ($siblings->contains(fn(self $page) => $page->slug === $slug)) {
+            throw new \InvalidArgumentException("A page with the slug \"$slug\" already exists");
+        }
+
+        ContentFile::write("$dir/.$slug/page.json", $data);
+
+        return self::fromPath("$dir/.$slug", $parent);
+    }
+
+    public function delete(): void
+    {
+        if ($this->isHome()) {
+            throw new \LogicException("The home page can't be deleted");
+        }
+
+        self::deletePath($this->root);
+    }
+
+    public function siblings(): Collection
+    {
+        return $this->parent?->allChildren() ?? App::instance()->site()->allChildren();
+    }
+
+    private function nextNum(): int
+    {
+        return (int) $this->siblings()->max(fn(self $page) => $page->num ?? 0) + 1;
+    }
+
+    private function moveTo(string $name): self
+    {
+        $extension = $this->isFolder() ? "" : "." . pathinfo($this->root, PATHINFO_EXTENSION);
+        $target = dirname($this->root) . "/$name$extension";
+
+        if ($target === $this->root) {
+            return $this;
+        }
+
+        if (file_exists($target)) {
+            throw new \RuntimeException("Can't rename the page, $target already exists");
+        }
+
+        rename($this->root, $target);
+
+        return self::fromPath($target, $this->parent);
+    }
+
+    private static function deletePath(string $path): void
+    {
+        if (is_dir($path) && !is_link($path)) {
+            foreach (array_diff(scandir($path), [".", ".."]) as $name) {
+                self::deletePath("$path/$name");
+            }
+            rmdir($path);
+        } else {
+            unlink($path);
+        }
+    }
 }

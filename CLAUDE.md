@@ -7,12 +7,14 @@ Flat file CMS inspired by Kirby. PHP >= 8.3, namespace `Blueprint\` → `src/`. 
 - `composer install`
 - `composer test` (Pest, tests in `tests/`)
 - `composer serve` → dev server on http://localhost:8000 (`public/index.php` is the front controller)
+- `composer panel:build` (Vue + Vite in `panel/` → `public/panel/`, gitignored), `composer panel:dev` (vite on :5173/panel/, proxies the API to :8000)
+- `bin/blueprint user:create <email> [role]`, `user:password <email>`, `user:list`
 
 ## Architecture
 
 - `public/index.php` → `App::create(Config::load(PROJECT_DIR . "/config"))->run()`
 - `Config` – defaults (`debug`, `panel`, `contentFolder`, `siteFolder`) < `site/config/config[.{host}].php` < `config/config[.{host}].php`. Config files return arrays (lambdas allowed).
-- `App` – singleton (`App::instance()`), wraps a Dumbo router with a catch-all `GET|HEAD *` route:
+- `App` – singleton (`App::instance()`), wraps a Dumbo router with a catch-all route. `/panel*` goes to `Panel` if `panel` is enabled (the website never depends on the panel), other non-GET/HEAD → 405. Pages:
   1. `content/redirects.json` (`{"301": {"from": "to"}}`)
   2. `Site::find($path)` resolves the slug path to a `Page`, else 404 (`site/templates/404.php`)
   3. canonical url redirect (301): pages with published children end with `/`, others don't; `/home` → `/`
@@ -29,10 +31,13 @@ Flat file CMS inspired by Kirby. PHP >= 8.3, namespace `Blueprint\` → `src/`. 
 - Global helpers in `src/helpers.php`: `page()`, `site()`, `user()`, `md()`, `esc()`, `dd()`, `redirect()`, `partial()` (`site/templates/partials/`), `static_file_url()` (mtime from `public/`).
 - Templates get `$page` and `$site`; field methods are already escaped (`esc()` doesn't double-escape them), raw `data()` must be `esc()`ed, `md()` for markdown.
 
+- `Panel` – serves `public/panel/index.html` for all `/panel/*` urls and the REST API under `/panel/api` (own regex routing, see `Panel::ROUTES`; page ids use `+` for `/`). Session login (`Session`, `$_SESSION["blueprint.user"]`) + `X-CSRF-Token` for changes; validation by blueprint (422). Writes via `Page::update/changeStatus/changeNum/create/delete`, `Site::update`, `User::create/update/delete`. Docs: `docs/02_reference/07_panel-api`.
+- Panel frontend (`panel/src`): `App.vue` (login / sidebar + view), `views/` (Site, Page, Users, User), `components/ModelForm.vue` (tabs → columns), `FieldList.vue` (field grid + `when`), `FieldInput.vue` (one native input per field type), `fields/` (structure, object, picker, pagelist), `api.js` (fetch client + session state). Keep form fields simple and native.
+
 ## Guidelines
 
 Modern PHP, keep it simple, flat class structure, camelCase, self-explaining names, comments only where code isn't obvious, English. Breaking changes are fine until a stable release.
 
 ## Not implemented yet
 
-Panel (Vue + Vite), blocks/fieldsets normalization, file models, plugins, controllers, models, routes in `site/`, sqlite/postgres.
+Panel: files, blocks/layout editors, sorting by drag & drop; blocks/fieldsets normalization, file models, plugins, controllers, models, routes in `site/`, sqlite/postgres.

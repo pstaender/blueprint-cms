@@ -11,3 +11,4 @@ title: Reference
 - [Classes](04_classes/page.md)
 - [Config options](05_config/page.md)
 - [Content files](06_content-files/page.md)
+- [Panel API](07_panel-api/page.md)

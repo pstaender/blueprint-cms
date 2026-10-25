@@ -24,7 +24,7 @@ class App
         $this->router = new Dumbo($this->isDebug() ? Dumbo::ENV_DEVELOPMENT : Dumbo::ENV_PRODUCTION);
         // trailing slashes are part of a page's canonical url, see Page::url()
         $this->router->setRemoveTrailingSlash(false);
-        $this->router->on(["GET", "HEAD"], "*", $this->handlePage(...));
+        $this->router->on(["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE"], "*", $this->handleRequest(...));
         $this->router->notFound(fn(Context $context) => $this->notFoundResponse());
         $this->router->onError(fn(\Throwable $error) => $this->errorResponse($error));
     }
@@ -96,9 +96,9 @@ class App
     /**
      * Handles a request without a server, e.g. in tests.
      */
-    public function request(string $uri, string $method = "GET"): ResponseInterface
+    public function request(string $uri, string $method = "GET", ?array $json = null, array $headers = []): ResponseInterface
     {
-        $request = new ServerRequest($method, $uri);
+        $request = new ServerRequest($method, $uri, $headers, $json === null ? null : json_encode($json));
         parse_str($request->getUri()->getQuery(), $query);
 
         return $this->handle($request->withQueryParams($query));
@@ -110,9 +110,40 @@ class App
         ini_set("display_errors", $this->isDebug() ? "1" : "0");
     }
 
-    private function handlePage(Context $context): ResponseInterface
+    public function isPanelEnabled(): bool
     {
-        $uri = $context->req->raw()->getUri();
+        return (bool) $this->config->get("panel");
+    }
+
+    /**
+     * Forgets the cached page tree, e.g. after the panel changed pages.
+     */
+    public function refreshSite(): void
+    {
+        $this->site = null;
+    }
+
+    /**
+     * The panel is independent of the page rendering, it only gets /panel requests if it is enabled.
+     */
+    private function handleRequest(Context $context): ResponseInterface
+    {
+        $request = $context->req->raw();
+
+        if ($this->isPanelEnabled() && Panel::handles($request->getUri()->getPath())) {
+            return (new Panel($this))->handle($request);
+        }
+
+        if (!in_array($request->getMethod(), ["GET", "HEAD"], true)) {
+            return new Response(405, ["Allow" => "GET, HEAD"]);
+        }
+
+        return $this->handlePage($request);
+    }
+
+    private function handlePage(ServerRequestInterface $request): ResponseInterface
+    {
+        $uri = $request->getUri();
         $path = rawurldecode($uri->getPath());
 
         try {

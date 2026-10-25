@@ -23,10 +23,95 @@ class User
 
     public static function all(): Collection
     {
-        $file = App::instance()->contentDir() . "/users.json";
-
-        return (new Collection(ContentFile::readJson($file)))
+        return (new Collection(ContentFile::readJson(self::file())))
             ->map(fn(array $values) => new self(new Data($values)));
+    }
+
+    private static function file(): string
+    {
+        return App::instance()->contentDir() . "/users.json";
+    }
+
+    public static function create(string $email, string $password, string $role = "user", array $data = []): self
+    {
+        if (trim($email) === "" || self::find($email) !== null) {
+            throw new \InvalidArgumentException("The email is empty or already taken");
+        }
+
+        $user = new self(new Data([
+            ...$data,
+            "email" => $email,
+            "uid" => bin2hex(random_bytes(5)),
+            "role" => $role,
+            "password" => self::hashPassword($password),
+        ]));
+
+        self::saveAll([...self::all()->all(), $user]);
+
+        return $user;
+    }
+
+    private static function hashPassword(string $password): string
+    {
+        if (mb_strlen($password) < 8) {
+            throw new \InvalidArgumentException("The password needs at least 8 characters");
+        }
+
+        return password_hash($password, PASSWORD_DEFAULT);
+    }
+
+    /**
+     * @param self[] $users
+     */
+    private static function saveAll(array $users): void
+    {
+        ContentFile::write(self::file(), array_map(fn(self $user) => $user->data->toArray(), array_values($users)));
+    }
+
+    public function verifyPassword(string $password): bool
+    {
+        $hash = $this->data->password;
+
+        return is_string($hash) && password_get_info($hash)["algo"] !== null && password_verify($password, $hash);
+    }
+
+    public function changePassword(string $password): self
+    {
+        return $this->update(["password" => self::hashPassword($password)]);
+    }
+
+    /**
+     * Saves the values to users.json, `null` values are removed. The uid can't be changed.
+     */
+    public function update(array $values): self
+    {
+        $data = array_filter([...$this->data->toArray(), ...$values, "uid" => $this->uid()], fn($value) => $value !== null);
+        $email = (string) ($data["email"] ?? "");
+
+        if ($email === "" || (($other = self::find($email)) !== null && $other->uid() !== $this->uid())) {
+            throw new \InvalidArgumentException("The email is empty or already taken");
+        }
+
+        $updated = new self(new Data($data));
+        self::saveAll(self::all()->map(fn(self $user) => $user->uid() === $this->uid() ? $updated : $user)->all());
+
+        return $updated;
+    }
+
+    public function delete(): void
+    {
+        self::saveAll(self::all()->reject(fn(self $user) => $user->uid() === $this->uid())->all());
+    }
+
+    /**
+     * The data without the password hash.
+     */
+    public function toArray(): array
+    {
+        $data = $this->data->toArray();
+        unset($data["password"]);
+
+        return $data;
     }
 
     /**
@@ -48,11 +133,8 @@ class User
             return self::$current;
         }
 
-        if (session_status() === PHP_SESSION_NONE && isset($_COOKIE[session_name()]) && !headers_sent()) {
-            session_start();
-        }
-
-        $uid = $_SESSION[self::SESSION_KEY] ?? null;
+        Session::resume();
+        $uid = Session::get(self::SESSION_KEY);
 
         return is_string($uid) ? self::find($uid) : null;
     }

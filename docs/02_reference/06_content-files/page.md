@@ -23,9 +23,11 @@ The special data key `template` chooses the template and the [blueprint](../01_b
 
 ```json
 [
-  {"email": "admin", "uid": "19qiajkmca", "role": "admin"}
+  {"email": "admin", "uid": "19qiajkmca", "role": "admin", "password": "$2y$12$…"}
 ]
 ```
+
+`password` is a `password_hash()`, set it with `bin/blueprint user:password admin`.
 
 ## content/redirects.json
 

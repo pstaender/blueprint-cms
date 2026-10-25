@@ -1,0 +1,155 @@
+<?php
+
+use Blueprint\App;
+use Blueprint\User;
+
+beforeEach(function () {
+    $this->dir = copyProject(BLUEPRINT_PROJECT);
+    $this->app = createApp($this->dir);
+    User::create("panel@example.com", "secret-password", "admin");
+});
+
+afterEach(fn() => removeProject($this->dir));
+
+function login(App $app): string
+{
+    $response = $app->request("/panel/api/session", "POST", ["email" => "panel@example.com", "password" => "secret-password"]);
+
+    return json_decode(body($response), true)["csrf"];
+}
+
+function api(App $app, string $method, string $path, ?array $json = null, ?string $csrf = null): array
+{
+    $response = $app->request("/panel/api$path", $method, $json, $csrf === null ? [] : ["X-CSRF-Token" => $csrf]);
+
+    return [$response->getStatusCode(), json_decode(body($response), true)];
+}
+
+it("requires a login", function () {
+    expect(api($this->app, "GET", "/site")[0])->toBe(401)
+        ->and(api($this->app, "POST", "/session", ["email" => "panel@example.com", "password" => "wrong"])[0])->toBe(401);
+});
+
+it("logs in and out", function () {
+    $csrf = login($this->app);
+    [$status, $session] = api($this->app, "GET", "/session");
+
+    expect($status)->toBe(200)
+        ->and($session["user"]["email"])->toBe("panel@example.com")
+        ->and($session["user"])->not->toHaveKey("password")
+        ->and($session["csrf"])->toBe($csrf);
+
+    api($this->app, "DELETE", "/session", csrf: $csrf);
+
+    expect(api($this->app, "GET", "/site")[0])->toBe(401);
+});
+
+it("requires a csrf token for changes", function () {
+    login($this->app);
+
+    expect(api($this->app, "PATCH", "/site", ["data" => ["name" => "New"]])[0])->toBe(403)
+        ->and(api($this->app, "PATCH", "/site", ["data" => ["name" => "New"]], "wrong")[0])->toBe(403);
+});
+
+it("reads and updates the site", function () {
+    $csrf = login($this->app);
+    [, $site] = api($this->app, "GET", "/site");
+
+    expect($site["title"])->toBe("Blueprint fixture")
+        ->and($site["blueprint"]["title"])->toBe("Website")
+        ->and(array_column($site["children"], "id"))->toContain("about", "home");
+
+    [$status, $result] = api($this->app, "PATCH", "/site", ["data" => ["name" => ""]], $csrf);
+    expect($status)->toBe(422)->and($result["errors"])->toHaveKey("name");
+
+    [$status, $site] = api($this->app, "PATCH", "/site", ["data" => ["name" => "Renamed", "unknown" => "x"]], $csrf);
+    expect($status)->toBe(200)
+        ->and($site["data"])->toBe(["name" => "Renamed"]);
+});
+
+it("reads pages", function () {
+    login($this->app);
+    [$status, $page] = api($this->app, "GET", "/pages/showcase");
+
+    expect($status)->toBe(200)
+        ->and($page["title"])->toBe("Fish & Chips <b>")
+        ->and($page["status"])->toBe("unlisted")
+        ->and($page["blueprint"]["name"])->toBe("pages/showcase")
+        ->and($page["data"]["category"])->toBe("review")
+        ->and(api($this->app, "GET", "/pages/nope")[0])->toBe(404)
+        ->and(array_column(api($this->app, "GET", "/pages?search=fish")[1], "id"))->toBe(["showcase"]);
+});
+
+it("updates pages and keeps data that isn't in the blueprint", function () {
+    $csrf = login($this->app);
+    [$status, $page] = api($this->app, "PATCH", "/pages/showcase", ["data" => ["title" => "New title", "price" => 3, "template" => "x"]], $csrf);
+
+    expect($status)->toBe(200)
+        ->and($page["data"]["title"])->toBe("New title")
+        ->and($page["data"]["price"])->toBe(3)
+        ->and($page["data"]["template"])->toBe("showcase")
+        ->and($page["data"]["undefinedField"])->toBe("<i>not in blueprint</i>");
+
+    [$status, $result] = api($this->app, "PATCH", "/pages/about", ["data" => ["title" => ""]], $csrf);
+    expect($status)->toBe(422)->and($result["errors"]["title"])->toBe(["Title is required"]);
+});
+
+it("creates, publishes, sorts and deletes pages", function () {
+    $csrf = login($this->app);
+
+    [$status, $page] = api($this->app, "POST", "/site/children", ["title" => "Über uns!", "template" => "article"], $csrf);
+    expect($status)->toBe(201)
+        ->and($page["id"])->toBe("uber-uns")
+        ->and($page["status"])->toBe("draft")
+        ->and($page["template"])->toBe("article")
+        ->and(is_file("$this->dir/content/.uber-uns/page.json"))->toBeTrue();
+
+    [, $page] = api($this->app, "PATCH", "/pages/uber-uns", ["status" => "listed"], $csrf);
+    expect($page["status"])->toBe("listed")->and($page["num"])->toBe(1);
+
+    [, $child] = api($this->app, "POST", "/pages/uber-uns/children", ["title" => "Team", "slug" => "team"], $csrf);
+    expect($child["id"])->toBe("uber-uns+team")
+        ->and(is_file("$this->dir/content/01_uber-uns/.team/page.json"))->toBeTrue();
+
+    api($this->app, "PATCH", "/pages/about", ["status" => "listed"], $csrf);
+    [, $about] = api($this->app, "PATCH", "/pages/about", ["num" => 1], $csrf);
+    expect($about["num"])->toBe(1)
+        ->and(is_dir("$this->dir/content/02_uber-uns"))->toBeTrue();
+
+    expect(api($this->app, "POST", "/site/children", ["title" => "About"], $csrf)[0])->toBe(400)
+        ->and(api($this->app, "PATCH", "/pages/home", ["status" => "draft"], $csrf)[0])->toBe(400);
+
+    expect($this->app->request("/panel/api/pages/uber-uns", "DELETE", null, ["X-CSRF-Token" => $csrf])->getStatusCode())->toBe(204)
+        ->and(file_exists("$this->dir/content/02_uber-uns"))->toBeFalse();
+});
+
+it("manages users", function () {
+    $csrf = login($this->app);
+
+    [$status, $user] = api($this->app, "POST", "/users", ["email" => "new@example.com", "password" => "long-enough", "role" => "editor"], $csrf);
+    expect($status)->toBe(201)
+        ->and($user["role"])->toBe("editor")
+        ->and($user["blueprint"]["name"])->toBe("users/editor")
+        ->and(api($this->app, "POST", "/users", ["email" => "x@example.com", "password" => "short"], $csrf)[0])->toBe(400);
+
+    [, $user] = api($this->app, "PATCH", "/users/{$user["uid"]}", ["data" => ["bio" => "Hi"], "password" => "another-password"], $csrf);
+    expect($user["bio"])->toBe("Hi")
+        ->and(User::find("new@example.com")->verifyPassword("another-password"))->toBeTrue()
+        ->and(array_column(api($this->app, "GET", "/users")[1], "email"))->toContain("new@example.com")
+        ->and(api($this->app, "DELETE", "/users/" . User::find("panel@example.com")->uid(), csrf: $csrf)[0])->toBe(400);
+});
+
+it("serves the panel app for all panel urls", function () {
+    $response = $this->app->request("/panel/pages/about");
+
+    expect($response->getStatusCode())->toBeIn([200, 503])
+        ->and(api($this->app, "GET", "/nope")[0])->toBe(404);
+});
+
+it("doesn't handle /panel when the panel is disabled", function () {
+    $app = createApp($this->dir, ["panel" => false]);
+
+    expect($app->request("/panel")->getStatusCode())->toBe(404)
+        ->and($app->request("/panel/api/session", "POST")->getStatusCode())->toBe(405)
+        ->and($app->request("/about")->getStatusCode())->toBe(200);
+});

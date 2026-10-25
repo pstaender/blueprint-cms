@@ -26,16 +26,17 @@ Singleton: `App::create(Config $config)`, `App::instance()`.
 | `field($name)`, `$page->{field}()` | [field values](../02_fields/02_field-methods/page.md) |
 | `blueprint()` | the page's [`Blueprint`](../../../src/Blueprint.php) |
 | `children()`, `drafts()`, `allChildren()`, `child($slug)`, `hasChildren()` | collections ([illuminate/support](https://laravel.com/docs/collections)) |
-| `isHome()`, `isListed()`, `isFolder()` | |
+| `isHome()`, `isListed()`, `isFolder()`, `status()`, `isEditable()` | |
+| `update($values)`, `changeStatus($status)`, `changeNum($position)`, `delete()`, `Page::create($parent, $slug, $data)` | write to the content folder |
 | `Page::current()`, `Page::find($path)` | |
 
 ## [`Site`](../../../src/Site.php)
 
-`data()`, `blueprint()`, `field($name)`, field methods, `children()`, `allChildren()`, `homePage()`, `find($path, $includeDrafts = null)`.
+`data()`, `update($values)`, `blueprint()`, `field($name)`, field methods, `children()`, `allChildren()`, `homePage()`, `find($path, $includeDrafts = null)`.
 
 ## [`User`](../../../src/User.php)
 
-`User::all()`, `User::find($emailOrUid)`, `User::current()`, `email()`, `uid()`, `role()`, `blueprint()`, `data()`, `field($name)`, field methods.
+`User::all()`, `User::find($emailOrUid)`, `User::current()`, `email()`, `uid()`, `role()`, `blueprint()`, `data()`, `field($name)`, field methods, `User::create()`, `verifyPassword()`, `changePassword()`, `update()`, `delete()`, `toArray()` (without password).
 
 ## [`Data`](../../../src/Data.php)
 
@@ -60,6 +61,10 @@ The value of a field, see [Field methods](../02_fields/02_field-methods/page.md)
 ## [`Values`](../../../src/Values.php)
 
 Structure rows and object fields with field methods. Field methods come from the [`HasFields`](../../../src/HasFields.php) trait.
+
+## [`Panel`](../../../src/Panel.php)
+
+The panel app and its [REST API](../07_panel-api/page.md), [`Session`](../../../src/Session.php) (login, CSRF token), [`ApiError`](../../../src/ApiError.php).
 
 ## Others
 

@@ -83,4 +83,11 @@ class Site
 
         return $page;
     }
+
+    public function update(array $values): void
+    {
+        $data = array_filter([...$this->data()->toArray(), ...$values], fn($value) => $value !== null);
+        ContentFile::write("$this->contentDir/site.json", $data);
+        $this->data = null;
+    }
 }

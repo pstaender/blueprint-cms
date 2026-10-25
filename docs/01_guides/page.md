@@ -6,3 +6,4 @@ title: Guides
 3. [Templates](03_templates/page.md)
 4. [Configuration](04_configuration/page.md)
 5. [Blueprints](05_blueprints/page.md)
+6. [Panel](06_panel/page.md)
