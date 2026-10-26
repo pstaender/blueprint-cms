@@ -124,7 +124,7 @@ it("moves pages to another parent", function () {
 it("creates, publishes, sorts and deletes pages", function () {
     $csrf = login($this->app);
 
-    [$status, $page] = api($this->app, "POST", "/site/children", ["title" => "Über uns!", "type" => "article"], $csrf);
+    [$status, $page] = api($this->app, "POST", "/site/~children", ["title" => "Über uns!", "type" => "article"], $csrf);
     expect($status)->toBe(201)
         ->and($page["id"])->toBe("uber-uns")
         ->and($page["status"])->toBe("draft")
@@ -134,21 +134,22 @@ it("creates, publishes, sorts and deletes pages", function () {
     [, $page] = api($this->app, "PATCH", "/pages/uber-uns", ["status" => "listed"], $csrf);
     expect($page["status"])->toBe("listed")->and($page["num"])->toBe(1);
 
-    [, $child] = api($this->app, "POST", "/pages/uber-uns/children", ["title" => "Team", "slug" => "team"], $csrf);
+    [, $child] = api($this->app, "POST", "/pages/uber-uns/~children", ["title" => "Team", "slug" => "team"], $csrf);
     expect($child["id"])->toBe("uber-uns/team")
         ->and(is_file("$this->dir/content/01_uber-uns/.team/page.json"))->toBeTrue()
         ->and(api($this->app, "GET", "/pages/uber-uns/team")[1]["breadcrumb"][0]["id"])->toBe("uber-uns")
-        ->and(api($this->app, "GET", "/pages/uber-uns/team/files")[1])->toBe([])
-        ->and(api($this->app, "GET", "/pages/uber-uns/team/children")[1])->toBe([])
-        ->and(api($this->app, "DELETE", "/pages/uber-uns/team/files", csrf: $csrf)[0])->toBe(405)
-        ->and(api($this->app, "POST", "/pages/uber-uns/children", ["title" => "Files"], $csrf)[0])->toBe(422);
+        ->and(api($this->app, "GET", "/pages/uber-uns/team/~files")[1])->toBe([])
+        ->and(api($this->app, "GET", "/pages/uber-uns/team/~children")[1])->toBe([])
+        ->and(api($this->app, "DELETE", "/pages/uber-uns/team/~files", csrf: $csrf)[0])->toBe(405)
+        ->and(api($this->app, "POST", "/pages/uber-uns/~children", ["title" => "Files"], $csrf)[0])->toBe(201)
+        ->and(api($this->app, "GET", "/pages/uber-uns/files")[1]["title"])->toBe("Files");
 
     api($this->app, "PATCH", "/pages/about", ["status" => "listed"], $csrf);
     [, $about] = api($this->app, "PATCH", "/pages/about", ["num" => 1], $csrf);
     expect($about["num"])->toBe(1)
         ->and(is_dir("$this->dir/content/02_uber-uns"))->toBeTrue();
 
-    expect(api($this->app, "POST", "/site/children", ["title" => "About"], $csrf)[0])->toBe(400)
+    expect(api($this->app, "POST", "/site/~children", ["title" => "About"], $csrf)[0])->toBe(400)
         ->and(api($this->app, "PATCH", "/pages/home", ["status" => "draft"], $csrf)[0])->toBe(400);
 
     expect($this->app->request("/panel/api/pages/uber-uns", "DELETE", null, ["X-CSRF-Token" => $csrf])->getStatusCode())->toBe(204)
@@ -267,7 +268,7 @@ it("changes slug and type of pages", function () {
 
 it("lists children for the page tree", function () {
     login($this->app);
-    [$status, $children] = api($this->app, "GET", "/pages/builder/children");
+    [$status, $children] = api($this->app, "GET", "/pages/builder/~children");
 
     expect($status)->toBe(200)->and($children)->toBe([]);
 });
@@ -276,10 +277,10 @@ it("uploads, updates and deletes files", function () {
     $csrf = login($this->app);
     $png = file_get_contents("$this->dir/content/builder/photo.png");
 
-    $response = $this->app->request("/panel/api/pages/builder/files?filename=New%20Image.PNG&template=image", "POST", null, ["X-CSRF-Token" => $csrf]);
+    $response = $this->app->request("/panel/api/pages/builder/~files?filename=New%20Image.PNG&template=image", "POST", null, ["X-CSRF-Token" => $csrf]);
     expect($response->getStatusCode())->toBe(400);
 
-    $request = (new Nyholm\Psr7\ServerRequest("POST", "/panel/api/pages/builder/files?filename=New%20Image.PNG&template=image", ["X-CSRF-Token" => $csrf], $png))
+    $request = (new Nyholm\Psr7\ServerRequest("POST", "/panel/api/pages/builder/~files?filename=New%20Image.PNG&template=image", ["X-CSRF-Token" => $csrf], $png))
         ->withQueryParams(["filename" => "New Image.PNG", "template" => "image"]);
     $response = $this->app->handle($request);
     $file = json_decode(body($response), true);
@@ -290,7 +291,7 @@ it("uploads, updates and deletes files", function () {
         ->and($file["ref"])->toBe("file://" . $file["uid"])
         ->and($file["blueprint"]["name"])->toBe("files/image");
 
-    [$status, $file] = api($this->app, "PATCH", "/pages/builder/files/new-image.png", ["data" => ["alt" => "Alt"], "name" => "renamed"], $csrf);
+    [$status, $file] = api($this->app, "PATCH", "/pages/builder/~files/new-image.png", ["data" => ["alt" => "Alt"], "name" => "renamed"], $csrf);
     expect($status)->toBe(200)
         ->and($file["filename"])->toBe("renamed.png")
         ->and($file["data"]["alt"])->toBe("Alt");
@@ -298,8 +299,8 @@ it("uploads, updates and deletes files", function () {
     [, $page] = api($this->app, "GET", "/pages/builder");
     expect(array_column($page["files"], "filename"))->toContain("renamed.png");
 
-    expect(api($this->app, "DELETE", "/pages/builder/files/renamed.png", csrf: $csrf)[0])->toBe(204)
-        ->and(api($this->app, "GET", "/pages/builder/files/renamed.png")[0])->toBe(404);
+    expect(api($this->app, "DELETE", "/pages/builder/~files/renamed.png", csrf: $csrf)[0])->toBe(204)
+        ->and(api($this->app, "GET", "/pages/builder/~files/renamed.png")[0])->toBe(404);
 });
 
 it("replaces files", function () {
@@ -307,7 +308,7 @@ it("replaces files", function () {
     page("builder")->file("notes.txt")->update(["createdAt" => "2026-01-01T10:00:00+00:00", "modifiedAt" => "2026-01-01T10:00:00+00:00"]);
     $uid = page("builder")->file("notes.txt")->uid();
     $replace = fn(string $filename, string $contents) => $this->app->handle(
-        (new Nyholm\Psr7\ServerRequest("PUT", "/panel/api/pages/builder/files/notes.txt", ["X-CSRF-Token" => $csrf], $contents))
+        (new Nyholm\Psr7\ServerRequest("PUT", "/panel/api/pages/builder/~files/notes.txt", ["X-CSRF-Token" => $csrf], $contents))
             ->withQueryParams(["filename" => $filename])
     );
 
@@ -336,14 +337,14 @@ it("restores a replaced file that isn't accepted", function () {
 it("sorts files", function () {
     $csrf = login($this->app);
 
-    [$status, $files] = api($this->app, "PATCH", "/pages/builder/files", ["sort" => ["photo.png", "notes.txt"]], $csrf);
+    [$status, $files] = api($this->app, "PATCH", "/pages/builder/~files", ["sort" => ["photo.png", "notes.txt"]], $csrf);
 
     expect($status)->toBe(200)
         ->and(array_column($files, "filename"))->toBe(["photo.png", "notes.txt"])
         ->and(page("builder")->file("notes.txt")->data()->sort)->toBe(2)
-        ->and(api($this->app, "PATCH", "/pages/builder/files", ["sort" => "x"], $csrf)[0])->toBe(400);
+        ->and(api($this->app, "PATCH", "/pages/builder/~files", ["sort" => "x"], $csrf)[0])->toBe(400);
 
-    [, $files] = api($this->app, "PATCH", "/pages/builder/files", ["sort" => ["notes.txt"]], $csrf);
+    [, $files] = api($this->app, "PATCH", "/pages/builder/~files", ["sort" => ["notes.txt"]], $csrf);
     expect(array_column($files, "filename"))->toBe(["notes.txt", "photo.png"]);
 });
 

@@ -31,7 +31,7 @@ Special data keys:
 | `createdAt` | ISO 8601 datetime of the first write |
 | `modifiedAt` | ISO 8601 datetime of the last write (with milliseconds, used for the panel's conflict check) |
 
-The cms fills these hidden fields on every write of pages, files (`{filename}.json`) and users (`SystemFields`), `site.json` only gets `createdAt` and `modifiedAt`; `uid` and `createdAt` can't be changed. Content written by hand gets them with the next save (or `bin/blueprint content:uids`).
+The cms fills these hidden fields on every write of pages, files (`{filename}.json`) and users (`SystemFields`), `site.json` only gets `createdAt` and `modifiedAt`; `uid` and `createdAt` can't be changed. Content written by hand gets them with the next save (or `bin/blueprint content:uids`). Markdown pages (`about.md`, `page.md`) never store them: `createdAt` and `modifiedAt` are the file's modification time, a `uid` or `createdAt` written into the front matter by hand is kept and used.
 
 ## Files
 

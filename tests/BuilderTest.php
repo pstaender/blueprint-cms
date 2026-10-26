@@ -4,6 +4,7 @@ use Blueprint\Block;
 use Blueprint\Blueprint;
 use Blueprint\File;
 use Blueprint\Page;
+use Blueprint\SystemFields;
 use Blueprint\Uid;
 
 beforeEach(fn() => $this->app = createApp(BLUEPRINT_PROJECT));
@@ -292,8 +293,8 @@ describe("content formats", function () {
     it("converts between the content formats and keeps the data", function () {
         page("about")->update(["content" => "Some **text**"]);
         $about = "$this->dir/content/about";
-        // the conversion is a write, it only changes modifiedAt
-        $withoutModified = fn(Page $page) => array_diff_key($page->data()->toArray(), ["modifiedAt" => true]);
+        // markdown files don't store the system fields, so only the other fields are kept
+        $withoutModified = fn(Page $page) => array_diff_key($page->data()->toArray(), array_flip(SystemFields::NAMES));
         $data = $withoutModified(page("about"));
 
         expect(page("about")->contentFormat())->toBe("json");
@@ -302,6 +303,9 @@ describe("content formats", function () {
         expect($page->contentFormat())->toBe("md")
             ->and(is_file("$about/page.json"))->toBeFalse()
             ->and(file_get_contents("$about/page.md"))->toEndWith("---\nSome **text**\n")
+            ->and(file_get_contents("$about/page.md"))->not->toContain("uid:", "createdAt:", "modifiedAt:")
+            ->and($page->uid())->toBeNull()
+            ->and($page->data()->modifiedAt)->toBe(date("Y-m-d\\TH:i:s.000P", filemtime("$about/page.md")))
             ->and($withoutModified($page))->toEqualCanonicalizing($data);
 
         $page = $page->changeContentFormat("json+md");
@@ -316,6 +320,21 @@ describe("content formats", function () {
             ->and(is_file("$about/page.content.md"))->toBeFalse()
             ->and($page->data()->content)->toBe("Some **text**")
             ->and(fn() => $page->changeContentFormat("xml"))->toThrow(InvalidArgumentException::class);
+    });
+
+    it("keeps the system fields out of markdown files", function () {
+        file_put_contents("$this->dir/content/note.md", "---\ntitle: Note\n---\nHello\n");
+        touch("$this->dir/content/note.md", strtotime("2026-01-02 03:04:05"));
+        expect(page("note")->data()->modifiedAt)->toBe(date("Y-m-d\\TH:i:s.000P", strtotime("2026-01-02 03:04:05")))
+            ->and(page("note")->data()->createdAt)->toBe(page("note")->data()->modifiedAt);
+
+        page("note")->update(["title" => "Changed"]);
+        expect(file_get_contents("$this->dir/content/note.md"))->toBe("---\ntitle: Changed\n---\nHello\n");
+
+        file_put_contents("$this->dir/content/note.md", "---\nuid: abc\ncreatedAt: '2025-01-01T00:00:00.000+00:00'\ntitle: Note\n---\n");
+        page("note")->update(["title" => "Again"]);
+        expect(file_get_contents("$this->dir/content/note.md"))->toBe("---\nuid: abc\ncreatedAt: '2025-01-01T00:00:00.000+00:00'\ntitle: Again\n---\n")
+            ->and(page("note")->data()->createdAt)->toBe("2025-01-01T00:00:00.000+00:00");
     });
 
     it("turns single file pages into folders", function () {

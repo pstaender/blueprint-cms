@@ -41,7 +41,7 @@ function load(data) {
 }
 
 async function reloadChildren() {
-  page.value.children = await api.get(`/pages/${props.id}/children`);
+  page.value.children = await api.get(`/pages/${props.id}/~children`);
 }
 
 const model = computed(() => page.value && { ...page.value, reload: reloadChildren });

@@ -65,7 +65,7 @@ watch([openId, pages], async () => {
 });
 
 async function load() {
-  pages.value = props.parentId ? await api.get(`/pages/${props.parentId}/children`) : (await api.get("/site")).children;
+  pages.value = props.parentId ? await api.get(`/pages/${props.parentId}/~children`) : (await api.get("/site")).children;
 }
 
 const groups = computed(() => [

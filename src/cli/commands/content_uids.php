@@ -8,7 +8,8 @@ return [
     "run" => function () {
         $count = 0;
         foreach (site()->index() as $page) {
-            if ($page->uid() === null && $page->isEditable()) {
+            // markdown pages don't store a uid
+            if ($page->uid() === null && $page->isEditable() && $page->contentFormat() !== "md") {
                 $page->update([]);
                 $count++;
             }

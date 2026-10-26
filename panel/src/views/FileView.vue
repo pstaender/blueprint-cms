@@ -21,7 +21,7 @@ const busy = ref(false);
 const dialogError = ref(null);
 const name = ref("");
 
-const path = computed(() => `/pages/${props.id}/files/${encodeURIComponent(props.filename)}`);
+const path = computed(() => `/pages/${props.id}/~files/${encodeURIComponent(props.filename)}`);
 const { values, errors, message, saving, isDirty, conflict, reset, submit, overwrite, loadLatest } = useEditing(async (body) => {
   load(await api.patch(path.value, body));
 }, async () => load(await api.get(path.value)));
@@ -56,7 +56,7 @@ async function submitDialog() {
     const updated = await api.patch(path.value, { name: name.value });
     await reloadFiles(props.id);
     dialog.value = null;
-    router.replace(`/pages/${props.id}/files/${encodeURIComponent(updated.filename)}`);
+    router.replace(`/pages/${props.id}/~files/${encodeURIComponent(updated.filename)}`);
   } catch (e) {
     dialogError.value = e.message;
   } finally {

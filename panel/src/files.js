@@ -15,7 +15,7 @@ export function filesOf(pageId) {
 }
 
 export async function reloadFiles(pageId) {
-  const files = await api.get(`/pages/${pageId}/files`);
+  const files = await api.get(`/pages/${pageId}/~files`);
   store[pageId] ??= { list: [], loaded: false };
   store[pageId].list = files;
   store[pageId].loaded = true;
@@ -23,7 +23,7 @@ export async function reloadFiles(pageId) {
 
 // stores a new order (filenames) and updates the shared list
 export async function sortFiles(pageId, filenames) {
-  store[pageId].list = await api.patch(`/pages/${pageId}/files`, { sort: filenames });
+  store[pageId].list = await api.patch(`/pages/${pageId}/~files`, { sort: filenames });
 }
 
 export async function uploadFiles(pageId, fileList, template) {

@@ -163,7 +163,7 @@ class Page
     private function readData(): array
     {
         if (!$this->isFolder()) {
-            return ContentFile::read($this->root);
+            return str_ends_with($this->root, ".md") ? SystemFields::fileDates(ContentFile::read($this->root), $this->root) : [];
         }
 
         $data = ContentFile::read("$this->root/page.json");
@@ -176,7 +176,19 @@ class Page
             $data["content"] = trim(file_get_contents("$this->root/page.content.md"));
         }
 
-        return $data;
+        return $this->contentFormat() === "md" ? SystemFields::fileDates($data, $this->dataFile()) : $data;
+    }
+
+    /**
+     * The file that the fields are written to.
+     */
+    private function dataFile(): string
+    {
+        return match (true) {
+            !$this->isFolder() => $this->root,
+            is_file("$this->root/page.md") => "$this->root/page.md",
+            default => "$this->root/page.json",
+        };
     }
 
     /**
@@ -387,7 +399,7 @@ class Page
         $content = trim((string) ($data["content"] ?? ""));
         $files = match ($format) {
             "json" => ["page.json" => ContentFile::toJson($data)],
-            "md" => ["page.md" => ContentFile::toMarkdown($data)],
+            "md" => ["page.md" => ContentFile::toMarkdown(SystemFields::forMarkdown($data))],
             "json+md" => [
                 "page.json" => ContentFile::toJson(array_diff_key($data, ["content" => true])),
                 "page.content.md" => "$content\n",
@@ -438,18 +450,18 @@ class Page
         }
 
         $existing = $this->readData();
-        $data = SystemFields::apply(array_filter([...$existing, ...$values], fn($value) => $value !== null), $existing);
+        $data = array_filter([...$existing, ...$values], fn($value) => $value !== null);
+        $file = $this->dataFile();
+        $data = str_ends_with($file, ".md")
+            ? SystemFields::forMarkdown($data, ContentFile::read($file))
+            : SystemFields::apply($data, $existing);
 
-        if (!$this->isFolder()) {
-            ContentFile::write($this->root, $data);
-        } else {
-            if (is_file("$this->root/page.content.md")) {
-                file_put_contents("$this->root/page.content.md", trim((string) ($data["content"] ?? "")) . "\n", LOCK_EX);
-                unset($data["content"]);
-            }
-
-            ContentFile::write(is_file("$this->root/page.md") ? "$this->root/page.md" : "$this->root/page.json", $data);
+        if (is_file("$this->root/page.content.md")) {
+            file_put_contents("$this->root/page.content.md", trim((string) ($data["content"] ?? "")) . "\n", LOCK_EX);
+            unset($data["content"]);
         }
+
+        ContentFile::write($file, $data);
 
         $this->data = null;
     }

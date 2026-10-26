@@ -49,7 +49,7 @@ const menu = ref(null);
 const replaceInput = ref(null);
 const current = ref(0);
 const file = computed(() => files.value[current.value]);
-const path = computed(() => `/pages/${props.model.id}/files/${encodeURIComponent(file.value.filename)}`);
+const path = computed(() => `/pages/${props.model.id}/~files/${encodeURIComponent(file.value.filename)}`);
 const dialog = ref(null);
 const dialogError = ref(null);
 const form = ref({ name: "", position: 1 });
@@ -141,7 +141,7 @@ async function replace(event) {
         title="Drag to sort or into a textarea, right click for options"
         @contextmenu.prevent="showMenu($event, index)"
       >
-        <RouterLink :to="`/pages/${item.page}/files/${encodeURIComponent(item.filename)}`" class="item-link" draggable="false">
+        <RouterLink :to="`/pages/${item.page}/~files/${encodeURIComponent(item.filename)}`" class="item-link" draggable="false">
           <FileThumb :file="item" />
           <span class="item-title">{{ item.filename }}</span>
           <span class="item-info">{{ item.template !== "default" ? item.template : "" }}</span>

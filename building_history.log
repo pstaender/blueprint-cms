@@ -285,3 +285,7 @@
 
 2026-10-26 – Panel: open page in the tree
 - The sidebar tree highlights the open page (also while one of its files is open, `route.params.id`) and expands its parents (stored like manually expanded pages), then scrolls it into view.
+
+2026-10-26 – Panel api subresources with ~, no system fields in markdown
+- Subresources in the panel api and panel urls start with `~` (`/pages/{id}/~children`, `/pages/{id}/~files/{filename}`, `/site/~children`), which slugs cannot contain. The reserved slugs `children`/`files` are gone, a page may be called `files` (the docs page reference/blueprints/files was read as the file list of reference/blueprints).
+- Markdown pages (`{slug}.md`, `page.md`) do not store `uid`, `createdAt`, `modifiedAt`: both dates come from the file modification time (PHP has no creation time); a `uid`/`createdAt` in the front matter written by hand is kept. `content:uids` skips them. Converting a page to `md` drops its uid (references fall back to the path).

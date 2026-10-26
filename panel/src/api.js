@@ -64,7 +64,7 @@ export const api = {
   // the request body is the file itself
   upload: (pageId, file, template) => {
     const query = new URLSearchParams({ filename: file.name, ...(template ? { template } : {}) });
-    return request("POST", `/pages/${pageId}/files?${query}`, undefined, file);
+    return request("POST", `/pages/${pageId}/~files?${query}`, undefined, file);
   },
   replace: (path, file) => request("PUT", `${path}?${new URLSearchParams({ filename: file.name })}`, undefined, file),
 };

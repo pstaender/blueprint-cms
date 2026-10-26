@@ -113,7 +113,7 @@ async function start() {
 async function create() {
   busy.value = true;
   try {
-    const path = props.parent.id ? `/pages/${props.parent.id}/children` : "/site/children";
+    const path = props.parent.id ? `/pages/${props.parent.id}/~children` : "/site/~children";
     const page = await api.post(path, form.value);
     open.value = false;
     router.push(`/pages/${page.id}`);

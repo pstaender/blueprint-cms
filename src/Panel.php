@@ -12,14 +12,12 @@ use Psr\Http\Message\ServerRequestInterface;
  * The admin panel: a Vue app (built into public/panel/) and its REST API under /panel/api.
  * It is independent of the page rendering, App only hands /panel requests to it when `panel` is enabled.
  *
- * Page ids in urls are slug paths, e.g. /panel/api/pages/blog/newest_entry/files. The slugs "children" and
- * "files" are reserved, they would be ambiguous.
+ * Page ids in urls are slug paths, e.g. /panel/api/pages/blog/newest_entry. Subresources start with `~`, which
+ * slugs can't contain, so pages may be called "files" or "children": /panel/api/pages/blog/~files/cover.jpg.
  */
 class Panel
 {
     public const PATH = "/panel";
-
-    public const RESERVED_SLUGS = ["children", "files"];
 
     /**
      * [method, path regex, handler]; the handler gets the request and the regex matches.
@@ -31,17 +29,17 @@ class Panel
         ["DELETE", "#^/session$#", "logout"],
         ["GET", "#^/site$#", "getSite"],
         ["PATCH", "#^/site$#", "updateSite"],
-        ["POST", "#^/site/children$#", "createPage"],
+        ["POST", "#^/site/~children$#", "createPage"],
         ["GET", "#^/pages$#", "listPages"],
-        ["GET", "#^/pages/(.+?)/children$#", "pageChildren"],
-        ["POST", "#^/pages/(.+?)/children$#", "createPage"],
-        ["GET", "#^/pages/(.+?)/files$#", "listFiles"],
-        ["POST", "#^/pages/(.+?)/files$#", "uploadFile"],
-        ["PATCH", "#^/pages/(.+?)/files$#", "sortFiles"],
-        ["GET", "#^/pages/(.+?)/files/([^/]+)$#", "getFile"],
-        ["PATCH", "#^/pages/(.+?)/files/([^/]+)$#", "updateFile"],
-        ["PUT", "#^/pages/(.+?)/files/([^/]+)$#", "replaceFile"],
-        ["DELETE", "#^/pages/(.+?)/files/([^/]+)$#", "deleteFile"],
+        ["GET", "#^/pages/(.+?)/~children$#", "pageChildren"],
+        ["POST", "#^/pages/(.+?)/~children$#", "createPage"],
+        ["GET", "#^/pages/(.+?)/~files$#", "listFiles"],
+        ["POST", "#^/pages/(.+?)/~files$#", "uploadFile"],
+        ["PATCH", "#^/pages/(.+?)/~files$#", "sortFiles"],
+        ["GET", "#^/pages/(.+?)/~files/([^/]+)$#", "getFile"],
+        ["PATCH", "#^/pages/(.+?)/~files/([^/]+)$#", "updateFile"],
+        ["PUT", "#^/pages/(.+?)/~files/([^/]+)$#", "replaceFile"],
+        ["DELETE", "#^/pages/(.+?)/~files/([^/]+)$#", "deleteFile"],
         ["GET", "#^/pages/(.+)$#", "getPage"],
         ["PATCH", "#^/pages/(.+)$#", "updatePage"],
         ["DELETE", "#^/pages/(.+)$#", "deletePage"],
@@ -252,7 +250,7 @@ class Panel
         }
 
         if (isset($input["slug"]) && $input["slug"] !== $page->slug) {
-            $page = $page->changeSlug(self::unreservedSlug((string) $input["slug"]));
+            $page = $page->changeSlug((string) $input["slug"]);
         }
 
         // parent: a page id, null or "" for the root
@@ -296,7 +294,7 @@ class Panel
         }
 
         $slug = (string) ($input["slug"] ?? "");
-        $page = Page::create($parent, self::unreservedSlug($slug !== "" ? $slug : self::slug($title)), array_filter([
+        $page = Page::create($parent, $slug !== "" ? $slug : self::slug($title), array_filter([
             "title" => $title,
             "type" => $type === Page::DEFAULT_TYPE ? null : $type,
         ]));
@@ -381,7 +379,7 @@ class Panel
     }
 
     /**
-     * The body is the file itself, e.g. POST /pages/blog/files?filename=cover.jpg&template=image
+     * The body is the file itself, e.g. POST /pages/blog/~files?filename=cover.jpg&template=image
      */
     private function uploadFile(ServerRequestInterface $request, string $id): ResponseInterface
     {
@@ -443,7 +441,7 @@ class Panel
     }
 
     /**
-     * The body is the new file, e.g. PUT /pages/blog/files/cover.jpg?filename=new-cover.jpg
+     * The body is the new file, e.g. PUT /pages/blog/~files/cover.jpg?filename=new-cover.jpg
      * (the extension has to stay the same).
      */
     private function replaceFile(ServerRequestInterface $request, string $id, string $filename): ResponseInterface
@@ -494,18 +492,6 @@ class Panel
             "blueprint" => $file->blueprint()->toArray(),
             "data" => $file->data()->toArray(),
         ];
-    }
-
-    /**
-     * "children" and "files" would be ambiguous in page urls (/pages/blog/files).
-     */
-    private static function unreservedSlug(string $slug): string
-    {
-        if (in_array($slug, self::RESERVED_SLUGS, true)) {
-            throw new ApiError("The slug \"$slug\" is reserved", 422, ["errors" => ["slug" => ["\"$slug\" is reserved"]]]);
-        }
-
-        return $slug;
     }
 
     private static function slug(string $title): string

@@ -7,6 +7,8 @@ namespace Blueprint;
 /**
  * Hidden fields that the cms fills in the data of pages, files and users on every write:
  * `uid`, `createdAt` (first write) and `modifiedAt` (last write), as ISO 8601 datetimes with milliseconds. The site only gets the dates.
+ * Pages in markdown files (`about.md`, `page.md`) don't store them: their dates are the file's modification time
+ * (PHP can't read creation times), a `uid` or `createdAt` in the front matter is kept.
  * They work like datetime fields (`$page->modifiedAt()->format("d.m.Y")`) and are hidden in the panel, unless a
  * blueprint shows them, e.g. `modifiedAt: {type: datetime, disabled: true}` (disabled fields aren't saved).
  */
@@ -38,6 +40,34 @@ class SystemFields
             "modifiedAt" => $now,
             ...array_diff_key($data, array_flip(self::NAMES)),
         ];
+    }
+
+    /**
+     * The data of a markdown file without system fields, except a `uid` and `createdAt` that are already in its front matter.
+     */
+    public static function forMarkdown(array $data, array $frontMatter = []): array
+    {
+        return [
+            ...array_filter(array_intersect_key($frontMatter, ["uid" => true, "createdAt" => true]), fn($value) => self::filled($value) !== null),
+            ...array_diff_key($data, array_flip(self::NAMES)),
+        ];
+    }
+
+    /**
+     * `modifiedAt` (and `createdAt`, unless set) from the modification time of a markdown file.
+     */
+    public static function fileDates(array $data, string $file): array
+    {
+        clearstatcache(true, $file);
+        $time = @filemtime($file);
+
+        if ($time === false) {
+            return $data;
+        }
+
+        $date = (new \DateTimeImmutable("@$time"))->setTimezone(new \DateTimeZone(date_default_timezone_get()))->format("Y-m-d\\TH:i:s.vP");
+
+        return [...$data, "createdAt" => self::filled($data["createdAt"] ?? null) ?? $date, "modifiedAt" => $date];
     }
 
     /**
