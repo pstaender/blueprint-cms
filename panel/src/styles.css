@@ -1295,17 +1295,10 @@ select[multiple].input {
   cursor: pointer;
 }
 
+/* the label starts where the titles start: after the space of the item icons (18px + 12px gap) */
 .section-header .item-select {
-  margin-right: 10px;
+  margin-right: 40px;
   vertical-align: -2px;
-}
-
-.items-cards .item-selectable {
-  align-items: flex-start;
-}
-
-.items-cards .item-selectable .item-select {
-  margin-top: 12px;
 }
 
 .bulk-actions {
