@@ -20,5 +20,9 @@ it("prints the usage for unknown commands", function () {
     ob_start();
     $code = Cli::run(["bin/blueprint", "nope"]);
 
-    expect(ob_get_clean())->toContain("bin/blueprint greet <name>", "greets someone")->and($code)->toBe(1);
+    $usage = ob_get_clean();
+
+    expect($code)->toBe(1)
+        ->and(strstr($usage, "User defined commands:", true))->toContain("bin/blueprint user:list")->not->toContain("greet")
+        ->and(strstr($usage, "User defined commands:"))->toContain("bin/blueprint greet <name>", "greets someone");
 });

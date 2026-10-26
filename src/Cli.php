@@ -12,20 +12,18 @@ namespace Blueprint;
  */
 class Cli
 {
-    /** @return array<string, array> command name => definition */
+    /** @return array<string, array> command name => definition, site commands have `userDefined` set */
     public static function commands(): array
     {
-        $files = [
-            ...glob(__DIR__ . "/cli/commands/*.php") ?: [],
-            ...glob(App::instance()->siteDir() . "/cli/*.php") ?: [],
-        ];
         $commands = [];
-        foreach ($files as $file) {
-            $command = require $file;
-            if (!is_array($command) || !is_string($command["command"] ?? null) || !is_callable($command["run"] ?? null)) {
-                throw new \UnexpectedValueException("$file must return an array with a command name and a run function");
+        foreach (["core" => __DIR__ . "/cli/commands", "site" => App::instance()->siteDir() . "/cli"] as $source => $dir) {
+            foreach (glob("$dir/*.php") ?: [] as $file) {
+                $command = require $file;
+                if (!is_array($command) || !is_string($command["command"] ?? null) || !is_callable($command["run"] ?? null)) {
+                    throw new \UnexpectedValueException("$file must return an array with a command name and a run function");
+                }
+                $commands[$command["command"]] = [...$command, "userDefined" => $source === "site"];
             }
-            $commands[$command["command"]] = $command;
         }
         ksort($commands);
 
@@ -61,12 +59,12 @@ class Cli
             $commands,
         );
         $width = max(array_map("strlen", $lines ?: [""]));
-        $usage = "Usage:" . PHP_EOL;
+        $usage = ["Usage:" . PHP_EOL, PHP_EOL . "User defined commands:" . PHP_EOL];
         foreach ($commands as $name => $command) {
-            $usage .= "  bin/blueprint " . str_pad($lines[$name], $width) . "   " . ($command["description"] ?? "") . PHP_EOL;
+            $usage[(int) $command["userDefined"]] .= "  bin/blueprint " . str_pad($lines[$name], $width) . "   " . ($command["description"] ?? "") . PHP_EOL;
         }
 
-        return $usage;
+        return str_contains($usage[1], "bin/blueprint") ? implode("", $usage) : $usage[0];
     }
 
     public static function askPassword(): string

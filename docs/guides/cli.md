@@ -2,7 +2,7 @@
 title: Command line
 sort: 8
 ---
-`bin/blueprint` runs commands, without arguments it lists them:
+`bin/blueprint` runs commands, without arguments it lists them (own commands under "User defined commands:"):
 
 ```sh
 bin/blueprint user:create <email> [role]   # creates a user (the first one is an admin), asks for the password
