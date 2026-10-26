@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4007f0324c2f8cf3224d69f115db9889",
+    "content-hash": "bef816d845c227df8957ef4f6a7b5684",
     "packages": [
         {
             "name": "carbonphp/carbon-doctrine-types",
@@ -3566,6 +3566,64 @@
             "time": "2022-02-21T01:04:05+00:00"
         },
         {
+            "name": "phlak/semver",
+            "version": "6.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/PHLAK/SemVer.git",
+                "reference": "5efaa9523cdf65ed740a1cb0a7c551a779ae21c6"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/PHLAK/SemVer/zipball/5efaa9523cdf65ed740a1cb0a7c551a779ae21c6",
+                "reference": "5efaa9523cdf65ed740a1cb0a7c551a779ae21c6",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.1 || ^8.2 || ^8.3 || ^8.4"
+            },
+            "require-dev": {
+                "phlak/coding-standards": "^4.0",
+                "phpstan/phpstan": "^2.0",
+                "yoast/phpunit-polyfills": "^3.0"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "src/Support/helpers.php"
+                ],
+                "psr-4": {
+                    "PHLAK\\SemVer\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Chris Kankiewicz",
+                    "email": "Chris@ChrisKankiewicz.com"
+                }
+            ],
+            "description": "Semantic versioning helper library",
+            "support": {
+                "issues": "https://github.com/PHLAK/SemVer/issues",
+                "source": "https://github.com/PHLAK/SemVer/tree/6.1.1"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/sponsors/PHLAK",
+                    "type": "github"
+                },
+                {
+                    "url": "https://paypal.me/ChrisKankiewicz",
+                    "type": "paypal"
+                }
+            ],
+            "time": "2025-06-14T16:31:14+00:00"
+        },
+        {
             "name": "phpdocumentor/reflection-common",
             "version": "2.2.1",
             "source": {
@@ -5982,7 +6040,9 @@
     "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
-    "platform": {},
+    "platform": {
+        "php": ">=8.3"
+    },
     "platform-dev": {},
     "plugin-api-version": "2.6.0"
 }

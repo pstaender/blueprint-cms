@@ -24,7 +24,8 @@
         "symfony/yaml": "^7.4"
     },
     "require-dev": {
-        "pestphp/pest": "^4.7"
+        "pestphp/pest": "^4.7",
+        "phlak/semver": "^6.1"
     },
     "config": {
         "allow-plugins": {
@@ -44,6 +45,10 @@
             "php -S localhost:8000 -t public public/index.php"
         ],
         "panel:build": "cd panel && npm install && npm run build",
-        "panel:dev": "cd panel && npm run dev"
+        "panel:dev": "cd panel && npm run dev",
+        "release": [
+            "Composer\\Config::disableProcessTimeout",
+            "php bin/release"
+        ]
     }
 }

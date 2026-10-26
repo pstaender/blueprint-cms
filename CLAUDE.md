@@ -8,6 +8,7 @@ Flat file CMS inspired by Kirby. PHP >= 8.3, namespace `Blueprint\` → `src/`. 
 - `composer test` (Pest, tests in `tests/`; they only use fixture projects in `tests/fixtures/`, never the project content)
 - `composer serve` → dev server on http://localhost:8000 (`public/index.php` is the front controller)
 - `composer panel:build` (Vue + Vite in `panel/` → `public/panel/`, gitignored), `composer panel:dev` (vite on :5173/panel/, proxies the API to :8000)
+- `composer release [version]` (`bin/release`, uses `phlak/semver`): suggests the next version after the latest `v*` tag (`0.1.0-alpha.1` first, pre-releases `alpha` → `beta` → `rc`) or takes your own (checked as semver, must be greater), writes it into `composer.json`, `panel/package.json` and the lock files, commits only these files and creates the annotated tag `v{version}`; nothing is pushed. Refuses when these files have uncommitted changes.
 - `bin/blueprint user:create <email> [role]`, `user:password <email>`, `user:list`, `content:uids`, `media:clear` (`Cli`: every php file in `src/cli/commands/`, plugins' `cli/` and `site/cli/` returns `["command", "description", "usage"?, "run" => fn (array $args)]`, run may return an int exit code; site commands override plugin and core ones)
 
 ## Architecture

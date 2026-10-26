@@ -32,6 +32,10 @@ composer test
 
 The documentation is a Blueprint CMS site itself: its content is in [`docs/`](docs) (guides, reference, examples) and this repository's config renders it, so `composer serve` shows it at http://localhost:8000. Start with [Getting started](docs/guides/getting-started.md).
 
+## Releases
+
+`composer release` suggests the next [semantic version](https://semver.org) after the latest git tag (pre-releases like `0.1.0-alpha.1` → `0.1.0-alpha.2`, `0.1.0-beta.1`, `0.1.0`) or takes your own (`composer release 0.2.0`). It writes the version into `composer.json` and `panel/package.json`, commits them and creates the tag `v0.2.0`; push it with `git push && git push origin v0.2.0`.
+
 ## License
 
 [MIT](LICENSE)

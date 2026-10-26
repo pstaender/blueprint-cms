@@ -1,0 +1,205 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * Bumps the version: `composer release [version]`.
+ * Suggests the next versions after the latest `v*` git tag (or 0.1.0-alpha.1), writes the version into composer.json
+ * and panel/package.json (+ the lock files), commits them and creates the tag `v{version}`. Nothing is pushed.
+ */
+
+declare(strict_types=1);
+
+use PHLAK\SemVer\Exceptions\InvalidVersionException;
+use PHLAK\SemVer\Version;
+
+require dirname(__DIR__) . "/vendor/autoload.php";
+
+const FIRST_VERSION = "0.1.0-alpha.1";
+const PRE_RELEASE_STAGES = ["alpha", "beta", "rc"];
+// semver.org's regex, without a `v` prefix and with complete major.minor.patch
+const SEMVER_REGEX = '/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/';
+const VERSION_FILES = ["composer.json", "composer.lock", "panel/package.json", "panel/package-lock.json"];
+
+chdir(dirname(__DIR__));
+
+function fail(string $message): never
+{
+    fwrite(STDERR, "$message\n");
+    exit(1);
+}
+
+function git(string ...$args): string
+{
+    exec("git " . implode(" ", array_map("escapeshellarg", $args)) . " 2>&1", $output, $code);
+
+    if ($code !== 0) {
+        fail("git " . implode(" ", $args) . " failed:\n" . implode("\n", $output));
+    }
+
+    return implode("\n", $output);
+}
+
+function latestVersion(): ?Version
+{
+    $latest = null;
+
+    foreach (array_filter(explode("\n", git("tag", "--list", "v*"))) as $tag) {
+        if (preg_match(SEMVER_REGEX, substr($tag, 1))) {
+            $version = new Version(substr($tag, 1));
+            $latest = $latest === null || $version->gt($latest) ? $version : $latest;
+        }
+    }
+
+    return $latest;
+}
+
+/**
+ * The next versions, the most likely first: 0.1.0-alpha.1 → 0.1.0-alpha.2, 0.1.0-beta.1, 0.1.0-rc.1, 0.1.0;
+ * 0.1.0 → 0.1.1, 0.2.0, 1.0.0, 0.2.0-alpha.1
+ *
+ * @return array<string, string> version => description
+ */
+function suggestions(?Version $latest): array
+{
+    if ($latest === null) {
+        return [FIRST_VERSION => "first version"];
+    }
+
+    $release = "$latest->major.$latest->minor.$latest->patch";
+
+    if ($latest->isPreRelease()) {
+        $suggestions = [(string) (clone $latest)->setBuild(null)->incrementPreRelease() => "next pre-release"];
+        $stage = explode(".", (string) $latest->preRelease)[0];
+        $index = array_search($stage, PRE_RELEASE_STAGES, true);
+
+        foreach (array_slice(PRE_RELEASE_STAGES, $index === false ? count(PRE_RELEASE_STAGES) : $index + 1) as $next) {
+            $suggestions["$release-$next.1"] = $next;
+        }
+
+        return $suggestions + [$release => "release"];
+    }
+
+    return [
+        (string) (clone $latest)->incrementPatch() => "patch",
+        (string) (clone $latest)->incrementMinor() => "minor",
+        (string) (clone $latest)->incrementMajor() => "major",
+        (clone $latest)->incrementMinor() . "-alpha.1" => "next minor alpha",
+    ];
+}
+
+function checkVersion(string $version, ?Version $latest): string
+{
+    $version = preg_replace('/^v/', "", trim($version));
+
+    if (!preg_match(SEMVER_REGEX, $version)) {
+        fail("$version is no semantic version (major.minor.patch[-pre.release][+build], e.g. " . FIRST_VERSION . ")");
+    }
+
+    try {
+        if ($latest !== null && !(new Version($version))->gt($latest)) {
+            fail("$version must be greater than the latest version $latest");
+        }
+    } catch (InvalidVersionException) {
+        fail("$version is no semantic version");
+    }
+
+    if (git("tag", "--list", "v$version") !== "") {
+        fail("The tag v$version already exists");
+    }
+
+    return $version;
+}
+
+function ask(string $question): string
+{
+    echo $question;
+
+    return trim((string) fgets(STDIN));
+}
+
+/**
+ * Sets the version right after `name`.
+ */
+function withVersion(stdClass $data, string $version): stdClass
+{
+    $result = new stdClass();
+
+    foreach ($data as $key => $value) {
+        if ($key !== "version") {
+            $result->$key = $value;
+        }
+
+        if ($key === "name") {
+            $result->version = $version;
+        }
+    }
+
+    return $result;
+}
+
+/**
+ * Keeps the file's indentation, objects stay objects (also empty ones).
+ */
+function writeJsonVersion(string $file, string $version, string $indent): void
+{
+    $data = withVersion(json_decode(file_get_contents($file)), $version);
+
+    if (isset($data->packages->{""})) {
+        $data->packages->{""} = withVersion($data->packages->{""}, $version);
+    }
+
+    $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    $json = preg_replace_callback('/^( +)/m', fn($match) => str_repeat($indent, strlen($match[1]) / 4), $json);
+    file_put_contents($file, "$json\n");
+}
+
+$arguments = array_slice($argv, 1);
+$interactive = stream_isatty(STDIN);
+
+if (count($arguments) > 1 || in_array($arguments[0] ?? "", ["-h", "--help"], true)) {
+    fail("Usage: composer release [version]");
+}
+
+if (trim(git("status", "--porcelain", "--", ...VERSION_FILES)) !== "") {
+    fail("Commit or discard the changes of " . implode(", ", VERSION_FILES) . " first");
+}
+
+$latest = latestVersion();
+echo "Latest version: " . ($latest === null ? "none" : "v$latest") . "\n";
+
+if (isset($arguments[0])) {
+    $version = checkVersion($arguments[0], $latest);
+} elseif (!$interactive) {
+    fail("Usage: composer release <version> (no terminal to ask for the version)");
+} else {
+    $suggestions = suggestions($latest);
+    $choices = array_keys($suggestions);
+
+    foreach ($choices as $index => $choice) {
+        printf("  [%d] %s (%s)\n", $index + 1, $choice, $suggestions[$choice]);
+    }
+
+    $answer = ask("Version (a number or your own version) [1]: ");
+    $choice = match (true) {
+        $answer === "" => $choices[0],
+        ctype_digit($answer) => $choices[(int) $answer - 1] ?? fail("There is no choice $answer"),
+        default => $answer,
+    };
+    $version = checkVersion($choice, $latest);
+}
+
+if ($interactive && strtolower(ask("Release v$version (commit the version files and tag it)? [y/N] ")) !== "y") {
+    fail("Cancelled");
+}
+
+writeJsonVersion("composer.json", $version, "    ");
+writeJsonVersion("panel/package.json", $version, "  ");
+writeJsonVersion("panel/package-lock.json", $version, "  ");
+// the version is part of composer.lock's content hash
+exec("composer update --lock --no-install --no-scripts --no-plugins --quiet 2>&1", $output, $code);
+$code === 0 || fail("composer update --lock failed:\n" . implode("\n", $output));
+
+git("commit", "--only", "-m", "Release v$version", "--", ...VERSION_FILES);
+git("tag", "-a", "v$version", "-m", "v$version");
+
+echo "Tagged v$version, push it with: git push && git push origin v$version\n";
