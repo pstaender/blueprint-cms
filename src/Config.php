@@ -15,6 +15,8 @@ class Config
         "siteFolder" => "site",
         // converts all local <img> of rendered pages to AVIF, see ImageOptimizer
         "optimizeContentImages" => false,
+        // Markdown Extra (tables, footnotes, …) for md() and textarea fields
+        "markdown" => ["extra" => false],
     ];
 
     public function __construct(

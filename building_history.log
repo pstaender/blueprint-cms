@@ -293,3 +293,6 @@
 2026-10-26 – Icon field
 - New field type `icon`: an icon name (datalist of the panel icons), emoji/short text, or an uploaded svg up to 50 KB stored inline as `data:image/svg+xml;base64,…` (`Field::isValidIcon`, `IconField.vue`). The value of a page's first `icon` field overrides its blueprint's icon in the panel (`Panel::pageIcon`).
 - The home page no longer gets a house icon by default, set it in its blueprint or icon field.
+
+2026-10-26 – Markdown Extra as option
+- `md()` and textarea fields use plain Markdown by default; config `"markdown" => ["extra" => true]` enables Markdown Extra (tables, footnotes, …). Both go through `App::markdown($markdown, $markup)`. The docs project enables it in `config/config.php`.

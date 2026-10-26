@@ -6,6 +6,8 @@ namespace Blueprint;
 
 use Dumbo\Context;
 use Dumbo\Dumbo;
+use Michelf\Markdown;
+use Michelf\MarkdownExtra;
 use Nyholm\Psr7\Response;
 use Nyholm\Psr7\Stream;
 use Nyholm\Psr7\ServerRequest;
@@ -149,6 +151,18 @@ class App
     {
         error_reporting($this->isDebug() ? E_ALL : E_ALL & ~E_DEPRECATED & ~E_NOTICE);
         ini_set("display_errors", $this->isDebug() ? "1" : "0");
+    }
+
+    /**
+     * Markdown to html, with Markdown Extra (tables, footnotes, definition lists, …) if `markdown.extra` is enabled.
+     * Without `$markup`, inline html is escaped.
+     */
+    public function markdown(string $markdown, bool $markup = true): string
+    {
+        $parser = $this->config->get("markdown.extra") ? new MarkdownExtra() : new Markdown();
+        $parser->no_markup = !$markup;
+
+        return $parser->transform($markdown);
     }
 
     public function isPanelEnabled(): bool

@@ -10,7 +10,6 @@ use Blueprint\Redirect;
 use Blueprint\Site;
 use Blueprint\Snippet;
 use Blueprint\User;
-use Michelf\MarkdownExtra;
 
 /**
  * page() returns the current page, page("blog") finds a page by its path.
@@ -43,7 +42,7 @@ function md(?string $markdown, ?Page $page = null): string
         return "";
     }
 
-    return File::resolveUrls(MarkdownExtra::defaultTransform($markdown), $page ?? Page::current());
+    return File::resolveUrls(App::instance()->markdown($markdown), $page ?? Page::current());
 }
 
 /**

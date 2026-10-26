@@ -8,7 +8,6 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Support\Stringable;
-use Michelf\MarkdownExtra;
 
 /**
  * The value of a field, returned by field methods of models, e.g. $page->createdAt().
@@ -404,9 +403,6 @@ class FieldValue implements \IteratorAggregate, \Countable, \JsonSerializable, \
      */
     private static function markdown(string $markdown): string
     {
-        $parser = new MarkdownExtra();
-        $parser->no_markup = true;
-
-        return $parser->transform($markdown);
+        return App::instance()->markdown($markdown, markup: false);
     }
 }

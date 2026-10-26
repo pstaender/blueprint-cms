@@ -143,3 +143,12 @@ it("gives site and users field methods", function () {
 it("renders field values in templates", function () {
     expect(body(App::instance()->request("/showcase")))->toBe("Fish &amp; Chips &lt;b&gt;|25.10.2026");
 });
+
+it("uses Markdown Extra only if markdown.extra is enabled", function () {
+    $table = "| a | b |\n|---|---|\n| 1 | 2 |\n\nText[^1]\n\n[^1]: Note";
+
+    expect(md($table))->not->toContain("<table>")->not->toContain("footnote");
+
+    createApp(BLUEPRINT_PROJECT, ["markdown" => ["extra" => true]]);
+    expect(md($table))->toContain("<table>")->toContain('class="footnote');
+});
