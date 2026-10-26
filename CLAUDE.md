@@ -8,7 +8,7 @@ Flat file CMS inspired by Kirby. PHP >= 8.3, namespace `Blueprint\` → `src/`. 
 - `composer test` (Pest, tests in `tests/`; they only use fixture projects in `tests/fixtures/`, never the project content)
 - `composer serve` → dev server on http://localhost:8000 (`public/index.php` is the front controller)
 - `composer panel:build` (Vue + Vite in `panel/` → `public/panel/`, gitignored), `composer panel:dev` (vite on :5173/panel/, proxies the API to :8000)
-- `bin/blueprint user:create <email> [role]`, `user:password <email>`, `user:list`, `content:uids`, `media:clear`
+- `bin/blueprint user:create <email> [role]`, `user:password <email>`, `user:list`, `content:uids`, `media:clear` (`Cli`: every php file in `src/cli/commands/` and `site/cli/` returns `["command", "description", "usage"?, "run" => fn (array $args)]`, run may return an int exit code; site commands override core ones)
 
 ## Architecture
 

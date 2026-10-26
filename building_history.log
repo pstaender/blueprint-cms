@@ -233,3 +233,10 @@
 2026-10-26 – Snippets in site/templates/snippets
 - Snippets (and block snippets) moved from `site/snippets/` to `site/templates/snippets/`, as in the original spec,
   next to `site/templates/partials/`.
+
+2026-10-26 – CLI commands as files
+- `bin/blueprint` only creates the app and calls `Cli::run($argv)`. Commands are php files returning
+  `["command", "description", "usage"?, "run"]`: core ones in `src/cli/commands/`, own ones in `site/cli/`
+  (same name overrides the core command). `run(array $args)` may return an int exit code (default 0), exceptions
+  print the message and exit with 1. Unknown/no command prints the usage generated from all commands.
+- `askPassword()` became `Cli::askPassword()`.

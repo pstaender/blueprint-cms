@@ -24,6 +24,8 @@ bin/blueprint content:uids                          # adds missing uids
 bin/blueprint media:clear                           # deletes optimized images
 ```
 
+See [Command line](/guides/cli) for all commands.
+
 Then log in at http://localhost:8000/panel.
 
 ## What it does

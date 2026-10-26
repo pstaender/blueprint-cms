@@ -4,8 +4,8 @@
 declare(strict_types=1);
 
 use Blueprint\App;
+use Blueprint\Cli;
 use Blueprint\Config;
-use Blueprint\User;
 
 define("PROJECT_DIR", dirname(__DIR__));
 
@@ -13,81 +13,4 @@ require PROJECT_DIR . "/vendor/autoload.php";
 
 App::create(Config::load(PROJECT_DIR . "/config"));
 
-$usage = <<<TXT
-Usage:
-  bin/blueprint user:create <email> [role]   creates a user (the first one is an admin), asks for the password
-  bin/blueprint user:password <email|uid>    sets a new password
-  bin/blueprint user:list
-  bin/blueprint content:uids                 adds a uid to all pages, files and users without one
-  bin/blueprint media:clear                  deletes the optimized images (they are created again when needed)
-
-TXT;
-
-function askPassword(): string
-{
-    if (getenv("BLUEPRINT_PASSWORD")) {
-        return getenv("BLUEPRINT_PASSWORD");
-    }
-
-    echo "Password (min. 8 characters): ";
-    shell_exec("stty -echo");
-    $password = trim((string) fgets(STDIN));
-    shell_exec("stty echo");
-    echo PHP_EOL;
-
-    return $password;
-}
-
-try {
-    switch ($argv[1] ?? "") {
-        case "user:create":
-            $user = User::create($argv[2] ?? "", askPassword(), $argv[3] ?? null);
-            echo "Created {$user->email()} ({$user->uid()})", PHP_EOL;
-            break;
-        case "user:password":
-            $user = User::find($argv[2] ?? "") ?? throw new InvalidArgumentException("User not found");
-            $user->changePassword(askPassword());
-            echo "Password of {$user->email()} changed", PHP_EOL;
-            break;
-        case "user:list":
-            foreach (User::all() as $user) {
-                echo "{$user->uid()}  {$user->email()}  {$user->role()}", PHP_EOL;
-            }
-            break;
-        case "content:uids":
-            $count = 0;
-            foreach (site()->index() as $page) {
-                if ($page->uid() === null && $page->isEditable()) {
-                    $page->update([]);
-                    $count++;
-                }
-                foreach ($page->files() as $file) {
-                    if ($file->uid() === null) {
-                        $file->update([]);
-                        $count++;
-                    }
-                }
-            }
-            foreach (User::all() as $user) {
-                if ($user->uid() === "") {
-                    $user->update([]);
-                    $count++;
-                }
-            }
-            echo "Added $count uids", PHP_EOL;
-            break;
-        case "media:clear":
-            $dir = App::instance()->publicDir() . Blueprint\ImageOptimizer::URL_PATH;
-            $files = glob("$dir/*/*.avif") ?: [];
-            array_map("unlink", $files);
-            array_map("rmdir", glob("$dir/*", GLOB_ONLYDIR) ?: []);
-            echo "Deleted " . count($files) . " optimized images", PHP_EOL;
-            break;
-        default:
-            echo $usage;
-            exit(1);
-    }
-} catch (Throwable $error) {
-    fwrite(STDERR, $error->getMessage() . PHP_EOL);
-    exit(1);
-}
+exit(Cli::run($argv));

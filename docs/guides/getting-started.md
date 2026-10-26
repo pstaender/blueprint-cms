@@ -16,7 +16,7 @@ composer panel:build   # the admin panel, see Panel guide
 ## Folder structure
 
 ```
-bin/blueprint       cli: create users, set passwords
+bin/blueprint       cli, see Command line
 config/             project config (config.php, config.{hostname}.php)
 content/            pages, site.json, users.json, redirects.json
 panel/              source of the panel (Vue + Vite)
@@ -30,6 +30,7 @@ site/
     files/          file blueprints
     users/          user blueprints, one per role
     site.yml        the site blueprint
+  cli/              own bin/blueprint commands
   config/           site config (overridden by config/)
   templates/        php templates, one per page type
     partials/       partials, see partial()
