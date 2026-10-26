@@ -300,6 +300,19 @@ a:hover {
   line-height: 1.5;
 }
 
+/* highlighted code (speed-highlight): only the token colors of the theme, the box is ours */
+.docs-text pre [class*="shj-lang-"] {
+  display: block;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  font: 14px/1.5 var(--font-mono);
+  white-space: pre;
+}
+
 .docs-copy {
   position: absolute;
   top: 8px;

@@ -62,8 +62,11 @@ $title ??= $page?->title()->value();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= esc($title) ?> | <?= esc($siteName) ?></title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@speed-highlight/core@2.1.0/dist/themes/github-light.css" media="(prefers-color-scheme: light)">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@speed-highlight/core@2.1.0/dist/themes/github-dark.css" media="(prefers-color-scheme: dark)">
     <link rel="stylesheet" href="<?= esc(static_file_url("assets/docs.css")) ?>">
     <script src="<?= esc(static_file_url("assets/docs.js")) ?>" defer></script>
+    <script src="<?= esc(static_file_url("assets/js/highlight.js")) ?>" type="module"></script>
 </head>
 <body>
     <header class="docs-header">

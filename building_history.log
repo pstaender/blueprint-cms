@@ -225,3 +225,7 @@
   tree on the left, breadcrumb, previous/next, "On this page"), `site/templates/default.php` and `404.php` use it.
   `public/assets/docs.css` (Kirby docs like, dark mode, menu as drawer below 800px) and `docs.js` (heading ids +
   anchors, "On this page" with the current section, copy buttons, mobile menu). No syntax highlighting yet.
+- Code highlighting for the docs only: `public/assets/js/highlight.js` (module, loaded by the docs layout) imports
+  speed-highlight 2.1.0 from jsDelivr when a page has ```lang blocks, colors the `<code>` inline so our `<pre>`
+  styles stay, github-light/-dark themes by color scheme. speed-highlight has no php, so a small own grammar is
+  registered with `setLoader()`; `sh` → `bash` etc.
