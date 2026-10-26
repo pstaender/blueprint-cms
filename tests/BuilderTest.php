@@ -103,7 +103,9 @@ describe("files", function () {
             ->and($response->getHeaderLine("Content-Disposition"))->toStartWith("inline")
             ->and($response->getHeaderLine("X-Content-Type-Options"))->toBe("nosniff")
             ->and($this->app->request("/builder/photo.png.json")->getStatusCode())->toBe(404)
-            ->and($this->app->request("/builder/page.json")->getStatusCode())->toBe(404);
+            ->and($this->app->request("/builder/page.json")->getStatusCode())->toBe(404)
+            ->and($this->app->request("/builder/photo.png", "POST")->getStatusCode())->toBe(405)
+            ->and($this->app->request("/builder/photo.png", "OPTIONS")->getStatusCode())->toBe(204);
     });
 
     it("resolves file references", function () {

@@ -16,6 +16,13 @@ it("uses the output of a page php file as response", function () {
     expect(body($this->app->request("/echo")))->toBe("echoed by echo");
 });
 
+it("lets page php files handle every request method", function () {
+    foreach (["POST", "PUT", "PATCH", "DELETE", "OPTIONS"] as $method) {
+        expect(body($this->app->request("/echo", $method)))->toBe("echoed by echo")
+            ->and(body($this->app->request("/data-page", $method)))->toBe("Data from PHP|");
+    }
+});
+
 it("redirects from templates with redirect()", function () {
     $response = $this->app->request("/go");
 

@@ -61,7 +61,7 @@ site/
 
 ## Request lifecycle
 
-`public/index.php` creates the `App`, which resolves every request. `/panel` goes to the [panel](/guides/panel) (if enabled), all other requests (any method, so a page's php file can handle forms) to the pages:
+`public/index.php` creates the `App`, which resolves every request. `/panel` goes to the [panel](/guides/panel) (if enabled), all other requests to the pages. Pages with their own php file answer every method (so they can handle forms), other pages and files only `GET`, `HEAD` and `OPTIONS` (`405` otherwise):
 
 1. `content/redirects.json`
 2. the page for the path, otherwise 404 (`site/templates/404.php`)

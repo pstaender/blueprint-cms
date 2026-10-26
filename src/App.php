@@ -18,6 +18,9 @@ class App
 {
     private static ?App $instance = null;
 
+    /** The methods of content without php, see staticMethodResponse() */
+    private const STATIC_METHODS = "GET, HEAD, OPTIONS";
+
     private Dumbo $router;
     private ?Site $site = null;
     private ?Redirects $redirects = null;
@@ -31,7 +34,7 @@ class App
         $this->router = new Dumbo($this->isDebug() ? Dumbo::ENV_DEVELOPMENT : Dumbo::ENV_PRODUCTION);
         // trailing slashes are part of a page's canonical url, see Page::url()
         $this->router->setRemoveTrailingSlash(false);
-        $this->router->on(["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE"], "*", $this->handleRequest(...));
+        $this->router->on(["GET", "HEAD", "OPTIONS", "POST", "PUT", "PATCH", "DELETE"], "*", $this->handleRequest(...));
         $this->router->notFound(fn(Context $context) => $this->notFoundResponse());
         $this->router->onError(fn(\Throwable $error) => $this->errorResponse($error));
     }
@@ -238,7 +241,11 @@ class App
             if ($page === null) {
                 $file = $this->findFile($path);
 
-                return $file === null ? $this->notFoundResponse() : $this->fileResponse($file);
+                return $file === null ? $this->notFoundResponse() : ($this->staticMethodResponse($request) ?? $this->fileResponse($file));
+            }
+
+            if ($page->phpFile() === null && $response = $this->staticMethodResponse($request)) {
+                return $response;
             }
 
             if ($page->url() !== $path) {
@@ -258,6 +265,19 @@ class App
         } finally {
             Page::setCurrent(null);
         }
+    }
+
+    /**
+     * Content without php (markdown/json pages, files) only answers GET, HEAD and OPTIONS,
+     * other methods are left to a page's own php file.
+     */
+    private function staticMethodResponse(ServerRequestInterface $request): ?ResponseInterface
+    {
+        return match ($request->getMethod()) {
+            "GET", "HEAD" => null,
+            "OPTIONS" => new Response(204, ["Allow" => self::STATIC_METHODS]),
+            default => new Response(405, ["Allow" => self::STATIC_METHODS]),
+        };
     }
 
     /**

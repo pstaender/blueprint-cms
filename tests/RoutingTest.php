@@ -27,13 +27,20 @@ it("serves folder pages with page.md", function () {
         ->and(body($response))->toContain("A very boring page");
 });
 
-it("renders pages for every request method", function () {
+it("only answers GET, HEAD and OPTIONS for pages without a php file", function () {
     foreach (["POST", "PUT", "PATCH", "DELETE"] as $method) {
         $response = $this->app->request("/imprint", $method);
 
-        expect($response->getStatusCode())->toBe(200)
-            ->and(body($response))->toContain("A very boring page");
+        expect($response->getStatusCode())->toBe(405)
+            ->and($response->getHeaderLine("Allow"))->toBe("GET, HEAD, OPTIONS");
     }
+
+    $response = $this->app->request("/imprint", "OPTIONS");
+
+    expect($response->getStatusCode())->toBe(204)
+        ->and($response->getHeaderLine("Allow"))->toBe("GET, HEAD, OPTIONS")
+        ->and($this->app->request("/imprint", "HEAD")->getStatusCode())->toBe(200)
+        ->and($this->app->request("/missing", "POST")->getStatusCode())->toBe(404);
 });
 
 it("redirects pages with subpages to their trailing slash url", function () {
