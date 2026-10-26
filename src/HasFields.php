@@ -6,7 +6,7 @@ namespace Blueprint;
 
 /**
  * Field methods for models: $page->createdAt() returns the FieldValue of the `createdAt` field.
- * Use field("name") for fields whose name is also a method of the model, e.g. field("url").
+ * For fields whose name is also a method of the model, use a leading underscore ($page->_url()) or field("url").
  */
 trait HasFields
 {
@@ -33,6 +33,6 @@ trait HasFields
 
     public function __call(string $name, array $arguments): FieldValue
     {
-        return $this->field($name);
+        return $this->field(str_starts_with($name, "_") ? substr($name, 1) : $name);
     }
 }

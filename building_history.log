@@ -313,3 +313,6 @@
 2026-10-26 – Accent colors: docs blue, panel black
 - `#068ef5` is the accent of the docs (`--color-accent` in docs.css, light and dark), not the panel: the panel's `--color-accent` is its black primary color again, the focus color its blue again. The variable stays, so a project can set its own panel accent.
 - Panel checkboxes and radios are drawn with css (`appearance: none`): accent background, check in `--color-accent-text`, rounded corners; Firefox showed its own blue ones before. Wrapped in `:where()`, so rules like `.item-select` keep their size and margins.
+
+2026-10-26 – Field methods with a leading underscore
+- `$page->_url()` returns the field value even if the model has a method with that name; `HasFields::__call` strips one leading underscore (same as `field("url")`).

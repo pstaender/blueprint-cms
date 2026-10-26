@@ -13,10 +13,11 @@ Every field is a method of its model (page, site, user, structure row, object fi
 
 The field definition comes from the model's [blueprint](/reference/blueprints/). Data that isn't defined in the blueprint works too: it is treated as `text` (or as a list for arrays).
 
-Model methods win over fields with the same name (e.g. `url`, `type`, `children`). Use `field()` for those:
+Model methods win over fields with the same name (e.g. `url`, `type`, `children`). Add a leading underscore to always get the field value, or use `field()`:
 
 ```php
-<?= $page->field("url") ?>
+<?= $page->_url() ?>                            // the field "url", not the page url
+<?= $page->field("url") ?>                      // the same
 ```
 
 `$page->title()` is a field method too, it falls back to the slug.

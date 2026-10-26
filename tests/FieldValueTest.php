@@ -21,6 +21,13 @@ it("returns field values from field methods", function () {
         ->and($this->page->field("createdAt")->value())->toBe("2026-10-25");
 });
 
+it("returns field values for method names with a leading underscore", function () {
+    expect($this->page->_createdAt()->value())->toBe("2026-10-25")
+        ->and($this->page->type())->toBeString()
+        ->and($this->page->_type())->toBeInstanceOf(FieldValue::class)
+        ->and($this->page->_type()->value())->toBe($this->page->data()->type);
+});
+
 it("escapes text output", function () {
     expect((string) $this->page->title())->toBe("Fish &amp; Chips &lt;b&gt;")
         ->and((string) $this->page->undefinedField())->toBe("&lt;i&gt;not in blueprint&lt;/i&gt;")
