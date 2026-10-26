@@ -56,13 +56,23 @@ class User
         }
     }
 
-    public static function create(string $email, string $password, string $role = self::DEFAULT_ROLE, array $data = []): self
+    /**
+     * The first user becomes an admin by default. The only user is an admin anyway (see role()), so it keeps
+     * the admin role when a second user is created.
+     */
+    public static function create(string $email, string $password, ?string $role = null, array $data = []): self
     {
         if (trim($email) === "" || self::find($email) !== null) {
             throw new \InvalidArgumentException("The email is empty or already taken");
         }
 
+        $users = self::all();
+        $role ??= $users->isEmpty() ? self::ADMIN_ROLE : self::DEFAULT_ROLE;
         self::validateRole($role);
+
+        if ($users->count() === 1 && $users->first()->data->role !== self::ADMIN_ROLE) {
+            $users = $users->map(fn(self $user) => new self(new Data([...$user->data->toArray(), "role" => self::ADMIN_ROLE])));
+        }
 
         $user = new self(new Data(SystemFields::apply([
             ...array_diff_key($data, array_flip(SystemFields::NAMES)),
@@ -71,7 +81,7 @@ class User
             "password" => self::hashPassword($password),
         ])));
 
-        self::saveAll([...self::all()->all(), $user]);
+        self::saveAll([...$users->all(), $user]);
 
         return $user;
     }
@@ -148,14 +158,14 @@ class User
     }
 
     /**
-     * The data without the password hash.
+     * The data without the password hash, with the effective role.
      */
     public function toArray(): array
     {
         $data = $this->data->toArray();
         unset($data["password"]);
 
-        return $data;
+        return [...$data, "role" => $this->role()];
     }
 
     /**
@@ -198,8 +208,15 @@ class User
         return $this->blueprint()->field($name);
     }
 
+    /**
+     * The only user is always an admin, so there is someone who can manage roles.
+     */
     public function role(): string
     {
+        if (self::all()->count() === 1 && $this->isSame(self::all()->first())) {
+            return self::ADMIN_ROLE;
+        }
+
         return (string) ($this->data->role ?? self::DEFAULT_ROLE);
     }
 

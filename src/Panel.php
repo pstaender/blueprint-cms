@@ -533,11 +533,13 @@ class Panel
     private function createUser(ServerRequestInterface $request): ResponseInterface
     {
         $input = self::input($request);
-        $user = User::create(
-            (string) ($input["email"] ?? ""),
-            (string) ($input["password"] ?? ""),
-            (string) (($input["role"] ?? "") ?: User::DEFAULT_ROLE),
-        );
+        $role = (string) (($input["role"] ?? "") ?: User::DEFAULT_ROLE);
+
+        if ($role !== User::DEFAULT_ROLE) {
+            self::requireAdmin("Only admins can choose the role of a user");
+        }
+
+        $user = User::create((string) ($input["email"] ?? ""), (string) ($input["password"] ?? ""), $role);
 
         return $this->getUser($request, $user->uid())->withStatus(201);
     }
@@ -560,10 +562,13 @@ class Panel
             ? $this->validatedValues($user->blueprint(), $user->data()->toArray(), $input["data"])
             : [];
 
-        foreach (["email", "role"] as $key) {
-            if (isset($input[$key])) {
-                $values[$key] = (string) $input[$key];
-            }
+        if (isset($input["email"])) {
+            $values["email"] = (string) $input["email"];
+        }
+
+        if (isset($input["role"]) && $input["role"] !== $user->role()) {
+            self::requireAdmin("Only admins can change the role of a user");
+            $values["role"] = (string) $input["role"];
         }
 
         $user = $user->update($values);
@@ -586,6 +591,13 @@ class Panel
         $user->delete();
 
         return new Response(204);
+    }
+
+    private static function requireAdmin(string $message): void
+    {
+        if (User::current()?->isAdmin() !== true) {
+            throw new ApiError($message, 403);
+        }
     }
 
     private function findUser(string $uid): User

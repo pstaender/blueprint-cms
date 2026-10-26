@@ -32,9 +32,9 @@ A JSON REST API under `/panel/api`, implemented in [`src/Panel.php`](../../../sr
 | `GET` | `/blueprints/pages` | | page types: `[{type, title, icon}]`, `page` first (`default` only if both blueprints exist) |
 | `GET` | `/roles` | | `[{name, title}]`, see [roles](../01_blueprints/04_users/page.md#roles) |
 | `GET` | `/users` | | all users (without passwords) |
-| `POST` | `/users` | `{email, password, role?}` | create a user |
+| `POST` | `/users` | `{email, password, role?}` | create a user, a `role` other than `user` needs an admin (403) |
 | `GET` | `/users/{uid}` | | user data, `role`, `blueprint` |
-| `PATCH` | `/users/{uid}` | `{data?, email?, role?, password?, currentPassword?}` | a new `password` needs the logged in user's `currentPassword` (422 if wrong), except for admins |
+| `PATCH` | `/users/{uid}` | `{data?, email?, role?, password?, currentPassword?}` | a new `password` needs the logged in user's `currentPassword` (422 if wrong), except for admins; changing the `role` needs an admin (403) |
 | `DELETE` | `/users/{uid}` | | (not yourself) |
 
 `ref` is the value pickers store: `page://uid`, `file://uid`, `user://uid` (the path or filename for models without uid).

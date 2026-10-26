@@ -15,7 +15,7 @@ App::create(Config::load(PROJECT_DIR . "/config"));
 
 $usage = <<<TXT
 Usage:
-  bin/blueprint user:create <email> [role]   creates a user, asks for the password
+  bin/blueprint user:create <email> [role]   creates a user (the first one is an admin), asks for the password
   bin/blueprint user:password <email|uid>    sets a new password
   bin/blueprint user:list
   bin/blueprint content:uids                 adds a uid to all pages, files and users without one
@@ -41,7 +41,7 @@ function askPassword(): string
 try {
     switch ($argv[1] ?? "") {
         case "user:create":
-            $user = User::create($argv[2] ?? "", askPassword(), $argv[3] ?? "user");
+            $user = User::create($argv[2] ?? "", askPassword(), $argv[3] ?? null);
             echo "Created {$user->email()} ({$user->uid()})", PHP_EOL;
             break;
         case "user:password":

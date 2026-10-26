@@ -48,7 +48,9 @@ async function saveDialog() {
       dialog.value = null;
       return router.push("/users");
     }
-    const changes = dialog.value === "password" ? { password: form.value.password, currentPassword: form.value.currentPassword } : { email: form.value.email, role: form.value.role };
+    const changes = dialog.value === "password"
+      ? { password: form.value.password, currentPassword: form.value.currentPassword }
+      : { email: form.value.email, ...(session.user?.role === "admin" ? { role: form.value.role } : {}) };
     load(await api.patch(`/users/${props.uid}`, changes));
     if (isCurrent.value) Object.assign(session.user, { email: user.value.email, role: user.value.role });
     dialog.value = null;
@@ -97,7 +99,7 @@ onMounted(async () => load(await api.get(`/users/${props.uid}`)));
           <span class="field-label">Email</span>
           <input v-model="form.email" class="input" type="text" required>
         </label>
-        <RoleInput v-model="form.role" />
+        <RoleInput v-if="session.user?.role === 'admin'" v-model="form.role" />
       </template>
       <template v-else-if="dialog === 'password'">
         <label v-if="needsCurrentPassword" class="field">

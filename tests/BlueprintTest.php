@@ -137,7 +137,8 @@ it("loads site and user blueprints", function () {
 it("falls back to the core user blueprint", function () {
     createApp(WEBSITE_PROJECT);
 
-    expect(User::find("admin")->blueprint()->name)->toBe("users/default");
+    expect(User::find("guest")->blueprint()->name)->toBe("users/default")
+        ->and(User::find("admin")->blueprint()->name)->toBe("users/admin");
 });
 
 it("lists blueprint names and ignores invalid names", function () {

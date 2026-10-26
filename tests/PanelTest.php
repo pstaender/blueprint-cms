@@ -11,9 +11,9 @@ beforeEach(function () {
 
 afterEach(fn() => removeProject($this->dir));
 
-function login(App $app): string
+function login(App $app, string $email = "panel@example.com", string $password = "secret-password"): string
 {
-    $response = $app->request("/panel/api/session", "POST", ["email" => "panel@example.com", "password" => "secret-password"]);
+    $response = $app->request("/panel/api/session", "POST", ["email" => $email, "password" => $password]);
 
     return json_decode(body($response), true)["csrf"];
 }
@@ -133,11 +133,13 @@ it("creates, publishes, sorts and deletes pages", function () {
 it("manages users", function () {
     $csrf = login($this->app);
 
-    [$status, $user] = api($this->app, "POST", "/users", ["email" => "new@example.com", "password" => "long-enough", "role" => "editor"], $csrf);
+    [$status, $user] = api($this->app, "POST", "/users", ["email" => "new@example.com", "password" => "long-enough"], $csrf);
     expect($status)->toBe(201)
-        ->and($user["role"])->toBe("editor")
-        ->and($user["blueprint"]["name"])->toBe("users/editor")
-        ->and(api($this->app, "POST", "/users", ["email" => "x@example.com", "password" => "short"], $csrf)[0])->toBe(400);
+        ->and($user["role"])->toBe("user")
+        ->and(api($this->app, "POST", "/users", ["email" => "x@example.com", "password" => "short"], $csrf)[0])->toBe(400)
+        ->and(api($this->app, "POST", "/users", ["email" => "y@example.com", "password" => "long-enough", "role" => "editor"], $csrf)[0])->toBe(403)
+        ->and(api($this->app, "PATCH", "/users/{$user["uid"]}", ["role" => "editor"], $csrf)[0])->toBe(403)
+        ->and(api($this->app, "PATCH", "/users/{$user["uid"]}", ["role" => "user", "email" => "new@example.com"], $csrf)[0])->toBe(200);
 
     $path = "/users/{$user["uid"]}";
     [$status, $result] = api($this->app, "PATCH", $path, ["password" => "another-password", "currentPassword" => "wrong"], $csrf);
@@ -145,20 +147,39 @@ it("manages users", function () {
         ->and($result["errors"])->toHaveKey("currentPassword")
         ->and(api($this->app, "PATCH", $path, ["password" => "another-password"], $csrf)[0])->toBe(422);
 
-    [, $user] = api($this->app, "PATCH", $path, ["data" => ["bio" => "Hi"], "password" => "another-password", "currentPassword" => "secret-password"], $csrf);
-    expect($user["bio"])->toBe("Hi")
+    [, $user] = api($this->app, "PATCH", $path, ["data" => ["name" => "Hi"], "password" => "another-password", "currentPassword" => "secret-password"], $csrf);
+    expect($user["name"])->toBe("Hi")
         ->and(User::find("new@example.com")->verifyPassword("another-password"))->toBeTrue()
         ->and(array_column(api($this->app, "GET", "/users")[1], "email"))->toContain("new@example.com")
         ->and(api($this->app, "DELETE", "/users/" . User::find("panel@example.com")->uid(), csrf: $csrf)[0])->toBe(400);
 
     User::create("chief@example.com", "admin-password", "admin");
-    $response = $this->app->request("/panel/api/session", "POST", ["email" => "chief@example.com", "password" => "admin-password"]);
-    $csrf = json_decode(body($response), true)["csrf"];
+    $csrf = login($this->app, "chief@example.com", "admin-password");
+    [$status, $user] = api($this->app, "PATCH", $path, ["role" => "editor"], $csrf);
 
-    expect(api($this->app, "PATCH", $path, ["password" => "admin-changed"], $csrf)[0])->toBe(200)
+    expect($status)->toBe(200)
+        ->and($user["blueprint"]["name"])->toBe("users/editor")
+        ->and(api($this->app, "POST", "/users", ["email" => "y@example.com", "password" => "long-enough", "role" => "editor"], $csrf)[0])->toBe(201)
+        ->and(api($this->app, "PATCH", $path, ["password" => "admin-changed"], $csrf)[0])->toBe(200)
         ->and(User::find("new@example.com")->verifyPassword("admin-changed"))->toBeTrue()
         ->and(User::find("chief@example.com")->isAdmin())->toBeTrue()
         ->and(User::find("chief@example.com")->blueprint()->name)->toBe("users/admin");
+});
+
+it("makes the only user an admin", function () {
+    file_put_contents("$this->dir/content/users.json", '[{"email": "solo@example.com", "role": "editor"}]');
+
+    expect(User::find("solo@example.com")->role())->toBe("admin")
+        ->and(User::find("solo@example.com")->toArray()["role"])->toBe("admin");
+
+    User::create("second@example.com", "secret-password");
+
+    expect(User::find("solo@example.com")->role())->toBe("admin")
+        ->and(User::find("second@example.com")->role())->toBe("user");
+
+    unlink("$this->dir/content/users.json");
+
+    expect(User::create("first@example.com", "secret-password")->data->role)->toBe("admin");
 });
 
 it("serves the panel app for all panel urls", function () {
@@ -272,7 +293,8 @@ it("sorts files", function () {
 });
 
 it("lists the roles and only accepts existing roles", function () {
-    $csrf = login($this->app);
+    User::create("chief@example.com", "admin-password", "admin");
+    $csrf = login($this->app, "chief@example.com", "admin-password");
     [$status, $roles] = api($this->app, "GET", "/roles");
     $uid = User::find("panel@example.com")->uid();
 

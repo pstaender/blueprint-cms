@@ -36,7 +36,7 @@ Then log in at http://localhost:8000/panel.
 - files: upload, sort by drag & drop, edit their data, rename, delete; right click a file in a list (or its ⋯ button) for open, rename, change position, replace and delete; `filelist` and `filepicker` (sortable selection)
 - drag a file from a file list or from your computer into a textarea: inserts `![name](file.jpg)` (images) or `[name](file.pdf)`; only used files are public, file lists mark unused ones
 - block and layout editors: add, hide, duplicate, sort (drag the handle) and remove blocks and rows
-- create users, change email, role and password (confirmed with your own password, unless you are an admin)
+- create users, change email, role (admins only) and password (confirmed with your own password, unless you are an admin)
 
 ## Development
 

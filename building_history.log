@@ -198,3 +198,6 @@
 - Core blueprint `users/admin.yml` (extends `users/default`), so `admin` is always a role; `User::isAdmin()`.
 - `PATCH /users/{uid}` with a `password` needs `currentPassword` (the logged in user's password, also when changing
   another user's password), admins are exempt. The panel's password dialog asks for it unless the user is an admin.
+- Only admins choose or change roles (API 403, the panel hides the role select). The only user is always an admin
+  (`User::role()`), the first created user gets the admin role, and creating a second user stores the admin role on
+  the first one if needed, so there is always an admin.

@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import { api } from "../api.js";
+import { api, session } from "../api.js";
 import ViewHeader from "../components/ViewHeader.vue";
 import Dialog from "../components/Dialog.vue";
 import Icon from "../components/Icon.vue";
@@ -67,7 +67,7 @@ onMounted(async () => {
         <span class="field-label">Password</span>
         <input v-model="form.password" class="input" type="password" minlength="8" autocomplete="new-password" required>
       </label>
-      <RoleInput v-model="form.role" />
+      <RoleInput v-if="session.user?.role === 'admin'" v-model="form.role" />
     </Dialog>
   </div>
 </template>
