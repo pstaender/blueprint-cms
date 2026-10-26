@@ -176,7 +176,7 @@ class Field
         if ($maxLength !== null && $length > $maxLength) {
             $errors[] = "{$this->label()} must be at most $maxLength characters long";
         }
-        if (is_string($pattern) && !preg_match("/^(?:$pattern)$/u", $value)) {
+        if (is_string($pattern) && !preg_match(self::patternRegex($pattern), $value)) {
             $errors[] = "{$this->label()} doesn't match the required format";
         }
 
@@ -195,6 +195,17 @@ class Field
         }
 
         return $errors;
+    }
+
+    /**
+     * The `pattern` prop (like the html attribute: no delimiters, matches the whole value) as a PHP regex.
+     * Slashes that aren't escaped yet (after an even number of backslashes) are escaped for the delimiter.
+     */
+    public static function patternRegex(string $pattern): string
+    {
+        $pattern = preg_replace('~(?<!\\\\)((?:\\\\\\\\)*)/~', '$1\\/', $pattern);
+
+        return "/^(?:$pattern)$/u";
     }
 
     /**

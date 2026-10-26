@@ -137,6 +137,18 @@ it("validates data", function () {
         ->toBe(["tags allows at most 1 entries"]);
 });
 
+it("validates patterns with slashes", function (string $pattern) {
+    $field = new Field(["name" => "link", "type" => "text", "pattern" => $pattern]);
+
+    expect($field->validate("/kontakt"))->toBe([])
+        ->and($field->validate("kontakt"))->toBe(["link doesn't match the required format"]);
+})->with(["/.*", "\\/.*", "[/].*", "(/|\\/)[a-z]+"]);
+
+it("keeps an escaped backslash before a slash", function () {
+    expect(Field::patternRegex("a\\\\/b"))->toBe("/^(?:a\\\\\\/b)$/u")
+        ->and(preg_match(Field::patternRegex("a\\\\/b"), "a\\/b"))->toBe(1);
+});
+
 it("chooses page blueprints by template and falls back to the core default", function () {
     expect(page("/")->blueprint()->name)->toBe("pages/article")
         ->and(page("about")->blueprint()->name)->toBe("pages/default")

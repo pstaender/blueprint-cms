@@ -19,7 +19,7 @@ Empty values (`null`, `""`, `[]`) are only checked for `required`. Display field
 | `required: true` | all fields with a value |
 | `min`, `max` | `number`, `range`: the value; list fields (`tags`, `checkboxes`, `multiselect`, pickers, `structure`, `blocks`, …): the number of entries |
 | `minlength`, `maxlength` | text values |
-| `pattern` | text values, regex without delimiters, e.g. `pattern: "[a-z]+"` |
+| `pattern` | text values, regex without delimiters that matches the whole value (like the html attribute), e.g. `pattern: "[a-z]+"` or `pattern: "/.*"` (slashes need no escaping) |
 | type | `email`, `url`, `date`, `time` must be valid; `number`/`range` must be numeric |
 | options | `select`, `radio`, `toggles`: the value must be one of the static `options` |
 
