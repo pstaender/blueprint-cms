@@ -82,6 +82,7 @@ a:hover {
   color: var(--color-text);
   font-weight: 700;
   font-size: 17px;
+  white-space: nowrap;
 }
 
 .docs-logo:hover {
@@ -104,6 +105,96 @@ a:hover {
   font: inherit;
   font-size: 14px;
   cursor: pointer;
+}
+
+/* Search */
+
+.docs-search {
+  position: relative;
+  flex: 0 1 280px;
+  min-width: 0;
+  margin-left: 24px;
+}
+
+.docs-search-input {
+  width: 100%;
+  height: 34px;
+  padding: 0 32px 0 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-bg-dimmed);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 14px;
+}
+
+.docs-search-input:focus {
+  border-color: var(--color-accent);
+  outline: none;
+  background: var(--color-bg);
+}
+
+.docs-search-key {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  padding: 0 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  color: var(--color-text-dimmed);
+  font: 12px/18px var(--font-mono);
+  pointer-events: none;
+}
+
+.docs-search-input:focus + .docs-search-key,
+.docs-search-input:not(:placeholder-shown) + .docs-search-key {
+  display: none;
+}
+
+.docs-search-results {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: max(100%, 340px);
+  max-height: min(420px, 70vh);
+  margin: 0;
+  padding: 6px;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-bg);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  list-style: none;
+}
+
+.docs-search-results a {
+  display: block;
+  padding: 8px 10px;
+  border-radius: 6px;
+  color: var(--color-text);
+  font-size: 14px;
+}
+
+.docs-search-results a:hover {
+  text-decoration: none;
+}
+
+.docs-search-results a.is-active {
+  background: var(--color-bg-dimmed);
+}
+
+.docs-search-results small {
+  display: block;
+  margin-top: 2px;
+  color: var(--color-text-dimmed);
+  font-size: 12px;
+}
+
+.docs-search-empty {
+  padding: 8px 10px;
+  color: var(--color-text-dimmed);
+  font-size: 14px;
 }
 
 /* Layout */
@@ -478,7 +569,27 @@ a:hover {
 
 @media (max-width: 800px) {
   .docs-header-inner {
+    gap: 12px;
     padding: 0 16px;
+  }
+
+  .docs-search {
+    position: static;
+    flex: 1 1 auto;
+    margin-left: 0;
+  }
+
+  .docs-search-key {
+    display: none;
+  }
+
+  /* below the header, as wide as the window */
+  .docs-search-results {
+    position: fixed;
+    top: calc(var(--header-height) + 6px);
+    left: 16px;
+    right: 16px;
+    width: auto;
   }
 
   .docs-menu-toggle {

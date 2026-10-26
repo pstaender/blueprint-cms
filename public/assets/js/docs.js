@@ -1,4 +1,4 @@
-// Blueprint CMS docs: heading anchors, "On this page", copy buttons for code and the mobile menu.
+// Blueprint CMS docs: heading anchors, "On this page", copy buttons for code, the mobile menu and the search.
 
 const text = document.querySelector(".docs-text");
 
@@ -96,6 +96,111 @@ function mobileMenu() {
   document.querySelector(".docs-menu [aria-current=page]")?.scrollIntoView({ block: "center" });
 }
 
+// Fuzzy search (Fuse.js) over the pages of the menu, "/" focuses it
+function search() {
+  const box = document.querySelector(".docs-search");
+  if (!box) return;
+
+  const input = box.querySelector("input");
+  const results = box.querySelector(".docs-search-results");
+  const pages = [...document.querySelectorAll("#docs-menu a")].map((link) => ({
+    title: link.textContent.trim(),
+    url: link.getAttribute("href"),
+    // the titles of the sections above, e.g. "Reference › Fields"
+    section: [...ancestors(link)].map((summary) => summary.textContent.trim()).reverse().join(" › "),
+  }));
+  const fuse = window.Fuse ? new Fuse(pages, { keys: [{ name: "title", weight: 3 }, "section"], threshold: 0.4, ignoreLocation: true }) : null;
+  let active = 0;
+
+  function* ancestors(link) {
+    for (let item = link.closest("li")?.parentElement.closest("li"); item; item = item.parentElement.closest("li")) {
+      const summary = item.querySelector(":scope > details > summary");
+      if (summary) yield summary;
+    }
+  }
+
+  function find(query) {
+    if (fuse) return fuse.search(query, { limit: 8 }).map((result) => result.item);
+    // without Fuse (e.g. offline) a plain substring search
+    return pages.filter((page) => `${page.title} ${page.section}`.toLowerCase().includes(query.toLowerCase())).slice(0, 8);
+  }
+
+  function render() {
+    const query = input.value.trim();
+    const found = query ? find(query) : [];
+    active = 0;
+    results.replaceChildren(...(query && !found.length ? [empty()] : found.map(option)));
+    results.hidden = !query;
+    input.setAttribute("aria-expanded", String(!results.hidden));
+    highlight();
+  }
+
+  function option(page, index) {
+    const item = document.createElement("li");
+    item.role = "option";
+    const link = document.createElement("a");
+    link.href = page.url;
+    link.textContent = page.title;
+    if (page.section) {
+      const section = document.createElement("small");
+      section.textContent = page.section;
+      link.append(section);
+    }
+    link.addEventListener("mousemove", () => {
+      active = index;
+      highlight();
+    });
+    item.append(link);
+    return item;
+  }
+
+  function empty() {
+    const item = document.createElement("li");
+    item.className = "docs-search-empty";
+    item.textContent = "No pages found";
+    return item;
+  }
+
+  function highlight() {
+    [...results.querySelectorAll("a")].forEach((link, index) => {
+      link.classList.toggle("is-active", index === active);
+      link.parentElement.setAttribute("aria-selected", String(index === active));
+    });
+  }
+
+  function close() {
+    results.hidden = true;
+    input.setAttribute("aria-expanded", "false");
+  }
+
+  input.addEventListener("input", render);
+  input.addEventListener("focus", () => input.value.trim() && render());
+  input.addEventListener("keydown", (event) => {
+    const links = results.querySelectorAll("a");
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      if (!links.length) return;
+      active = (active + (event.key === "ArrowDown" ? 1 : -1) + links.length) % links.length;
+      highlight();
+      links[active].scrollIntoView({ block: "nearest" });
+    } else if (event.key === "Enter" && links[active]) {
+      event.preventDefault();
+      location.href = links[active].href;
+    } else if (event.key === "Escape") {
+      if (results.hidden) input.blur();
+      close();
+    }
+  });
+  document.addEventListener("pointerdown", (event) => box.contains(event.target) || close());
+  document.addEventListener("keydown", (event) => {
+    const typing = event.target.closest("input, textarea, select, [contenteditable]");
+    if (event.key === "/" && !typing) {
+      event.preventDefault();
+      input.focus();
+    }
+  });
+}
+
 if (text) {
   tableOfContents(headingAnchors());
   copyButtons();
@@ -104,3 +209,4 @@ if (text) {
   if (location.hash) document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView();
 }
 mobileMenu();
+search();

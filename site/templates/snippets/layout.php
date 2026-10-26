@@ -65,6 +65,7 @@ $title ??= $page?->title()->value();
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@speed-highlight/core@2.1.0/dist/themes/github-light.css" media="(prefers-color-scheme: light)">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@speed-highlight/core@2.1.0/dist/themes/github-dark.css" media="(prefers-color-scheme: dark)">
     <link rel="stylesheet" href="<?= esc(static_file_url("assets/css/docs.css")) ?>">
+    <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0/dist/fuse.min.js" defer></script>
     <script src="<?= esc(static_file_url("assets/js/docs.js")) ?>" defer></script>
     <script src="<?= esc(static_file_url("assets/js/highlight.js")) ?>" type="module"></script>
 </head>
@@ -73,6 +74,11 @@ $title ??= $page?->title()->value();
         <div class="docs-header-inner">
             <button type="button" class="docs-menu-toggle" aria-controls="docs-menu" aria-expanded="false">Menu</button>
             <a class="docs-logo" href="/"><?= esc($siteName) ?></a>
+            <div class="docs-search" role="search">
+                <input type="search" class="docs-search-input" placeholder="Search" aria-label="Search the docs" aria-controls="docs-search-results" aria-expanded="false" autocomplete="off">
+                <kbd class="docs-search-key" aria-hidden="true">/</kbd>
+                <ul id="docs-search-results" class="docs-search-results" role="listbox" hidden></ul>
+            </div>
             <a class="docs-header-link" href="/panel">Panel</a>
         </div>
     </header>

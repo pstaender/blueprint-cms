@@ -266,3 +266,6 @@
 
 2026-10-26 – Panel icons in the docs
 - The icon data moved to `panel/src/icons.json` (imported by `icons.js`), so the docs page `docs/reference/panel-icons` can read it: its `page.php` returns the text of `page.md` plus a grid of all icons, rendered with the docs template.
+
+2026-10-26 – Docs search
+- The docs header has a search field: a client side fuzzy search (Fuse.js 7.0.0 from jsDelivr) over the pages listed in `#docs-menu` (title, weighted higher, and the section path like "Reference › Blueprints"). "/" focuses it, arrow keys + Enter open a result, Escape closes. Without Fuse (offline) it falls back to a substring search. Full text search can come later.
