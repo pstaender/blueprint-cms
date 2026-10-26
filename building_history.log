@@ -279,3 +279,6 @@
 2026-10-26 – speed-highlight default theme
 - The docs use speed-highlight's `atom-dark` theme in both color schemes instead of github-light/-dark, so code blocks are always dark (`--color-pre-*`, also the copy button).
 - Back to speed-highlight's `dark` theme (instead of `atom-dark`). The logo uses a brighter blue.
+
+2026-10-26 – Docs: panel link only for logged in users
+- The "Edit in panel" link in the docs header is only shown when a user is logged in (and the panel is enabled) and opens the current page in the panel (`/panel/pages/{id}`, `/panel/site` without a page).

@@ -55,6 +55,12 @@ for ($parent = $page?->parent; $parent !== null; $parent = $parent->parent) {
 }
 $siteName = $site->data()->name ?? "Docs";
 $title ??= $page?->title()->value();
+
+// only for logged in users, opens the current page in the panel
+$panelUrl = null;
+if (Blueprint\App::instance()->isPanelEnabled() && user() !== null) {
+    $panelUrl = $page === null ? "/panel/site" : "/panel/pages/" . implode("/", array_map(rawurlencode(...), explode("/", $page->id())));
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -79,7 +85,9 @@ $title ??= $page?->title()->value();
                 <kbd class="docs-search-key" aria-hidden="true">/</kbd>
                 <ul id="docs-search-results" class="docs-search-results" role="listbox" hidden></ul>
             </div>
-            <a class="docs-header-link" href="/panel">Panel</a>
+            <?php if ($panelUrl): ?>
+                <a class="docs-header-link" href="<?= esc($panelUrl) ?>">Edit in panel</a>
+            <?php endif ?>
         </div>
     </header>
     <div class="docs-layout">
