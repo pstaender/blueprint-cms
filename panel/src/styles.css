@@ -102,12 +102,15 @@ body {
 }
 
 :where(input[type="checkbox"]:not(.switch))::before {
-  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+  /* a thin stroked check */
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M1.5 5.2 4 7.5 8.5 2.5' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 
 :where(input[type="checkbox"]:not(.switch)):indeterminate::before {
-  height: 2px;
-  clip-path: none;
+  width: 8px;
+  height: 1.5px;
+  border-radius: 1px;
+  mask: none;
 }
 
 :where(input[type="radio"])::before {
