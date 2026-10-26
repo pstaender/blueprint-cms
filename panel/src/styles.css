@@ -1221,21 +1221,47 @@ select[multiple].input {
   position: relative;
 }
 
+/* the checkbox sits inside the item's card */
 .item-selectable {
   display: flex;
   align-items: center;
-  gap: 8px;
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  box-shadow: var(--shadow);
+}
+
+.item-selectable:has(.item-select:checked) {
+  box-shadow: 0 0 0 1px var(--color-focus), var(--shadow);
 }
 
 .item-selectable .item-link {
   flex: 1;
   min-width: 0;
+  padding-left: 10px;
+  background: none;
+  box-shadow: none;
 }
 
 .item-select {
   flex-shrink: 0;
-  margin: 0 4px 0 0;
+  width: 14px;
+  height: 14px;
+  margin: 0 0 0 12px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+.section-header .item-select {
+  margin-right: 10px;
   vertical-align: -2px;
+}
+
+.items-cards .item-selectable {
+  align-items: flex-start;
+}
+
+.items-cards .item-selectable .item-select {
+  margin-top: 12px;
 }
 
 .bulk-actions {
