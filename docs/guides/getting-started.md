@@ -13,6 +13,26 @@ composer test
 composer panel:build   # the admin panel, see Panel guide
 ```
 
+## As a composer package
+
+A website can require Blueprint instead of being a copy of the repository:
+
+```sh
+composer require pstaender/blueprintcms
+vendor/bin/blueprint public:build   # public/index.php, public/.htaccess, public/panel/
+vendor/bin/blueprint user:create admin@example.com
+php -S localhost:8000 -t public public/index.php
+```
+
+The website has the folders below except `bin/`, `panel/` and `src/` (they are in `vendor/`). To keep the panel up to date, let composer run `public:build` after updates in the website's `composer.json`:
+
+```json
+"scripts": {
+    "post-install-cmd": "blueprint public:build",
+    "post-update-cmd": "blueprint public:build"
+}
+```
+
 ## Folder structure
 
 ```
@@ -21,6 +41,7 @@ config/             project config (config.php, config.{hostname}.php)
 content/            pages, site.json, users.json, redirects.json
 panel/              source of the panel (Vue + Vite)
 public/             document root, index.php is the front controller
+  .htaccess         rewrites to index.php for Apache
   panel/            the built panel
 site/
   blueprints/       data structures and panel views

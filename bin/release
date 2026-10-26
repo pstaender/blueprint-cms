@@ -3,8 +3,9 @@
 
 /**
  * Bumps the version: `composer release [version]`.
- * Suggests the next versions after the latest `v*` git tag (or 0.1.0-alpha.1), writes the version into composer.json
- * and panel/package.json (+ the lock files), commits them and creates the tag `v{version}`. Nothing is pushed.
+ * Suggests the next versions after the latest `v*` git tag (or 0.1.0-alpha.1), builds the panel into public/panel
+ * (part of the package), writes the version into composer.json and panel/package.json (+ the lock files), commits them
+ * and creates the tag `v{version}`. Nothing is pushed.
  */
 
 declare(strict_types=1);
@@ -14,6 +15,7 @@ const PRE_RELEASE_STAGES = ["alpha", "beta", "rc"];
 // semver.org's regex, without a `v` prefix and with complete major.minor.patch
 const SEMVER_REGEX = '/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/';
 const VERSION_FILES = ["composer.json", "composer.lock", "panel/package.json", "panel/package-lock.json"];
+const PANEL_BUILD = "public/panel";
 
 chdir(dirname(__DIR__));
 
@@ -153,6 +155,12 @@ function checkVersion(string $version, ?string $latest): string
     return $version;
 }
 
+function run(string $command): void
+{
+    passthru($command, $code);
+    $code === 0 || fail("$command failed");
+}
+
 function ask(string $question): string
 {
     echo $question;
@@ -231,9 +239,14 @@ if (isset($arguments[0])) {
     $version = checkVersion($choice, $latest);
 }
 
-if ($interactive && strtolower(ask("Release v$version (commit the version files and tag it)? [y/N] ")) !== "y") {
+if ($interactive && strtolower(ask("Release v$version (build the panel, commit it and the version files, tag it)? [y/N] ")) !== "y") {
     fail("Cancelled");
 }
+
+// websites that require the package copy the built panel with `bin/blueprint public:build`
+run("npm ci --prefix panel");
+run("npm run build --prefix panel");
+git("add", "--all", "--", PANEL_BUILD);
 
 writeJsonVersion("composer.json", $version, "    ");
 writeJsonVersion("panel/package.json", $version, "  ");
@@ -242,7 +255,7 @@ writeJsonVersion("panel/package-lock.json", $version, "  ");
 exec("composer update --lock --no-install --no-scripts --no-plugins --quiet 2>&1", $output, $code);
 $code === 0 || fail("composer update --lock failed:\n" . implode("\n", $output));
 
-git("commit", "--only", "-m", "Release v$version", "--", ...VERSION_FILES);
+git("commit", "--only", "-m", "Release v$version", "--", ...VERSION_FILES, ...[PANEL_BUILD]);
 git("tag", "-a", "v$version", "-m", "v$version");
 
 echo "Tagged v$version, push it with: git push && git push origin v$version\n";

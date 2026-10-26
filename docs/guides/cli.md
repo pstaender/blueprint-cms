@@ -2,7 +2,7 @@
 title: Command line
 sort: 8
 ---
-`bin/blueprint` runs commands, without arguments it lists them (own commands under "User defined commands:"):
+`bin/blueprint` runs commands, without arguments it lists them (own commands under "User defined commands:"). In a website that requires Blueprint as a composer package, it is `vendor/bin/blueprint`:
 
 ```sh
 bin/blueprint user:create <email> [role]   # creates a user (the first one is an admin), asks for the password
@@ -10,9 +10,12 @@ bin/blueprint user:password <email|uid>    # sets a new password
 bin/blueprint user:list
 bin/blueprint content:uids                 # adds a uid to all pages, files and users without one
 bin/blueprint media:clear                  # deletes the optimized images
+bin/blueprint public:build [--force]       # copies index.php, .htaccess and the panel into public/
 ```
 
 `user:create` and `user:password` read the password from `BLUEPRINT_PASSWORD` if it is set.
+
+`public:build` copies the front controller `index.php`, the `.htaccess` (for Apache) and the built panel of the installed package into the website's `public/`. The panel is always replaced, an existing `index.php` and `.htaccess` are kept (they may be customized) unless `--force` is given. Run it after every update of the package.
 
 ## Own commands
 

@@ -1,7 +1,6 @@
 /vendor
 node_modules/
 .DS_Store
-/public/panel/
 /public/media/
 /docs/users.json
 /static/

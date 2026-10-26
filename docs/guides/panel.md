@@ -8,7 +8,7 @@ The panel is independent of the website: pages are rendered without it, and with
 
 ## Setup
 
-Build the panel once (Node.js required), the result is written to `public/panel/`:
+Releases contain the built panel. A website that requires Blueprint as a composer package copies it into its `public/panel/` with `vendor/bin/blueprint public:build` (see [Getting started](/guides/getting-started#as-a-composer-package)). In a checkout of the repository, build it yourself (Node.js required), the result is written to `public/panel/`:
 
 ```sh
 composer panel:build

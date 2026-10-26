@@ -7,15 +7,16 @@ Flat file CMS inspired by Kirby. PHP >= 8.3, namespace `Blueprint\` → `src/`. 
 - `composer install`
 - `composer test` (Pest, tests in `tests/`; they only use fixture projects in `tests/fixtures/`, never the project content)
 - `composer serve` → dev server on http://localhost:8000 (`public/index.php` is the front controller)
-- `composer panel:build` (Vue + Vite in `panel/` → `public/panel/`, gitignored), `composer panel:dev` (vite on :5173/panel/, proxies the API to :8000)
-- `composer release [version]` (`bin/release`, no dependencies): suggests the next version after the latest `v*` tag (`0.1.0-alpha.1` first, pre-releases `alpha` → `beta` → `rc`) or takes your own (checked as semver, must be greater), writes it into `composer.json`, `panel/package.json` and the lock files, commits only these files and creates the annotated tag `v{version}`; nothing is pushed. Refuses when these files have uncommitted changes.
-- `bin/blueprint user:create <email> [role]`, `user:password <email>`, `user:list`, `content:uids`, `media:clear` (`Cli`: every php file in `src/cli/commands/`, plugins' `cli/` and `site/cli/` returns `["command", "description", "usage"?, "run" => fn (array $args)]`, run may return an int exit code; site commands override plugin and core ones)
+- `composer panel:build` (Vue + Vite in `panel/` → `public/panel/`, committed by `composer release`), `composer panel:dev` (vite on :5173/panel/, proxies the API to :8000)
+- `composer release [version]` (`bin/release`, no dependencies): suggests the next version after the latest `v*` tag (`0.1.0-alpha.1` first, pre-releases `alpha` → `beta` → `rc`) or takes your own (checked as semver, must be greater), builds the panel, writes the version into `composer.json`, `panel/package.json` and the lock files, commits only these files and `public/panel/` and creates the annotated tag `v{version}`; nothing is pushed. Refuses when these files have uncommitted changes.
+- `bin/blueprint user:create <email> [role]`, `user:password <email>`, `user:list`, `content:uids`, `media:clear`, `public:build [--force]` (`Cli`: every php file in `src/cli/commands/`, plugins' `cli/` and `site/cli/` returns `["command", "description", "usage"?, "run" => fn (array $args)]`, run may return an int exit code; site commands override plugin and core ones)
 
 GitHub Actions (`.github/workflows/`): `ci.yml` runs the tests on PHP 8.3–8.5 and builds the panel; `docs.yml` renders `docs/` with `static:build _site --base-path=…` (from `actions/configure-pages`) and deploys it to GitHub Pages (https://pstaender.github.io/blueprint-cms/, repo https://github.com/pstaender/blueprint-cms).
 
 ## Architecture
 
-- `public/index.php` → `App::create(Config::load(PROJECT_DIR . "/config"))->run()`
+- `public/index.php` → `App::create(Config::load(PROJECT_DIR . "/config"))->run()`, `public/.htaccess` rewrites to it for Apache
+- Installed as a composer package (`pstaender/blueprintcms`): `vendor/bin/blueprint` (composer's proxy sets `$_composer_autoload_path`, `PROJECT_DIR` is the root package's path from `InstalledVersions`), `public:build` (`PublicFolder`) copies the package's `public/index.php`, `.htaccess` and built `panel/` into the website's `public/` (existing `index.php`/`.htaccess` only with `--force`, the panel is always replaced). Core code finds its own files via `__DIR__`, the website's via `App::projectDir()`. `.gitattributes` keeps the docs project (`config/`, `site/`, `docs/`, `public/assets/`), panel sources, tests and dev files out of the package.
 - `Config` – defaults (`debug`, `panel`, `contentFolder`, `siteFolder`, `csp`: directive => sources for the `Content-Security-Policy` of rendered pages, nonce via `csp_nonce()`; the panel has its own `Panel::CSP`) < `site/config/config[.{host}].php` < `config/config[.{host}].php`. Config files return arrays (lambdas allowed).
 - `App` – singleton (`App::instance()`), wraps a Dumbo router with a catch-all route. `/panel*` goes to `Panel` if `panel` is enabled (the website never depends on the panel), other non-GET/HEAD → 405. Pages:
   1. `content/redirects.json` (`{"301": {"from": "to"}}`)
