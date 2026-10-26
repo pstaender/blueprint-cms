@@ -27,7 +27,7 @@ Then log in at http://localhost:8000/panel.
 
 ## What it does
 
-- edit the site, pages and users with the fields of their blueprints (⌘/Ctrl + S saves)
+- edit the site, pages and users with the fields of their blueprints (⌘/Ctrl + S saves). Saving only sends the changed fields; if someone else has changed one of them in the meantime, the panel asks whether to load their version or overwrite it with yours
 - validation by the blueprint, errors are shown below the fields
 - a nested page tree in the sidebar: listed pages first (sortable by drag & drop), then the groups "Unlisted" and "Drafts"; expandable
 - create pages (as drafts), change their status (draft, unlisted, listed), sort and delete them

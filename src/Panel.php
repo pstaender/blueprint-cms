@@ -193,7 +193,9 @@ class Panel
     private function updateSite(ServerRequestInterface $request): ResponseInterface
     {
         $site = $this->app->site();
-        $values = $this->validatedValues($site->blueprint(), $site->data()->toArray(), self::input($request)["data"] ?? []);
+        $input = self::input($request);
+        self::checkConflicts($site->data()->toArray(), $input);
+        $values = $this->validatedValues($site->blueprint(), $site->data()->toArray(), $input["data"] ?? []);
         $site->update($values);
 
         return $this->getSite();
@@ -235,6 +237,7 @@ class Panel
     {
         $page = $this->findPage($id);
         $input = self::input($request);
+        self::checkConflicts($page->data()->toArray(), $input);
 
         if (isset($input["data"]) && is_array($input["data"])) {
             $page->update($this->validatedValues($page->blueprint(), $page->data()->toArray(), $input["data"]));
@@ -419,6 +422,7 @@ class Panel
     {
         $file = $this->findFile($id, $filename);
         $input = self::input($request);
+        self::checkConflicts($file->data()->toArray(), $input);
 
         if (isset($input["data"]) && is_array($input["data"])) {
             $file->update($this->validatedValues($file->blueprint(), $file->data()->toArray(), $input["data"]));
@@ -563,6 +567,7 @@ class Panel
             throw new ApiError("The current password is wrong", 422, ["errors" => ["currentPassword" => ["The current password is wrong"]]]);
         }
 
+        self::checkConflicts($user->data()->toArray(), $input);
         $values = isset($input["data"]) && is_array($input["data"])
             ? $this->validatedValues($user->blueprint(), $user->data()->toArray(), $input["data"])
             : [];
@@ -630,6 +635,31 @@ class Panel
     /**
      * Only fields of the blueprint that store a value are saved, the merged data must be valid.
      */
+    /**
+     * Optimistic locking for saves: the client sends `modifiedAt` (from when it loaded the model) and `original`
+     * (the loaded values of the fields in `data`). If the model was saved by someone else in the meantime, only
+     * fields that have changed since then conflict (409). Without `modifiedAt` the save overwrites.
+     */
+    private static function checkConflicts(array $current, array $input): void
+    {
+        if (!isset($input["modifiedAt"]) || ($current["modifiedAt"] ?? null) === $input["modifiedAt"]) {
+            return;
+        }
+
+        $original = is_array($input["original"] ?? null) ? $input["original"] : [];
+        $conflicts = [];
+
+        foreach (array_keys(is_array($input["data"] ?? null) ? $input["data"] : []) as $name) {
+            if (json_encode($current[$name] ?? null) !== json_encode($original[$name] ?? null)) {
+                $conflicts[] = $name;
+            }
+        }
+
+        if ($conflicts !== []) {
+            throw new ApiError("Someone else has changed this in the meantime", 409, ["conflicts" => $conflicts]);
+        }
+    }
+
     private function validatedValues(Blueprint $blueprint, array $current, mixed $input): array
     {
         $values = [];

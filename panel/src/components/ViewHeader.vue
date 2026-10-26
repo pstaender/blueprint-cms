@@ -8,8 +8,10 @@ defineProps({
   isDirty: Boolean,
   saving: Boolean,
   message: { type: Object, default: null },
+  // field names that someone else has changed in the meantime (409 on save)
+  conflict: { type: Array, default: null },
 });
-defineEmits(["save", "discard"]);
+defineEmits(["save", "discard", "overwrite", "reload"]);
 </script>
 
 <template>
@@ -28,6 +30,11 @@ defineEmits(["save", "discard"]);
         <span v-else-if="message" class="message" :class="`message-${message.type}`">{{ message.text }}</span>
       </div>
     </div>
-    <p v-if="message?.type === 'negative' && isDirty" class="notice notice-negative">{{ message.text }}</p>
+    <div v-if="conflict" class="notice notice-negative conflict">
+      <span>Someone else has changed {{ conflict.length ? conflict.join(", ") : "this" }} in the meantime.</span>
+      <button type="button" class="button button-small" @click="$emit('reload')">Load their version</button>
+      <button type="button" class="button button-small" @click="$emit('overwrite')">Overwrite with mine</button>
+    </div>
+    <p v-else-if="message?.type === 'negative' && isDirty" class="notice notice-negative">{{ message.text }}</p>
   </header>
 </template>

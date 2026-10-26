@@ -22,13 +22,13 @@ const dialogError = ref(null);
 const name = ref("");
 
 const path = computed(() => `/pages/${props.id}/files/${encodeURIComponent(props.filename)}`);
-const { values, errors, message, saving, isDirty, reset, submit } = useEditing(async (data) => {
-  load(await api.patch(path.value, { data }));
-});
+const { values, errors, message, saving, isDirty, conflict, reset, submit, overwrite, loadLatest } = useEditing(async (body) => {
+  load(await api.patch(path.value, body));
+}, async () => load(await api.get(path.value)));
 
 function load(data) {
   file.value = data;
-  reset(data.data);
+  reset(data.data, data.data.modifiedAt);
 }
 
 const breadcrumb = computed(() => [
@@ -76,7 +76,7 @@ onMounted(async () => {
 <template>
   <p v-if="loadError" class="notice notice-negative">{{ loadError }}</p>
   <div v-else-if="file" class="view">
-    <ViewHeader :title="file.filename" :breadcrumb="breadcrumb" :is-dirty="isDirty" :saving="saving" :message="message" @save="submit" @discard="reset(file.data)">
+    <ViewHeader :title="file.filename" :breadcrumb="breadcrumb" :is-dirty="isDirty" :saving="saving" :message="message" :conflict="conflict" @save="submit" @discard="reset(file.data, file.data.modifiedAt)" @overwrite="overwrite" @reload="loadLatest">
       <template #actions>
         <a class="button" :href="file.url" target="_blank"><Icon name="open" /> Open</a>
         <button type="button" class="button" :disabled="isDirty" @click="openRename">Rename</button>

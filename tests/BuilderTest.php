@@ -292,7 +292,9 @@ describe("content formats", function () {
     it("converts between the content formats and keeps the data", function () {
         page("about")->update(["content" => "Some **text**"]);
         $about = "$this->dir/content/about";
-        $data = page("about")->data()->toArray();
+        // the conversion is a write, it only changes modifiedAt
+        $withoutModified = fn(Page $page) => array_diff_key($page->data()->toArray(), ["modifiedAt" => true]);
+        $data = $withoutModified(page("about"));
 
         expect(page("about")->contentFormat())->toBe("json");
 
@@ -300,14 +302,14 @@ describe("content formats", function () {
         expect($page->contentFormat())->toBe("md")
             ->and(is_file("$about/page.json"))->toBeFalse()
             ->and(file_get_contents("$about/page.md"))->toEndWith("---\nSome **text**\n")
-            ->and($page->data()->toArray())->toEqualCanonicalizing($data);
+            ->and($withoutModified($page))->toEqualCanonicalizing($data);
 
         $page = $page->changeContentFormat("json+md");
         expect($page->contentFormat())->toBe("json+md")
             ->and(is_file("$about/page.md"))->toBeFalse()
             ->and(json_decode(file_get_contents("$about/page.json"), true))->not->toHaveKey("content")
             ->and(file_get_contents("$about/page.content.md"))->toBe("Some **text**\n")
-            ->and($page->data()->toArray())->toEqualCanonicalizing($data);
+            ->and($withoutModified($page))->toEqualCanonicalizing($data);
 
         $page = $page->changeContentFormat("json");
         expect($page->contentFormat())->toBe("json")

@@ -172,6 +172,30 @@ it("lets admins manage users", function () {
         ->and(api($this->app, "DELETE", $path, csrf: $csrf)[0])->toBe(204);
 });
 
+it("detects conflicting changes with modifiedAt", function () {
+    $csrf = login($this->app);
+    [, $page] = api($this->app, "PATCH", "/pages/showcase", ["data" => ["title" => "Loaded", "text" => "Loaded text"]], $csrf);
+    $loaded = $page["data"]["modifiedAt"];
+    file_put_contents("$this->dir/content/showcase/page.json", json_encode([...$page["data"], "text" => "Their text", "modifiedAt" => "2000-01-01T00:00:00+00:00"]));
+    $this->app->refreshSite();
+    $save = fn(array $data, array $original) => api($this->app, "PATCH", "/pages/showcase", ["data" => $data, "original" => $original, "modifiedAt" => $loaded], $csrf);
+
+    [$status, $result] = $save(["text" => "My text"], ["text" => "Loaded text"]);
+    expect($status)->toBe(409)
+        ->and($result["conflicts"])->toBe(["text"]);
+
+    [$status, $page] = $save(["title" => "My title"], ["title" => "Loaded"]);
+    expect($status)->toBe(200)
+        ->and($page["data"]["title"])->toBe("My title")
+        ->and($page["data"]["text"])->toBe("Their text");
+
+    [$status, $page] = api($this->app, "PATCH", "/pages/showcase", ["data" => ["text" => "Overwritten"]], $csrf);
+    expect($status)->toBe(200)->and($page["data"]["text"])->toBe("Overwritten");
+
+    [$status] = api($this->app, "PATCH", "/pages/showcase", ["data" => ["text" => "Next"], "original" => ["text" => "x"], "modifiedAt" => $page["data"]["modifiedAt"]], $csrf);
+    expect($status)->toBe(200);
+});
+
 it("makes the only user an admin", function () {
     file_put_contents("$this->dir/content/users.json", '[{"email": "solo@example.com", "role": "editor"}]');
 

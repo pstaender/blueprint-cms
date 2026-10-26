@@ -209,3 +209,10 @@
 - `useEditing` sends only the fields that differ from the loaded values (cleared ones as null). The API already
   merged partial `data`, so concurrent edits of different fields no longer overwrite each other. No conflict
   detection for the same field (last save wins).
+
+2026-10-26 – Conflict check with modifiedAt
+- `PATCH` bodies can carry `modifiedAt` (from loading) and `original` (loaded values of the sent fields).
+  `Panel::checkConflicts()`: if the stored `modifiedAt` differs, every sent field whose stored value differs from
+  `original` is a conflict → 409 `{conflicts: [...]}`. So edits of other fields still merge, only real conflicts
+  stop the save. The panel shows "Load their version" / "Overwrite with mine" (resend without `modifiedAt`).
+- `modifiedAt`/`createdAt` now have milliseconds, saves within the same second must not look unchanged.

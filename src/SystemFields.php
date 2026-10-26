@@ -6,7 +6,7 @@ namespace Blueprint;
 
 /**
  * Hidden fields that the cms fills in the data of pages, files and users on every write:
- * `uid`, `createdAt` (first write) and `modifiedAt` (last write), as ISO 8601 datetimes. The site only gets the dates.
+ * `uid`, `createdAt` (first write) and `modifiedAt` (last write), as ISO 8601 datetimes with milliseconds. The site only gets the dates.
  * They work like datetime fields (`$page->modifiedAt()->format("d.m.Y")`) and are hidden in the panel, unless a
  * blueprint shows them, e.g. `modifiedAt: {type: datetime, disabled: true}` (disabled fields aren't saved).
  */
@@ -30,7 +30,8 @@ class SystemFields
      */
     public static function applyDates(array $data, array $existing = []): array
     {
-        $now = date(DATE_ATOM);
+        // milliseconds, so modifiedAt also tells saves within the same second apart (conflict check)
+        $now = (new \DateTimeImmutable())->format("Y-m-d\\TH:i:s.vP");
 
         return [
             "createdAt" => self::filled($existing["createdAt"] ?? null) ?? self::filled($data["createdAt"] ?? null) ?? $now,

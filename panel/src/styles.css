@@ -1214,3 +1214,14 @@ select[multiple].input {
   bottom: 8px;
   transform: none;
 }
+
+.conflict {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.conflict span {
+  flex: 1;
+}

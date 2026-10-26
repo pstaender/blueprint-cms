@@ -28,15 +28,15 @@ const contentFormats = [
 ];
 const types = ref([]);
 
-const { values, errors, message, saving, isDirty, reset, submit } = useEditing(async (data) => {
-  load(await api.patch(`/pages/${props.id}`, { data }));
+const { values, errors, message, saving, isDirty, conflict, reset, submit, overwrite, loadLatest } = useEditing(async (body) => {
+  load(await api.patch(`/pages/${props.id}`, body));
   // saving can change which files are used (public)
   await reloadFiles(props.id);
-});
+}, async () => load(await api.get(`/pages/${props.id}`)));
 
 function load(data) {
   page.value = data;
-  reset(data.data);
+  reset(data.data, data.data.modifiedAt);
 }
 
 async function reloadChildren() {
@@ -118,8 +118,11 @@ onMounted(async () => {
       :is-dirty="isDirty"
       :saving="saving"
       :message="message"
+      :conflict="conflict"
       @save="submit"
-      @discard="reset(page.data)"
+      @discard="reset(page.data, page.data.modifiedAt)"
+      @overwrite="overwrite"
+      @reload="loadLatest"
     >
       <template #actions>
         <a class="button" :href="page.url" target="_blank"><Icon name="open" /> Open</a>

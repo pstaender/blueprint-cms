@@ -17,9 +17,9 @@ const busy = ref(false);
 const error = ref(null);
 const form = ref({});
 
-const { values, errors, message, saving, isDirty, reset, submit } = useEditing(async (data) => {
-  load(await api.patch(`/users/${props.uid}`, { data }));
-});
+const { values, errors, message, saving, isDirty, conflict, reset, submit, overwrite, loadLatest } = useEditing(async (body) => {
+  load(await api.patch(`/users/${props.uid}`, body));
+}, async () => load(await api.get(`/users/${props.uid}`)));
 
 function load(data) {
   user.value = data;
@@ -27,7 +27,7 @@ function load(data) {
   for (const name of Object.keys(data.blueprint.fields)) {
     if (name in data) fieldValues[name] = data[name];
   }
-  reset(fieldValues);
+  reset(fieldValues, data.modifiedAt);
 }
 
 const isCurrent = computed(() => session.user?.uid === props.uid);
@@ -72,8 +72,11 @@ onMounted(async () => load(await api.get(`/users/${props.uid}`)));
       :is-dirty="isDirty"
       :saving="saving"
       :message="message"
+      :conflict="conflict"
       @save="submit"
       @discard="load(user)"
+      @overwrite="overwrite"
+      @reload="loadLatest"
     >
       <template #actions>
         <button type="button" class="button" @click="start('account')">{{ user.email }} · {{ user.role }}</button>
