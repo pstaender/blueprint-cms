@@ -182,3 +182,10 @@
 2026-10-25 – Content independent tests
 - Tests never read the project's content/site folders (they change while working on the site): `createApp()` needs a
   project dir, the routing tests use the `tests/fixtures/website` fixture.
+
+2026-10-26 – Kirby style snippets
+- `snippet($name, $data, $return, $slots)` renders `site/snippets/{name}.php` like Kirby: lists of names (first
+  existing), missing snippets render nothing, slots via `snippet(…, slots: true)` / `slot()` / `endslot()` /
+  `endsnippet()` (`Snippet` keeps a stack of open snippets, output buffering; `$slot`, `$slots->name()`).
+- `partial()` stays as it is (site/templates/partials, exception if missing).
+- Block snippets moved from site/templates/blocks to site/snippets/blocks (Kirby location), core fallback src/views/blocks.

@@ -6,7 +6,7 @@ namespace Blueprint;
 
 /**
  * A block of a blocks field: {"id": "…", "type": "heading", "isHidden": false, "content": {"text": "…"}}.
- * Its fields are defined by the fieldset (blocks/{type}.yml), echo renders site/templates/blocks/{type}.php.
+ * Its fields are defined by the fieldset (blocks/{type}.yml), echo renders site/snippets/blocks/{type}.php.
  */
 class Block extends Values
 {

@@ -84,15 +84,51 @@ it("provides site, user and page helpers", function () {
         ->and(site()->children()->map->slug->all())->toContain("blog", "about", "home", "imprint");
 });
 
-it("renders partials, also as Kirby snippets", function () {
+it("renders partials", function () {
     Blueprint\Page::setCurrent(page("imprint"));
-    $html = "<p>Hello &lt;b&gt; from Imprint</p>\n";
 
-    expect(partial("greeting", ["name" => "<b>"], true))->toBe($html)
-        ->and(snippet("greeting", ["name" => "<b>"], true))->toBe($html);
+    expect(partial("greeting", ["name" => "<b>"], true))->toBe("<p>Hello &lt;b&gt; from Imprint</p>\n")
+        ->and(fn() => partial("missing"))->toThrow(InvalidArgumentException::class);
+});
+
+it("renders snippets like Kirby", function () {
+    Blueprint\Page::setCurrent(page("imprint"));
+
+    expect(snippet("teaser", ["title" => "<b>"], true))->toBe("<article>&lt;b&gt; (Imprint)</article>\n")
+        ->and(snippet(["missing", "teaser"], (object) ["title" => "x"], true))->toBe("<article>x (Imprint)</article>\n")
+        ->and(snippet("missing", return: true))->toBe("");
 
     ob_start();
-    snippet("greeting", ["name" => "x"]);
+    snippet("teaser", ["title" => "echoed"]);
 
-    expect(ob_get_clean())->toContain("Hello x");
+    expect(ob_get_clean())->toContain("echoed");
+});
+
+it("renders snippets with slots", function () {
+    ob_start();
+    snippet("card", ["class" => "big"], slots: true);
+    echo "ignored between slots";
+    slot("title");
+    echo "<h2>Title</h2>";
+    endslot();
+    slot();
+    echo "Body";
+    endslot();
+    endsnippet();
+    $html = ob_get_clean();
+
+    ob_start();
+    snippet("card", slots: true);
+    echo "Only <em>default</em>";
+    $default = endsnippet();
+    $defaultHtml = ob_get_clean();
+
+    snippet("card", return: true, slots: true);
+    echo "Returned";
+
+    expect($html)->toBe("<div class=\"big\"><h2>Title</h2><p>Body</p></div>\n")
+        ->and($default)->toBeNull()
+        ->and($defaultHtml)->toBe("<div class=\"card\">no title<p>Only <em>default</em></p></div>\n")
+        ->and(endsnippet())->toBe("<div class=\"card\">no title<p>Returned</p></div>\n")
+        ->and(fn() => endsnippet())->toThrow(LogicException::class);
 });

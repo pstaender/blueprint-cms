@@ -36,8 +36,8 @@ Echoing a field value (or `esc($value)`, which doesn't escape it twice) outputs:
 | `select`, `radio`, `toggles`, `checkboxes`, `multiselect`, `tags` | option labels, comma separated |
 | `pagepicker` / `userpicker` | page titles / user names (or emails), comma separated |
 | `filepicker` | file urls, comma separated |
-| `blocks` | the rendered blocks (`site/templates/blocks/{type}.php`), hidden blocks are skipped |
-| `layout` | the rendered rows (`site/templates/blocks/layout.php`) |
+| `blocks` | the rendered blocks (`site/snippets/blocks/{type}.php`), hidden blocks are skipped |
+| `layout` | the rendered rows (`site/snippets/blocks/layout.php`) |
 | `password`, `structure`, `object` | nothing, use the methods below |
 
 ```yaml

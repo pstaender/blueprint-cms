@@ -40,7 +40,7 @@ fields:
 ```
 
 ```php
-<?php // site/templates/blocks/cta.php ?>
+<?php // site/snippets/blocks/cta.php ?>
 <?php if ($target = $block->link()->toPage()): ?>
   <a class="button" href="<?= esc($target->url()) ?>"><?= $block->label() ?></a>
 <?php endif ?>

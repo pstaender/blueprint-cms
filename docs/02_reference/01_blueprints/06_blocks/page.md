@@ -90,10 +90,10 @@ Blocks and layouts are stored like in Kirby:
 <?php endforeach ?>
 ```
 
-Each block is rendered with `site/templates/blocks/{type}.php`, falling back to the core snippets in [`src/views/blocks/`](../../../../src/views/blocks). Snippets get `$block` (field methods for its content, `id()`, `type()`, `isHidden()`), `$page` and `$site`. Layout rows use `blocks/layout.php` with `$layout`.
+Each block is rendered with `site/snippets/blocks/{type}.php`, falling back to the core snippets in [`src/views/blocks/`](../../../../src/views/blocks). Snippets get `$block` (field methods for its content, `id()`, `type()`, `isHidden()`), `$page` and `$site`. Layout rows use `blocks/layout.php` with `$layout`.
 
 ```php
-<?php // site/templates/blocks/callout.php ?>
+<?php // site/snippets/blocks/callout.php ?>
 <aside class="callout callout-<?= $block->theme()->or("info") ?>">
   <?= $block->text() ?>
 </aside>

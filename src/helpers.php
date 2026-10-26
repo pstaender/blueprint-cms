@@ -8,6 +8,7 @@ use Blueprint\File;
 use Blueprint\Page;
 use Blueprint\Redirect;
 use Blueprint\Site;
+use Blueprint\Snippet;
 use Blueprint\User;
 use Michelf\MarkdownExtra;
 
@@ -82,11 +83,48 @@ function partial(string $name, array $variables = [], bool $return = false): ?st
 }
 
 /**
- * Kirby compatible alias of partial(), e.g. snippet("header").
+ * Renders site/snippets/{name}.php like Kirby, e.g. snippet("header"), snippet(["teaser-" . $page->type(), "teaser"])
+ * (the first existing one). Missing snippets render nothing. With `slots: true` the snippet is closed by endsnippet(),
+ * see Snippet.
  */
-function snippet(string $name, array $variables = [], bool $return = false): ?string
+function snippet(string|array $name, array|object $data = [], bool $return = false, bool $slots = false): Snippet|string|null
 {
-    return partial($name, $variables, $return);
+    $data = is_object($data) ? get_object_vars($data) : $data;
+
+    if ($slots) {
+        return Snippet::begin($name, $data, $return);
+    }
+
+    $html = App::instance()->renderSnippet($name, $data);
+
+    if ($return) {
+        return $html;
+    }
+
+    echo $html;
+
+    return null;
+}
+
+/**
+ * Closes snippet(…, slots: true) and renders it.
+ */
+function endsnippet(): ?string
+{
+    return Snippet::end();
+}
+
+/**
+ * Starts a slot of the open snippet, slot() is the default slot ($slot in the snippet).
+ */
+function slot(string $name = "default"): void
+{
+    Snippet::slot($name);
+}
+
+function endslot(): void
+{
+    Snippet::endSlot();
 }
 
 /**

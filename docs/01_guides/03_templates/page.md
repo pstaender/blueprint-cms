@@ -34,10 +34,10 @@ return ["title" => "Computed title", "template" => "article"];
 
 ## Blocks
 
-Echoing a `blocks` field renders every block with `site/templates/blocks/{type}.php` (core: [`src/views/blocks/`](../../../src/views/blocks)). The snippet gets `$block`:
+Echoing a `blocks` field renders every block with `site/snippets/blocks/{type}.php` (core: [`src/views/blocks/`](../../../src/views/blocks)). The snippet gets `$block`:
 
 ```php
-<?php // site/templates/blocks/heading.php ?>
+<?php // site/snippets/blocks/heading.php ?>
 <h2 class="headline"><?= $block->text() ?></h2>
 ```
 
@@ -46,5 +46,30 @@ See [Blocks](../../02_reference/01_blueprints/06_blocks/page.md).
 ## Partials
 
 `partial("head")` renders `site/templates/partials/head.php` with `$page` and `$site`; pass more variables with `partial("teaser", ["item" => $child])`.
+
+## Snippets
+
+Snippets work like in Kirby: `snippet("teaser", ["item" => $child])` renders `site/snippets/teaser.php` with the data, `$page` and `$site`. A missing snippet renders nothing; with a list the first existing one is used: `snippet(["teaser-" . $child->type(), "teaser"])`. `snippet("teaser", $data, true)` returns the html instead of echoing it.
+
+Snippets with slots wrap content:
+
+```php
+<?php snippet("card", ["class" => "highlight"], slots: true) ?>
+  <?php slot("title") ?><h2>Hello</h2><?php endslot() ?>
+  <?php slot() ?><p>The text</p><?php endslot() ?>
+<?php endsnippet() ?>
+```
+
+```php
+<?php // site/snippets/card.php ?>
+<div class="<?= esc($class) ?>">
+  <?= $slots->title() ?>
+  <?= $slot ?>
+</div>
+```
+
+`$slot` is the default slot (everything between `snippet()` and `endsnippet()` if there are no `slot()` calls), `$slots->name()` the named ones (`null` if missing). Slots aren't escaped.
+
+Partials and snippets are alike: partials throw an exception if they are missing.
 
 See all [helpers](../../02_reference/03_helpers/page.md).

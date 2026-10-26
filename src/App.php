@@ -263,22 +263,24 @@ class App
     }
 
     /**
-     * Renders site/templates/{name}.php or the core src/views/{name}.php, e.g. "blocks/heading".
-     * Missing snippets render nothing (a comment in debug mode).
+     * Renders site/snippets/{name}.php or the core src/views/{name}.php, e.g. "blocks/heading".
+     * With a list of names the first existing snippet is used. Missing snippets render nothing (a comment in debug mode).
      */
-    public function renderSnippet(string $name, array $variables = []): string
+    public function renderSnippet(string|array $name, array $variables = []): string
     {
-        if (!preg_match('#^[\w-]+(/[\w-]+)*$#', $name)) {
-            return "";
-        }
+        foreach ((array) $name as $candidate) {
+            if (!is_string($candidate) || !preg_match('#^[\w-]+(/[\w-]+)*$#', $candidate)) {
+                continue;
+            }
 
-        foreach ([$this->siteDir() . "/templates/$name.php", __DIR__ . "/views/$name.php"] as $file) {
-            if (is_file($file)) {
-                return $this->capture($file, $variables + ["page" => Page::current(), "site" => $this->site()])[0];
+            foreach ([$this->siteDir() . "/snippets/$candidate.php", __DIR__ . "/views/$candidate.php"] as $file) {
+                if (is_file($file)) {
+                    return $this->capture($file, $variables + ["page" => Page::current(), "site" => $this->site()])[0];
+                }
             }
         }
 
-        return $this->isDebug() ? "<!-- snippet $name not found -->" : "";
+        return $this->isDebug() ? "<!-- snippet " . esc(implode(", ", (array) $name)) . " not found -->" : "";
     }
 
     /**
