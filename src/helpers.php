@@ -67,19 +67,14 @@ function redirect(string $url, int $status = 302): never
 }
 
 /**
- * Renders site/templates/partials/{name}.php, e.g. partial("head").
+ * Returns the output of site/templates/partials/{name}.php or of an absolute php file, e.g. <?= partial("head") ?>,
+ * <?= partial(__DIR__ . "/partials/head.php", ["title" => "Hello"]) ?>. Throws if the partial doesn't exist.
+ *
+ * @param array<string, mixed> $variables available as variables in the partial (besides $page and $site)
  */
-function partial(string $name, array $variables = [], bool $return = false): ?string
+function partial(string $name, array $variables = []): string
 {
-    $html = App::instance()->renderPartial($name, $variables);
-
-    if ($return) {
-        return $html;
-    }
-
-    echo $html;
-
-    return null;
+    return App::instance()->renderPartial($name, $variables);
 }
 
 /**

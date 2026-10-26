@@ -284,13 +284,14 @@ class App
     }
 
     /**
-     * Renders site/templates/partials/{name}.php.
+     * Renders site/templates/partials/{name}.php, or an absolute path to a php file.
      */
     public function renderPartial(string $name, array $variables = []): string
     {
-        $file = $this->siteDir() . "/templates/partials/$name.php";
+        $isPath = str_starts_with($name, "/") || preg_match('#^[a-z]:[\\\\/]#i', $name);
+        $file = $isPath ? $name : $this->siteDir() . "/templates/partials/$name.php";
 
-        if (str_contains($name, "..") || !is_file($file)) {
+        if ((!$isPath && str_contains($name, "..")) || !str_ends_with($file, ".php") || !is_file($file)) {
             throw new \InvalidArgumentException("Partial \"$name\" not found in $file");
         }
 

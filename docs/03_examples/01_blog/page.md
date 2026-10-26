@@ -60,21 +60,21 @@ fields:
 
 ```php
 <?php // site/templates/blog.php ?>
-<?php partial("head") ?>
+<?= partial("head") ?>
 <h1><?= $page->title() ?></h1>
 <?= $page->intro() ?>
 
 <?php foreach ($page->children() as $article): ?>
   <a href="<?= esc($article->url()) ?>"><?= $article->title() ?></a>
 <?php endforeach ?>
-<?php partial("footer") ?>
+<?= partial("footer") ?>
 ```
 
 ```php
 <?php // site/templates/article.php ?>
-<?php partial("head") ?>
+<?= partial("head") ?>
 <h1><?= $page->title() ?></h1>
 <time><?= $page->date()->format("d.m.Y") ?></time>
 <?= $page->content() ?>
-<?php partial("footer") ?>
+<?= partial("footer") ?>
 ```

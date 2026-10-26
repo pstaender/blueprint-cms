@@ -189,3 +189,7 @@
   `endsnippet()` (`Snippet` keeps a stack of open snippets, output buffering; `$slot`, `$slots->name()`).
 - `partial()` stays as it is (site/templates/partials, exception if missing).
 - Block snippets moved from site/templates/blocks to site/snippets/blocks (Kirby location), core fallback src/views/blocks.
+
+2026-10-26 – partial() returns the html
+- `partial($name, $variables)` returns the html instead of echoing (`<?= partial("head") ?>`, no `$return` flag),
+  throws if missing, and takes an absolute path to a php file instead of a name (IDEs can follow it).

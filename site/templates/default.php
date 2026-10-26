@@ -1,4 +1,4 @@
-<?php partial("head") ?>
+<?= partial("head") ?>
 <main>
     <h1><?= esc($page->title()) ?></h1>
     <?= md($page->data()->content) ?>
@@ -11,4 +11,4 @@
         </ul>
     <?php endif ?>
 </main>
-<?php partial("footer") ?>
+<?= partial("footer") ?>

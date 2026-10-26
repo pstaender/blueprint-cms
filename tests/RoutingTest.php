@@ -87,8 +87,17 @@ it("provides site, user and page helpers", function () {
 it("renders partials", function () {
     Blueprint\Page::setCurrent(page("imprint"));
 
-    expect(partial("greeting", ["name" => "<b>"], true))->toBe("<p>Hello &lt;b&gt; from Imprint</p>\n")
-        ->and(fn() => partial("missing"))->toThrow(InvalidArgumentException::class);
+    $html = "<p>Hello &lt;b&gt; from Imprint</p>\n";
+
+    ob_start();
+    $result = partial("greeting", ["name" => "<b>"]);
+
+    expect(ob_get_clean())->toBe("")
+        ->and($result)->toBe($html)
+        ->and(partial(WEBSITE_PROJECT . "/site/templates/partials/greeting.php", ["name" => "<b>"]))->toBe($html)
+        ->and(fn() => partial("missing"))->toThrow(InvalidArgumentException::class)
+        ->and(fn() => partial(WEBSITE_PROJECT . "/content/site.json"))->toThrow(InvalidArgumentException::class)
+        ->and(fn() => partial("../templates/default"))->toThrow(InvalidArgumentException::class);
 });
 
 it("renders snippets like Kirby", function () {

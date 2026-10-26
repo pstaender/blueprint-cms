@@ -5,11 +5,11 @@ Templates are plain php files in `site/templates/`, one per page type. A page wi
 
 ```php
 <?php // site/templates/article.php ?>
-<?php partial("head") ?>
+<?= partial("head") ?>
 <h1><?= $page->title() ?></h1>
 <time><?= $page->date()->format("d.m.Y") ?></time>
 <?= $page->content() ?>
-<?php partial("footer") ?>
+<?= partial("footer") ?>
 ```
 
 Lookup: `site/templates/{type}.php` → `page.php` → `default.php` → [`src/views/default.php`](../../../src/views/default.php).
@@ -45,7 +45,7 @@ See [Blocks](../../02_reference/01_blueprints/06_blocks/page.md).
 
 ## Partials
 
-`partial("head")` renders `site/templates/partials/head.php` with `$page` and `$site`; pass more variables with `partial("teaser", ["item" => $child])`.
+`<?= partial("head") ?>` outputs `site/templates/partials/head.php` with `$page` and `$site`; pass more variables with `partial("teaser", ["item" => $child])`. `partial()` returns the html (it doesn't echo) and throws an exception if the partial doesn't exist. Instead of a name, it takes an absolute path to a php file, so IDEs can follow it: `<?= partial(__DIR__ . "/partials/head.php") ?>`.
 
 ## Snippets
 

@@ -48,13 +48,13 @@ fields:
 
 ```php
 <?php // site/templates/landing.php ?>
-<?php partial("head") ?>
+<?= partial("head") ?>
 <?php if ($cover = $page->cover()->toFile()): ?>
   <img src="<?= esc($cover->url()) ?>" alt="<?= $cover->alt() ?>">
 <?php endif ?>
 <h1><?= $page->title() ?></h1>
 <?= $page->sections() ?>
-<?php partial("footer") ?>
+<?= partial("footer") ?>
 ```
 
 The page uses this blueprint and template with `type: landing` in its content file (or by choosing the type in the panel: page settings → Type).
