@@ -4,7 +4,6 @@ import { api, session } from "../api.js";
 import { useEditing } from "../editing.js";
 import ModelForm from "../components/ModelForm.vue";
 import ViewHeader from "../components/ViewHeader.vue";
-import PageItems from "../components/PageItems.vue";
 import Icon from "../components/Icon.vue";
 
 const site = ref(null);
@@ -19,7 +18,6 @@ async function reloadChildren() {
 }
 
 const model = computed(() => site.value && { id: null, children: site.value.children, canHaveChildren: true, reload: reloadChildren });
-const hasPageList = computed(() => Object.values(site.value?.blueprint.fields ?? {}).some((field) => field.type === "pagelist"));
 
 async function load() {
   site.value = await api.get("/site");
@@ -37,6 +35,5 @@ onMounted(load);
       </template>
     </ViewHeader>
     <ModelForm :blueprint="site.blueprint" :values="values" :errors="errors" :model="model" />
-    <PageItems v-if="!hasPageList" :pages="site.children" :parent="model" @changed="reloadChildren" />
   </div>
 </template>

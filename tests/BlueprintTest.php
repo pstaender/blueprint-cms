@@ -25,7 +25,7 @@ it("collects all fields of all tabs", function () {
     $blueprint = Blueprint::load("pages/article");
 
     expect(array_keys($blueprint->fields()))
-        ->toBe(["title", "links", "text", "date", "category", "email", "seoTitle", "seoDescription"])
+        ->toBe(["title", "links", "text", "date", "category", "email", "seoTitle", "seoDescription", "subpages"])
         ->and($blueprint->field("email")->type)->toBe("email")
         ->and($blueprint->field("SEOTITLE")->label())->toBe("SEO title")
         ->and($blueprint->field("seoDescription")->label())->toBe("Seo description")
@@ -43,6 +43,27 @@ it("wraps loose fields and columns in a main tab", function () {
         ->and($columns->tab("main")["columns"][1]["width"])->toBe("1/2");
 });
 
+it("adds the subpages field unless the blueprint has a pagelist or removes it", function () {
+    $loose = Blueprint::load("pages/loose");
+    $columns = $loose->tab("main")["columns"];
+
+    expect(array_keys(end($columns)["fields"]))->toBe(["subpages"])
+        ->and(end($columns)["width"])->toBe("1/1")
+        ->and($loose->field("subpages")->type)->toBe("pagelist")
+        ->and($loose->field("subpages")->label())->toBe("Subpages")
+        ->and(Blueprint::load("site")->field("subpages")->label())->toBe("Pages")
+        ->and(Blueprint::load("pages/legacy")->field("subpages"))->toBeNull();
+});
+
+it("removes inherited fields with false", function () {
+    $blueprint = Blueprint::load("pages/extended");
+
+    expect($blueprint->field("subpages"))->toBeNull()
+        ->and($blueprint->field("email"))->toBeNull()
+        ->and($blueprint->field("title"))->not->toBeNull()
+        ->and(array_column($blueprint->fields(), "type"))->not->toContain("info");
+});
+
 it("converts legacy sections into fields", function () {
     $blueprint = Blueprint::load("pages/legacy");
 
@@ -57,7 +78,7 @@ it("converts legacy sections into fields", function () {
 it("replaces invalid fields with error fields", function () {
     $fields = Blueprint::load("pages/broken")->fields();
 
-    expect(array_keys($fields))->toBe(["title", "missing", "title-duplicate", "wrong"])
+    expect(array_keys($fields))->toBe(["title", "missing", "title-duplicate", "wrong", "subpages"])
         ->and($fields["missing"]->get("theme"))->toBe("negative")
         ->and($fields["wrong"]->get("text"))->toContain("Invalid field type \"nope\"");
 });

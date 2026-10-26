@@ -14,7 +14,7 @@ describe("fields: true", function () {
 
         expect(array_keys($blueprint->tab("content")["columns"][1]["fields"]))->toBe(["seoTitle", "seoDescription", "extra"])
             ->and(array_keys($blueprint->tab("meta")["columns"][0]["fields"]))->toBe(["date"])
-            ->and(array_keys($blueprint->fields()))->toBe(["title", "intro", "date", "seoTitle", "seoDescription", "extra"]);
+            ->and(array_keys($blueprint->fields()))->toBe(["title", "intro", "date", "seoTitle", "seoDescription", "extra", "subpages"]);
     });
 });
 

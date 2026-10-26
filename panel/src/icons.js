@@ -2,7 +2,7 @@
 // for this project (by Claude, in the style of Feather/Lucide, but not copied from them), so there is no third
 // party license. Blueprints can use these names as `icon`, see Panel guide.
 export const icons = {
-  site: "M12 21a9 9 0 100-18 9 9 0 000 18zM3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18",
+  site: "M12 22a10 10 0 100-20 10 10 0 000 20zM2.3 10.2h2.2c1.2 0 2-.9 2-2 0-1 .8-1.6 1.7-1.5 1.1.1 1.6-.9 1.4-1.9L9 2.5M9.8 21.7c.2-1.3-.1-2.6.8-3.5.9-.9 2.3-.6 3.2-1.4.8-.7 1.9-.5 2.4.4.4.8.2 1.8.6 2.6l.3.6M17.4 3.6c-.9.9-1.6 2.1-1.2 3.3.4 1.1 1.7 1.3 2.3 2.2.5.8.4 1.9 1.3 2.3h2.1",
   home: "M3 11l9-7 9 7M5 10v10h5v-6h4v6h5V10",
   page: "M6 3h8l4 4v14H6zM14 3v4h4",
   users: "M9 11a4 4 0 100-8 4 4 0 000 8zM2 21v-1a7 7 0 0114 0v1M16 3.5a4 4 0 010 7.5M18 14a6 6 0 014 6v1",

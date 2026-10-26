@@ -28,6 +28,22 @@ fields:
     type: date
 ```
 
+## subpages
+
+Every page blueprint gets a `subpages` field, the list of the page's subpages in the panel (a [`pagelist`](/reference/fields/page) in a full width column at the end of the first tab). It isn't added if the blueprint has its own `pagelist` field or a field named `subpages`, which can also change it:
+
+```yaml
+fields:
+  subpages: false            # no subpages list
+
+  # or a changed one
+  subpages:
+    type: pagelist
+    layout: cards
+```
+
+The site blueprint gets the same field (labeled "Pages"), unless it has a `pagelist`.
+
 ## icon
 
 `icon` is shown next to the pages of this type in the panel: the name of a panel icon (`icon: image`) or any text like an emoji (`icon: 📝`), see [Panel guide](/guides/panel#icons).

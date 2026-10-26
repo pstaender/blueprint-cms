@@ -19,5 +19,14 @@ const pages = computed(() => {
 </script>
 
 <template>
-  <PageItems :label="field.label" :pages="pages" :layout="field.layout" :parent="model" :types="types" @changed="model?.reload?.()" />
+  <!-- file pages can't have subpages -->
+  <PageItems
+    v-if="pages.length || model?.canHaveChildren !== false"
+    :label="field.label"
+    :pages="pages"
+    :layout="field.layout"
+    :parent="model"
+    :types="types"
+    @changed="model?.reload?.()"
+  />
 </template>

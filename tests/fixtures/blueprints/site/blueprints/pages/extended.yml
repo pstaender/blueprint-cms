@@ -8,3 +8,6 @@ options:
   changeSlug:
     admin: true
     "*": false
+fields:
+  email: false
+  subpages: false

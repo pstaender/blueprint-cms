@@ -252,3 +252,9 @@
 - The draft status can't be disabled by a blueprint anymore (`draft: false` is ignored), every page but the home page can be taken offline.
 - Page tree: context menu (right click / ⋯) with "Move to …" and the statuses. Page settings: parent select (`ParentSelect.vue`). Page lists: checkboxes + select all, bulk status / move / delete (one request per page, failures are collected).
 - The page view reloads after changes elsewhere (`session.changes`) when it has no unsaved changes; the tree follows the open page when it is moved.
+
+2026-10-26 – Subpages as a default field
+- The panel no longer injects a subpages list below the form: `Blueprint::DEFAULT_FIELDS` gives every page blueprint (and the site) a `subpages` field of type `pagelist`, in a full width column at the end of the first tab. It is skipped if the blueprint has a pagelist or a field named `subpages`; `subpages: false` turns it off. The type stays `pagelist` (no new `subpages` type).
+- `false` removes any field, also inherited ones referenced by the layout (references to removed fields are skipped instead of becoming error fields).
+- Pages rendered by a php file (no form) still get the subpages list below.
+- The `site` icon is now an earth with land masses instead of a plain globe grid.

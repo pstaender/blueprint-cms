@@ -14,6 +14,8 @@ use Illuminate\Support\Str;
  *   tabs and columns reference them by name, e.g. `fields: [title, text]`
  * - loose fields are wrapped in a column, loose columns in a `main` tab
  * - (legacy) sections are converted to fields, e.g. `type: pages` → `pagelist`
+ * - `false` removes a field, e.g. an inherited one (`extends`) or a default field (`subpages: false`)
+ * - default fields (e.g. `subpages` of pages) are added in a full width column at the end of the first tab
  * - field groups are replaced by their fields
  * - `extends` (or a string as props) merges the props of another blueprint file into the props
  *
@@ -44,6 +46,9 @@ class BlueprintNormalizer
     /** @var array<string, true> lowercase names of the definitions used in the layout */
     private array $used = [];
 
+    /** @var array<string, true> lowercase names of the fields removed with `false` */
+    private array $disabled = [];
+
     /**
      * @param Closure(string): ?array $find returns the raw props of a blueprint file, e.g. "custom-fields/seo"
      */
@@ -55,13 +60,15 @@ class BlueprintNormalizer
     }
 
     /**
+     * @param array<string, array> $defaultFields fields every blueprint of this type gets, by name
      * @return array the props with normalized `tabs` and a flat list of all `fields`
      */
-    public function normalize(array $props, string $name): array
+    public function normalize(array $props, string $name, array $defaultFields = []): array
     {
         $this->definitions = [];
         $this->fields = [];
         $this->used = [];
+        $this->disabled = [];
 
         $props = $this->extend($props);
         $props["name"] = $name;
@@ -77,7 +84,7 @@ class BlueprintNormalizer
         }
 
         $props = $this->wrapColumnsInTab($this->wrapFieldsInColumn($this->convertSections($props)));
-        $props["tabs"] = $this->placeUnusedFields($this->normalizeTabs($props["tabs"] ?? []));
+        $props["tabs"] = $this->addDefaultFields($this->placeUnusedFields($this->normalizeTabs($props["tabs"] ?? [])), $defaultFields);
         $props["fields"] = array_column($this->fields, null, "name");
 
         return $props;
@@ -245,6 +252,31 @@ class BlueprintNormalizer
         return $tabs;
     }
 
+    /**
+     * Adds the default fields the blueprint doesn't have: no field with their name or type, not removed with `false`.
+     */
+    private function addDefaultFields(array $tabs, array $defaultFields): array
+    {
+        $types = array_column($this->fields, "type");
+        $missing = array_filter(
+            $defaultFields,
+            fn(array $field, string $name) => !isset($this->fields[strtolower($name)])
+                && !isset($this->definitions[strtolower($name)])
+                && !isset($this->disabled[strtolower($name)])
+                && !in_array($field["type"], $types, true),
+            ARRAY_FILTER_USE_BOTH,
+        );
+
+        if ($missing === []) {
+            return $tabs;
+        }
+
+        $tabs = $tabs ?: ["main" => ["name" => "main", "label" => "Main", "icon" => null, "columns" => []]];
+        $tabs[array_key_first($tabs)]["columns"][] = ["width" => "1/1", "fields" => $this->place($this->expand($missing))];
+
+        return $tabs;
+    }
+
     private function normalizeColumns(mixed $columns): array
     {
         $normalized = [];
@@ -338,9 +370,18 @@ class BlueprintNormalizer
             }
 
             if (is_int($key) && is_string($props)) {
+                if (isset($this->disabled[strtolower($props)])) {
+                    continue;
+                }
+
                 $this->used[strtolower($props)] = true;
                 $resolved[] = $this->definitions[strtolower($props)]
                     ?? self::errorField($props, "The field \"$props\" is not defined in the blueprint's fields");
+                continue;
+            }
+
+            if ($props === false) {
+                $this->disabled[strtolower((string) $key)] = true;
                 continue;
             }
 

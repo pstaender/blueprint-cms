@@ -18,6 +18,15 @@ class Blueprint
     public const EXTENSIONS = ["yml", "yaml", "php"];
 
     /**
+     * Fields every blueprint of a model type gets, unless it has a field with the same name or type, or removes
+     * it with `false` (`subpages: false`).
+     */
+    public const DEFAULT_FIELDS = [
+        "pages" => ["subpages" => ["type" => "pagelist"]],
+        "site" => ["subpages" => ["type" => "pagelist", "label" => "Pages"]],
+    ];
+
+    /**
      * Available `options` per model type, `null` means "use the default behaviour".
      */
     public const OPTIONS = [
@@ -50,8 +59,8 @@ class Blueprint
 
     public function __construct(public readonly string $name, array $props)
     {
-        $props = (new BlueprintNormalizer(self::find(...)))->normalize($props, $name);
         $type = $this->type();
+        $props = (new BlueprintNormalizer(self::find(...)))->normalize($props, $name, self::DEFAULT_FIELDS[$type] ?? []);
 
         if (isset(self::OPTIONS[$type])) {
             $props["options"] = BlueprintNormalizer::normalizeOptions($props["options"] ?? null, self::OPTIONS[$type]);

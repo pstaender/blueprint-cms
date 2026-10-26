@@ -156,7 +156,8 @@ onMounted(async () => {
     <p v-if="!page.isEditable" class="notice notice-info">This page is rendered by a php file and can't be edited.</p>
     <ModelForm v-else :blueprint="page.blueprint" :values="values" :errors="errors" :model="model" />
 
-    <PageItems v-if="!fieldTypes.includes('pagelist') && page.children.length" label="Subpages" :pages="page.children" :parent="model" @changed="reloadChildren" />
+    <!-- pages rendered by a php file have no form for their subpages field -->
+    <PageItems v-if="!page.isEditable && page.children.length" label="Subpages" :pages="page.children" :parent="model" @changed="reloadChildren" />
     <FileList v-if="!fieldTypes.includes('filelist') && page.files.length" :field="{ label: 'Files', type: 'filelist' }" :model="model" />
 
     <Dialog

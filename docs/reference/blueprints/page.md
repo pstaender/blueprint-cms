@@ -49,6 +49,14 @@ fields:
   title: text              # same as {type: text}
 ```
 
+`false` removes a field (or tab) that the blueprint inherits, also when the layout references it:
+
+```yaml
+extends: pages/article
+fields:
+  category: false
+```
+
 ## Loading
 
 ```php
