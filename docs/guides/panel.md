@@ -44,9 +44,19 @@ Then log in at http://localhost:8000/panel.
 
 ## Icons
 
-A blueprint's `icon` is either the name of a panel icon or any text, usually an emoji (`icon: 📝`). Panel icons: `site`, `home`, `page`, `file`, `image`, `blocks`, `user`, `users`, `settings`, `edit`, `upload`, `open`, `copy`, `eye`, `trash`, `check`, … (all in `panel/src/icons.js`).
+A blueprint's `icon` (page types, tabs, …) can be:
 
-The icons are simple 24×24 line paths written by hand for Blueprint CMS, in the style of [Feather](https://feathericons.com) and [Lucide](https://lucide.dev) but not copied from them, so no third party license applies.
+```yaml
+icon: home                                  # the name of a panel icon
+icon: 👍                                    # any text, usually an emoji
+icon: data:image/svg+xml;base64,PHN2Zy…     # an inline image (data URI)
+```
+
+Inline images must be `data:image/…` URIs (other data URIs are ignored). They are used as a mask, so they are drawn in the text color of the panel (light and dark mode); transparent parts stay transparent.
+
+Panel icons (the names follow [Kirby's icon set](https://getkirby.com/docs/reference/panel/icons), without its brand logos): `accessibility`, `account`, `add`, `ai`, `alert`, `anchor`, `angle-down`, `angle-dropdown`, `angle-left`, `angle-right`, `angle-up`, `archive`, `asterisk`, `attachment`, `audio`, `badge`, `bars`, `bell`, `blocks`, `bold`, `bolt`, `book`, `bookmark`, `box`, `brush`, `bug`, `calendar`, `cancel`, `cancel-small`, `car`, `cart`, `chart`, `chat`, `check`, `checklist`, `chevron`, `circle`, `circle-filled`, `circle-half`, `circle-nested`, `clear`, `clock`, `close`, `cloud`, `code`, `cog`, `collapse`, `collapse-horizontal`, `copy`, `credit-card`, `crop`, `dashboard`, `deselect-all`, `discount`, `display`, `divider`, `document`, `dots`, `down`, `download`, `draft`, `edit`, `edit-line`, `email`, `expand`, `expand-horizontal`, `eye`, `file`, `file-audio`, `file-code`, `file-document`, `file-image`, `file-spreadsheet`, `file-text`, `file-video`, `file-word`, `file-zip`, `filter`, `flag`, `folder`, `folder-structure`, `food`, `git-branch`, `globe`, `grid`, `grid-bottom`, `grid-bottom-left`, `grid-bottom-right`, `grid-full`, `grid-left`, `grid-right`, `grid-top`, `grid-top-left`, `grid-top-right`, `grip`, `h1`, `h2`, `h3`, `h4`, `h5`, `h6`, `headline`, `heart`, `heart-filled`, `hidden`, `home`, `image`, `images`, `import`, `info`, `info-card`, `italic`, `key`, `lab`, `layers`, `layout-bottom`, `layout-columns`, `layout-left`, `layout-right`, `layout-top`, `link`, `list-bullet`, `list-numbers`, `live`, `loader`, `lock`, `logout`, `map`, `markdown`, `megaphone`, `menu`, `merge`, `mobile`, `money`, `moon`, `more`, `open`, `order-alpha-asc`, `order-alpha-desc`, `order-num-asc`, `order-num-desc`, `page`, `palette`, `paragraph`, `parent`, `pen`, `phone`, `pin`, `pipette`, `plane`, `play`, `plus`, `preview`, `print`, `protected`, `qr-code`, `question`, `quote`, `refresh`, `remove`, `replace`, `rocket`, `rss`, `scroll-to-bottom`, `search`, `select-all`, `server`, `settings`, `share`, `shield`, `shuffle`, `shut-down`, `site`, `sitemap`, `smile`, `sort`, `sparkling`, `split`, `star`, `star-filled`, `status-draft`, `status-listed`, `status-unlisted`, `store`, `strikethrough`, `subscript`, `sun`, `superscript`, `table`, `tablet`, `tag`, `template`, `terminal`, `text`, `text-bottom`, `text-center`, `text-justify`, `text-left`, `text-middle`, `text-right`, `text-top`, `ticket`, `title`, `toggle-off`, `toggle-on`, `translate`, `trash`, `underline`, `undo`, `unlock`, `up`, `upload`, `url`, `user`, `users`, `video`, `wallet`, `wand`, `wheelchair`, `window`.
+
+The icons are simple 24×24 line paths written by hand for Blueprint CMS, in the style of [Feather](https://feathericons.com) and [Lucide](https://lucide.dev) but not copied from them (nor from Kirby), so no third party license applies.
 
 ## Development
 

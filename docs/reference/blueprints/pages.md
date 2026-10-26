@@ -46,7 +46,7 @@ The site blueprint gets the same field (labeled "Pages"), unless it has a `pagel
 
 ## icon
 
-`icon` is shown next to the pages of this type in the panel: the name of a panel icon (`icon: image`) or any text like an emoji (`icon: 📝`), see [Panel guide](/guides/panel#icons).
+`icon` is shown next to the pages of this type in the panel: the name of a panel icon (`icon: image`), any text like an emoji (`icon: 📝`) or an inline image (`icon: data:image/svg+xml;base64,…`), see [Panel guide](/guides/panel#icons).
 
 ## default
 

@@ -89,6 +89,18 @@ textarea {
   stroke-linejoin: round;
 }
 
+.icon-fill {
+  fill: currentColor;
+  stroke: none;
+}
+
+.image-icon {
+  display: inline-block;
+  background: currentColor;
+  mask: center / contain no-repeat;
+  -webkit-mask: center / contain no-repeat;
+}
+
 .text-icon {
   display: inline-flex;
   justify-content: center;

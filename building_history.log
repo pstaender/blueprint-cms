@@ -258,3 +258,8 @@
 - `false` removes any field, also inherited ones referenced by the layout (references to removed fields are skipped instead of becoming error fields).
 - Pages rendered by a php file (no form) still get the subpages list below.
 - The `site` icon is now an earth with land masses instead of a plain globe grid.
+
+2026-10-26 – More panel icons, image icons
+- The icon set grew to ~220 icons with the names of Kirby's panel icons (no brand logos), all hand-drawn in the existing line style. Generated from helpers (circles, rounded rects, gear) and reviewed on a contact sheet; `icons.js` keeps the plain path data.
+- An icon is a stroke path or `{d, fill}` with a filled path (circle-filled, star-filled, status-*, grid-*).
+- Blueprint `icon` also accepts `data:image/…` URIs (other data URIs are ignored). They are rendered as a CSS mask in the text color, so foreign svgs fit the theme and can't run scripts.
