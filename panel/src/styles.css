@@ -491,9 +491,12 @@ select[multiple].input {
   min-height: 120px;
 }
 
+/* markdown is easier to write in a monospaced font */
 .textarea {
   min-height: 160px;
   resize: vertical;
+  font-family: var(--font-mono);
+  font-size: 13px;
   line-height: 1.6;
 }
 
