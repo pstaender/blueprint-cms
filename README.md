@@ -34,4 +34,4 @@ The documentation is a Blueprint CMS site itself: its content is in [`docs/`](do
 
 ## License
 
-MIT
+[MIT](LICENSE)
