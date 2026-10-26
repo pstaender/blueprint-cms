@@ -62,6 +62,7 @@ $title ??= $page?->title()->value();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= esc($title) ?> | <?= esc($siteName) ?></title>
+    <link rel="icon" href="<?= esc(static_file_url("assets/images/blueprint_cms.svg")) ?>" type="image/svg+xml">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@speed-highlight/core@2.1.0/dist/themes/github-light.css" media="(prefers-color-scheme: light)">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@speed-highlight/core@2.1.0/dist/themes/github-dark.css" media="(prefers-color-scheme: dark)">
     <link rel="stylesheet" href="<?= esc(static_file_url("assets/css/docs.css")) ?>">
@@ -73,7 +74,7 @@ $title ??= $page?->title()->value();
     <header class="docs-header">
         <div class="docs-header-inner">
             <button type="button" class="docs-menu-toggle" aria-controls="docs-menu" aria-expanded="false">Menu</button>
-            <a class="docs-logo" href="/"><?= esc($siteName) ?></a>
+            <a class="docs-logo" href="/"><img src="<?= esc(static_file_url("assets/images/blueprint_cms.svg")) ?>" alt="" width="28" height="28"><span class="docs-logo-name"><?= esc($siteName) ?></span></a>
             <div class="docs-search" role="search">
                 <input type="search" class="docs-search-input" placeholder="Search" aria-label="Search the docs" aria-controls="docs-search-results" aria-expanded="false" autocomplete="off">
                 <kbd class="docs-search-key" aria-hidden="true">/</kbd>

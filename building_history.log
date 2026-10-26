@@ -272,3 +272,6 @@
 
 2026-10-26 – House icon for the site
 - The `site` icon (sidebar "Site") is the house again, like `home`; the earth drawing stays available as `earth`.
+
+2026-10-26 – Docs logo
+- `public/assets/images/blueprint_cms.svg` (the project logo) is the docs favicon and sits next to the site name in the docs header; on narrow screens only the logo is shown, the name stays for screen readers.

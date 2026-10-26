@@ -79,10 +79,14 @@ a:hover {
 }
 
 .docs-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   color: var(--color-text);
   font-weight: 700;
   font-size: 17px;
   white-space: nowrap;
+  padding-left: 6px;
 }
 
 .docs-logo:hover {
@@ -571,6 +575,16 @@ a:hover {
   .docs-header-inner {
     gap: 12px;
     padding: 0 16px;
+  }
+
+  /* only the logo, so the search has room */
+  .docs-logo-name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
   .docs-search {
