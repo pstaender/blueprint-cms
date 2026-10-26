@@ -687,13 +687,44 @@ select[multiple].input {
   color: var(--color-text-dimmed);
 }
 
-.writer :is(.TMCode, .TMFencedCodeBacktick, .TMFencedCodeTilde, .TMIndentedCode, .TMCodeFenceBacktickOpen,
+/* code blocks: the fence lines and the code lines are sibling divs, together one box with rounded corners */
+.writer :is(.TMFencedCodeBacktick, .TMFencedCodeTilde, .TMIndentedCode, .TMCodeFenceBacktickOpen,
   .TMCodeFenceBacktickClose, .TMCodeFenceTildeOpen, .TMCodeFenceTildeClose) {
+  padding: 0 0.5rem;
   background: var(--color-hover);
 }
 
-.writer .TMCode {
-  border-radius: 3px;
+.writer :is(.TMCodeFenceBacktickOpen, .TMCodeFenceTildeOpen) {
+  padding-top: 0.5rem;
+  border-radius: 4px 4px 0 0;
+}
+
+.writer :is(.TMCodeFenceBacktickClose, .TMCodeFenceTildeClose) {
+  padding-bottom: 0.5rem;
+  border-radius: 0 0 4px 4px;
+}
+
+/* a block that isn't closed (yet) ends with its last code line */
+.writer .TMFencedCodeBacktick:not(:has(+ :is(.TMFencedCodeBacktick, .TMCodeFenceBacktickClose))),
+.writer .TMFencedCodeTilde:not(:has(+ :is(.TMFencedCodeTilde, .TMCodeFenceTildeClose))) {
+  padding-bottom: 0.5rem;
+  border-radius: 0 0 4px 4px;
+}
+
+/* inline code: backtick, code, backtick together as one box (like GitHub's .2em .4em) */
+.writer :is(.TMCode, .TMMark_TMCode) {
+  padding: 0.2em 0;
+  background: var(--color-hover);
+}
+
+.writer .TMMark_TMCode:has(+ .TMCode) {
+  padding-left: 0.4em;
+  border-radius: 4px 0 0 4px;
+}
+
+.writer .TMCode + .TMMark_TMCode {
+  padding-right: 0.4em;
+  border-radius: 0 4px 4px 0;
 }
 
 .writer .TMBlockquote {
