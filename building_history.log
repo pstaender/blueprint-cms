@@ -216,3 +216,12 @@
   `original` is a conflict → 409 `{conflicts: [...]}`. So edits of other fields still merge, only real conflicts
   stop the save. The panel shows "Load their version" / "Overwrite with mine" (resend without `modifiedAt`).
 - `modifiedAt`/`createdAt` now have milliseconds, saves within the same second must not look unchanged.
+
+2026-10-26 – Docs as a website
+- docs/ without sorting numbers: `name.md` pages, folders with `page.md` only for pages with subpages; the order is
+  `sort` in the front matter (the menu sorts by it, then by title). Links are site paths (`/guides/content#files`),
+  links to project files became plain code (they don't exist on the website).
+- Rendered with `contentFolder` = docs: `site/snippets/layout.php` (a snippet with slots: header, collapsible site
+  tree on the left, breadcrumb, previous/next, "On this page"), `site/templates/default.php` and `404.php` use it.
+  `public/assets/docs.css` (Kirby docs like, dark mode, menu as drawer below 800px) and `docs.js` (heading ids +
+  anchors, "On this page" with the current section, copy buttons, mobile menu). No syntax highlighting yet.
