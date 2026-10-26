@@ -31,11 +31,11 @@ A JSON REST API under `/panel/api`, implemented in [`src/Panel.php`](../../../sr
 | `DELETE` | `/pages/{id}/files/{filename}` | | delete the file and its data |
 | `GET` | `/blueprints/pages` | | page types: `[{type, title, icon}]`, `page` first (`default` only if both blueprints exist) |
 | `GET` | `/roles` | | `[{name, title}]`, see [roles](../01_blueprints/04_users/page.md#roles) |
-| `GET` | `/users` | | all users (without passwords) |
-| `POST` | `/users` | `{email, password, role?}` | create a user, a `role` other than `user` needs an admin (403) |
-| `GET` | `/users/{uid}` | | user data, `role`, `blueprint` |
+| `GET` | `/users` | | all users (without passwords), non-admins only get themselves |
+| `POST` | `/users` | `{email, password, role?}` | create a user (admins only) |
+| `GET` | `/users/{uid}` | | user data, `role`, `blueprint`; non-admins only themselves (403 for other users, also for `PATCH`) |
 | `PATCH` | `/users/{uid}` | `{data?, email?, role?, password?, currentPassword?}` | a new `password` needs the logged in user's `currentPassword` (422 if wrong), except for admins; changing the `role` needs an admin (403) |
-| `DELETE` | `/users/{uid}` | | (not yourself) |
+| `DELETE` | `/users/{uid}` | | admins only, not yourself |
 
 `ref` is the value pickers store: `page://uid`, `file://uid`, `user://uid` (the path or filename for models without uid).
 

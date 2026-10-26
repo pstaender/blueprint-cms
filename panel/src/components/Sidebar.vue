@@ -12,7 +12,7 @@ import PageTree from "./PageTree.vue";
 
     <nav class="sidebar-nav">
       <RouterLink to="/site" class="sidebar-link"><Icon name="site" /> Site</RouterLink>
-      <RouterLink to="/users" class="sidebar-link"><Icon name="users" /> Users</RouterLink>
+      <RouterLink v-if="session.user?.role === 'admin'" to="/users" class="sidebar-link"><Icon name="users" /> Users</RouterLink>
     </nav>
 
     <nav class="sidebar-nav">

@@ -201,3 +201,6 @@
 - Only admins choose or change roles (API 403, the panel hides the role select). The only user is always an admin
   (`User::role()`), the first created user gets the admin role, and creating a second user stores the admin role on
   the first one if needed, so there is always an admin.
+- Non-admins only see and edit themselves: `GET /users` returns only the current user, other users' endpoints → 403,
+  creating and deleting users is admin only. The panel hides the Users list for them (sidebar link, breadcrumb,
+  /users redirects to the own account). Consequence: a userpicker of a non-admin only offers themselves.

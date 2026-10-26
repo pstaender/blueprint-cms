@@ -34,6 +34,8 @@ function start() {
 }
 
 onMounted(async () => {
+  // only admins see other users
+  if (session.user?.role !== "admin") return router.replace(`/users/${session.user.uid}`);
   users.value = await api.get("/users");
 });
 </script>
@@ -67,7 +69,7 @@ onMounted(async () => {
         <span class="field-label">Password</span>
         <input v-model="form.password" class="input" type="password" minlength="8" autocomplete="new-password" required>
       </label>
-      <RoleInput v-if="session.user?.role === 'admin'" v-model="form.role" />
+      <RoleInput v-model="form.role" />
     </Dialog>
   </div>
 </template>

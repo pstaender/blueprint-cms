@@ -68,7 +68,7 @@ onMounted(async () => load(await api.get(`/users/${props.uid}`)));
   <div v-if="user" class="view">
     <ViewHeader
       :title="user.name || user.email"
-      :breadcrumb="[{ to: '/users', title: 'Users' }]"
+      :breadcrumb="session.user?.role === 'admin' ? [{ to: '/users', title: 'Users' }] : []"
       :is-dirty="isDirty"
       :saving="saving"
       :message="message"
@@ -78,7 +78,7 @@ onMounted(async () => load(await api.get(`/users/${props.uid}`)));
       <template #actions>
         <button type="button" class="button" @click="start('account')">{{ user.email }} · {{ user.role }}</button>
         <button type="button" class="button" @click="start('password')">Password</button>
-        <button v-if="!isCurrent" type="button" class="button" title="Delete" @click="start('delete')"><Icon name="trash" /></button>
+        <button v-if="!isCurrent && session.user?.role === 'admin'" type="button" class="button" title="Delete" @click="start('delete')"><Icon name="trash" /></button>
       </template>
     </ViewHeader>
 
@@ -103,7 +103,7 @@ onMounted(async () => load(await api.get(`/users/${props.uid}`)));
       </template>
       <template v-else-if="dialog === 'password'">
         <label v-if="needsCurrentPassword" class="field">
-          <span class="field-label">{{ isCurrent ? "Current password" : "Your password" }}</span>
+          <span class="field-label">Current password</span>
           <input v-model="form.currentPassword" class="input" type="password" autocomplete="current-password" required>
         </label>
         <label class="field">

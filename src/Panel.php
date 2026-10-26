@@ -515,14 +515,20 @@ class Panel
         ], User::roles()));
     }
 
+    /**
+     * Non-admins only see themselves.
+     */
     private function listUsers(): ResponseInterface
     {
-        return self::json(User::all()->map(fn(User $user) => [...$user->toArray(), "ref" => "user://" . $user->uid()])->values()->all());
+        $current = User::current();
+        $users = $current->isAdmin() ? User::all() : User::all()->filter(fn(User $user) => $user->isSame($current));
+
+        return self::json($users->map(fn(User $user) => [...$user->toArray(), "ref" => "user://" . $user->uid()])->values()->all());
     }
 
     private function getUser(ServerRequestInterface $request, string $uid): ResponseInterface
     {
-        $user = $this->findUser($uid);
+        $user = $this->findAccessibleUser($uid);
 
         return self::json([...$user->toArray(), "role" => $user->role(), "blueprint" => $user->blueprint()->toArray()]);
     }
@@ -532,14 +538,13 @@ class Panel
      */
     private function createUser(ServerRequestInterface $request): ResponseInterface
     {
+        self::requireAdmin("Only admins can create users");
         $input = self::input($request);
-        $role = (string) (($input["role"] ?? "") ?: User::DEFAULT_ROLE);
-
-        if ($role !== User::DEFAULT_ROLE) {
-            self::requireAdmin("Only admins can choose the role of a user");
-        }
-
-        $user = User::create((string) ($input["email"] ?? ""), (string) ($input["password"] ?? ""), $role);
+        $user = User::create(
+            (string) ($input["email"] ?? ""),
+            (string) ($input["password"] ?? ""),
+            (string) (($input["role"] ?? "") ?: User::DEFAULT_ROLE),
+        );
 
         return $this->getUser($request, $user->uid())->withStatus(201);
     }
@@ -549,7 +554,7 @@ class Panel
      */
     private function updateUser(ServerRequestInterface $request, string $uid): ResponseInterface
     {
-        $user = $this->findUser($uid);
+        $user = $this->findAccessibleUser($uid);
         $input = self::input($request);
         $current = User::current();
 
@@ -582,6 +587,7 @@ class Panel
 
     private function deleteUser(ServerRequestInterface $request, string $uid): ResponseInterface
     {
+        self::requireAdmin("Only admins can delete users");
         $user = $this->findUser($uid);
 
         if ($user->uid() === User::current()?->uid()) {
@@ -598,6 +604,20 @@ class Panel
         if (User::current()?->isAdmin() !== true) {
             throw new ApiError($message, 403);
         }
+    }
+
+    /**
+     * Non-admins can only see and edit themselves.
+     */
+    private function findAccessibleUser(string $uid): User
+    {
+        $user = $this->findUser($uid);
+
+        if (!User::current()->isAdmin() && !$user->isSame(User::current())) {
+            throw new ApiError("Only admins can see other users", 403);
+        }
+
+        return $user;
     }
 
     private function findUser(string $uid): User

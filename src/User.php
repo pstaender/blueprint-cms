@@ -106,7 +106,7 @@ class User
     /**
      * Users without uid (written by hand) are identified by their email.
      */
-    private function isSame(self $user): bool
+    public function isSame(self $user): bool
     {
         return $this->uid() !== "" ? $user->uid() === $this->uid() : $user->email() === $this->email();
     }
