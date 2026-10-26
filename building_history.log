@@ -204,3 +204,8 @@
 - Non-admins only see and edit themselves: `GET /users` returns only the current user, other users' endpoints → 403,
   creating and deleting users is admin only. The panel hides the Users list for them (sidebar link, breadcrumb,
   /users redirects to the own account). Consequence: a userpicker of a non-admin only offers themselves.
+
+2026-10-26 – Panel saves only changed fields
+- `useEditing` sends only the fields that differ from the loaded values (cleared ones as null). The API already
+  merged partial `data`, so concurrent edits of different fields no longer overwrite each other. No conflict
+  detection for the same field (last save wins).

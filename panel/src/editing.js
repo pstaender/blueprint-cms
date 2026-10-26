@@ -3,6 +3,8 @@ import { clone } from "./fields.js";
 
 /**
  * Shared edit state of a model view: the values, unsaved changes, validation errors and saving (⌘/Ctrl + S).
+ * `save` only gets the changed fields (cleared ones as null), so saving doesn't overwrite fields that someone
+ * else changed in the meantime.
  */
 export function useEditing(save) {
   const values = ref({});
@@ -12,6 +14,16 @@ export function useEditing(save) {
   const saving = ref(false);
 
   const isDirty = computed(() => JSON.stringify(values.value) !== original.value);
+
+  function changes() {
+    const before = JSON.parse(original.value);
+    const changed = {};
+    for (const name of new Set([...Object.keys(before), ...Object.keys(values.value)])) {
+      const value = values.value[name] ?? null;
+      if (JSON.stringify(value) !== JSON.stringify(before[name] ?? null)) changed[name] = value;
+    }
+    return changed;
+  }
 
   function reset(data) {
     values.value = clone(data ?? {});
@@ -24,7 +36,7 @@ export function useEditing(save) {
     saving.value = true;
     message.value = null;
     try {
-      await save(values.value);
+      await save(changes());
       message.value = { type: "positive", text: "Saved" };
     } catch (e) {
       errors.value = e.errors ?? {};
