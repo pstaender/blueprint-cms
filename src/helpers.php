@@ -178,7 +178,7 @@ function static_file_url(string $path): string
 
 if (!function_exists("dd")) {
     /**
-     * Dumps the given values and ends the script.
+     * Dumps the given values and ends the script, a fallback for symfony/var-dumper's dd() (see Dumper).
      */
     function dd(mixed ...$values): never
     {

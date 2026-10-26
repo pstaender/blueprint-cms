@@ -1,5 +1,3 @@
-title: Page
-
 fields:
   title:
     type: text

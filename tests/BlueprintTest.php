@@ -83,6 +83,19 @@ it("replaces invalid fields with error fields", function () {
         ->and($fields["wrong"]->get("text"))->toContain("Invalid field type \"nope\"");
 });
 
+it("rejects file and page lists in structures and objects, they store nothing", function () {
+    $fields = (new Blueprint("pages/test", ["fields" => [
+        "rows" => ["type" => "structure", "fields" => ["name" => "text", "cover" => "filelist"]],
+        "meta" => ["type" => "object", "fields" => ["related" => "pagelist", "note" => "info"]],
+    ]]))->fields();
+
+    expect($fields["rows"]->get("fields")["name"]["type"])->toBe("text")
+        ->and($fields["rows"]->get("fields")["cover"]["type"])->toBe("info")
+        ->and($fields["rows"]->get("fields")["cover"]["text"])->toContain("type: filepicker")
+        ->and($fields["meta"]->get("fields")["related"]["text"])->toContain("type: pagepicker")
+        ->and($fields["meta"]->get("fields")["note"]["type"])->toBe("info");
+});
+
 it("extends blueprints and normalizes options and status", function () {
     $blueprint = Blueprint::load("pages/extended");
 

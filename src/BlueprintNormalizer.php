@@ -416,6 +416,10 @@ class BlueprintNormalizer
         if (isset($props["fields"])) {
             // nested fields (e.g. of a structure) have their own namespace
             $props["fields"] = array_column($this->expand($props["fields"]), null, "name");
+
+            if ($type === "structure" || $type === "object") {
+                $props["fields"] = array_map(self::rejectListInEntries(...), $props["fields"]);
+            }
         }
 
         if ($type === "blocks" || $type === "layout") {
@@ -447,6 +451,20 @@ class BlueprintNormalizer
             "label" => $props["label"] ?? self::label($name),
             "width" => $props["width"] ?? "1/1",
         ];
+    }
+
+    /**
+     * `filelist` and `pagelist` only show the page's files/subpages and store nothing,
+     * in structure rows and objects they would silently lose the selection.
+     */
+    private static function rejectListInEntries(array $field): array
+    {
+        $picker = ["filelist" => "filepicker", "pagelist" => "pagepicker"][$field["type"]] ?? null;
+
+        return $picker === null ? $field : self::errorField(
+            $field["name"],
+            "The field \"{$field["name"]}\" is a {$field["type"]}, which only shows the page's " . ($field["type"] === "filelist" ? "files" : "subpages") . " and stores nothing, use type: $picker to store a selection",
+        );
     }
 
     /**

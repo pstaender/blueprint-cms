@@ -1,9 +1,9 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import { useRouter } from "vue-router";
 import { api } from "../api.js";
 import { useEditing } from "../editing.js";
-import { reloadFiles, formatSize } from "../files.js";
+import { filesOf, reloadFiles, formatSize } from "../files.js";
 import ModelForm from "../components/ModelForm.vue";
 import ViewHeader from "../components/ViewHeader.vue";
 import Dialog from "../components/Dialog.vue";
@@ -37,6 +37,27 @@ const breadcrumb = computed(() => [
 ]);
 const model = computed(() => file.value && { id: props.id });
 
+// previous and next file of the page (in the sort order of the file list)
+const files = filesOf(props.id);
+const siblings = computed(() => {
+  const index = files.list.findIndex((item) => item.filename === props.filename);
+  if (index === -1) return { prev: null, next: null };
+  return { prev: files.list[index - 1] ?? null, next: files.list[index + 1] ?? null };
+});
+const fileUrl = (item) => `/pages/${props.id}/~files/${encodeURIComponent(item.filename)}`;
+
+function go(item) {
+  if (item && !isDirty.value) router.push(fileUrl(item));
+}
+
+// ← / → switch files, unless typing in a field or a dialog is open
+function onKeydown(event) {
+  if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey || dialog.value) return;
+  if (event.target.closest?.("input, textarea, select, [contenteditable], dialog")) return;
+  if (event.key === "ArrowLeft") go(siblings.value.prev);
+  else if (event.key === "ArrowRight") go(siblings.value.next);
+}
+
 function openRename() {
   name.value = file.value.filename.replace(/\.[^.]+$/, "");
   dialogError.value = null;
@@ -65,12 +86,14 @@ async function submitDialog() {
 }
 
 onMounted(async () => {
+  window.addEventListener("keydown", onKeydown);
   try {
     load(await api.get(path.value));
   } catch (e) {
     loadError.value = e.message;
   }
 });
+onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
 </script>
 
 <template>
@@ -78,6 +101,10 @@ onMounted(async () => {
   <div v-else-if="file" class="view">
     <ViewHeader :title="file.filename" :breadcrumb="breadcrumb" :is-dirty="isDirty" :saving="saving" :message="message" :conflict="conflict" @save="submit" @discard="reset(file.data, file.data.modifiedAt)" @overwrite="overwrite" @reload="loadLatest">
       <template #actions>
+        <span v-if="siblings.prev || siblings.next" class="button-group">
+          <button type="button" class="button" title="Previous file (←)" :disabled="!siblings.prev || isDirty" @click="go(siblings.prev)"><Icon name="angle-left" /></button>
+          <button type="button" class="button" title="Next file (→)" :disabled="!siblings.next || isDirty" @click="go(siblings.next)"><Icon name="angle-right" /></button>
+        </span>
         <a class="button" :href="file.url" target="_blank"><Icon name="open" /> Open</a>
         <button type="button" class="button" :disabled="isDirty" @click="openRename">Rename</button>
         <button type="button" class="button" title="Delete" @click="dialog = 'delete'"><Icon name="trash" /></button>

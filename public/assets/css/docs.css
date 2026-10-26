@@ -97,10 +97,36 @@ a:hover {
   text-decoration: none;
 }
 
-.docs-header-link {
+.docs-version {
+  margin-left: -8px;
+  padding: 2px 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: var(--color-text-dimmed);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.docs-header-links {
+  display: flex;
+  align-items: center;
+  gap: 16px;
   margin-left: auto;
+}
+
+.docs-header-link {
   color: var(--color-text-dimmed);
   font-size: 14px;
+  white-space: nowrap;
+}
+
+.docs-github {
+  display: flex;
+  color: var(--color-text-dimmed);
+}
+
+.docs-github:hover {
+  color: var(--color-text);
 }
 
 .docs-menu-toggle {
@@ -597,6 +623,10 @@ a:hover {
     position: static;
     flex: 1 1 auto;
     margin-left: 0;
+  }
+
+  .docs-version {
+    display: none;
   }
 
   .docs-search-key {

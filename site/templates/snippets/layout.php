@@ -54,6 +54,9 @@ for ($parent = $page?->parent; $parent !== null; $parent = $parent->parent) {
     array_unshift($breadcrumb, $parent);
 }
 $siteName = $site->data()->name ?? "Docs";
+// the version of this repository (written by `composer release`)
+$composer = json_decode((string) @file_get_contents(Blueprint\App::instance()->projectDir() . "/composer.json"), true);
+$version = $composer["version"] ?? null;
 $title ??= $page?->title()->value();
 
 // only for logged in users, opens the current page in the panel
@@ -80,14 +83,22 @@ if (Blueprint\App::instance()->isPanelEnabled() && user() !== null) {
         <div class="docs-header-inner">
             <button type="button" class="docs-menu-toggle" aria-controls="docs-menu" aria-expanded="false">Menu</button>
             <a class="docs-logo" href="/"><img src="<?= esc(static_file_url("assets/images/blueprint_cms.svg")) ?>" alt="" width="28" height="28"><span class="docs-logo-name"><?= esc($siteName) ?></span></a>
+            <?php if ($version): ?>
+                <span class="docs-version" title="Current version">v<?= esc($version) ?></span>
+            <?php endif ?>
             <div class="docs-search" role="search">
                 <input type="search" class="docs-search-input" placeholder="Search" aria-label="Search the docs" aria-controls="docs-search-results" aria-expanded="false" autocomplete="off">
                 <kbd class="docs-search-key" aria-hidden="true">/</kbd>
                 <ul id="docs-search-results" class="docs-search-results" role="listbox" hidden></ul>
             </div>
-            <?php if ($panelUrl): ?>
-                <a class="docs-header-link" href="<?= esc($panelUrl) ?>">Edit in panel</a>
-            <?php endif ?>
+            <div class="docs-header-links">
+                <?php if ($panelUrl): ?>
+                    <a class="docs-header-link" href="<?= esc($panelUrl) ?>">Edit in panel</a>
+                <?php endif ?>
+                <a class="docs-github" href="https://github.com/pstaender/blueprint-cms/" title="Blueprint CMS on GitHub" aria-label="Blueprint CMS on GitHub">
+                    <svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/></svg>
+                </a>
+            </div>
         </div>
     </header>
     <div class="docs-layout">

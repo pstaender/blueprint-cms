@@ -175,6 +175,10 @@ class App
     {
         error_reporting($this->isDebug() ? E_ALL : E_ALL & ~E_DEPRECATED & ~E_NOTICE);
         ini_set("display_errors", $this->isDebug() ? "1" : "0");
+        // websites that link the package without installing its dependencies use the dd() fallback in helpers.php
+        if (class_exists(\Symfony\Component\VarDumper\VarDumper::class)) {
+            Dumper::register();
+        }
     }
 
     /**

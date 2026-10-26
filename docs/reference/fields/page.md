@@ -82,7 +82,7 @@ $field->validate("x");   // ["Date is not a valid date value"]
 | `userpicker` | select users, stores `user://uid` | `min`, `max`, `multiple` |
 | `link` | link to a page, file, url, email, … | `options` |
 | `pagelist` | subpages of the model (display only), sortable | `template` (page type filter), `layout` (`list`, `cards`, `table`), `status` |
-| `filelist` | files of the page with uploads (display only) | `template` (file template filter), `layout`, `uploads` |
+| `filelist` | files of the page with uploads (display only, not in structures or objects: use `filepicker` there) | `template` (file template filter), `layout`, `uploads` |
 
 Legacy names: `pages` → `pagepicker`, `files` → `filepicker`, `users` → `userpicker`.
 
