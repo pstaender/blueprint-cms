@@ -309,3 +309,7 @@
 - No library: new passkeys send their public key as SPKI (`getPublicKey()`) and no attestation is requested, so the server only checks the client data (type, one time challenge from the session, origin host = request host, https except on localhost) and the authenticator data (rp id hash, user present + verified flags, counter), logins are verified with `openssl_verify`. ES256 and RS256.
 - Stored in the user's `passkeys` in users.json; the api only shows id, name and dates. Only the user can add passkeys to their account, the user and admins can delete them (user view).
 - `--color-accent: #068ef5` for checkboxes, radios, switches and the focus color.
+
+2026-10-26 – Accent colors: docs blue, panel black
+- `#068ef5` is the accent of the docs (`--color-accent` in docs.css, light and dark), not the panel: the panel's `--color-accent` is its black primary color again, the focus color its blue again. The variable stays, so a project can set its own panel accent.
+- Panel checkboxes and radios are drawn with css (`appearance: none`): accent background, check in `--color-accent-text`, rounded corners; Firefox showed its own blue ones before. Wrapped in `:where()`, so rules like `.item-select` keep their size and margins.

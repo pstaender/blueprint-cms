@@ -6,7 +6,7 @@
   --color-text: #1c1c1e;
   --color-text-dimmed: #6b6b70;
   --color-border: #e6e6e3;
-  --color-accent: #2f5bd3;
+  --color-accent: #068ef5;
   --color-code-bg: #f3f3f1;
   /* code blocks are dark in both color schemes (speed-highlight's atom-dark theme) */
   --color-pre-bg: #161b22;
@@ -28,7 +28,7 @@
     --color-text: #ececee;
     --color-text-dimmed: #9b9ba2;
     --color-border: #2c2c30;
-    --color-accent: #8aa8ff;
+    --color-accent: #068ef5;
     --color-code-bg: #212125;
     --color-mark: #4a3f12;
   }

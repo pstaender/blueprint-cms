@@ -8,8 +8,10 @@
   --color-hover: rgba(0, 0, 0, 0.05);
   --color-primary: #16171a;
   --color-primary-text: #fff;
-  --color-accent: #068ef5;
-  --color-focus: var(--color-accent);
+  /* checkboxes, radios, switches (clients may set their own) */
+  --color-accent: var(--color-primary);
+  --color-accent-text: var(--color-primary-text);
+  --color-focus: #4271ae;
   --color-positive: #5d800d;
   --color-positive-bg: #e6efcf;
   --color-negative: #c82829;
@@ -35,6 +37,7 @@
     --color-hover: rgba(255, 255, 255, 0.06);
     --color-primary: #ececee;
     --color-primary-text: #16171a;
+    --color-focus: #7aa2d6;
     --color-positive-bg: #2c3a14;
     --color-positive: #a5c66b;
     --color-negative-bg: #4a2222;
@@ -59,6 +62,72 @@ body {
   color: var(--color-text);
   background: var(--color-background);
   -webkit-font-smoothing: antialiased;
+  accent-color: var(--color-accent);
+}
+
+/* Checkboxes and radios: the same look in every browser, in the accent color. :where() keeps the sizes and
+   margins of more specific rules */
+
+:where(input[type="checkbox"]:not(.switch), input[type="radio"]) {
+  appearance: none;
+  display: inline-grid;
+  place-content: center;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border: 1px solid color-mix(in srgb, var(--color-text) 35%, transparent);
+  border-radius: 4px;
+  background: var(--color-surface);
+  vertical-align: -3px;
+  cursor: pointer;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+:where(input[type="radio"]) {
+  border-radius: 50%;
+}
+
+:where(input[type="checkbox"]:not(.switch), input[type="radio"]):is(:checked, :indeterminate) {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+}
+
+:where(input[type="checkbox"]:not(.switch), input[type="radio"])::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  background: var(--color-accent-text);
+  transform: scale(0);
+  transition: transform 0.1s;
+}
+
+:where(input[type="checkbox"]:not(.switch))::before {
+  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+}
+
+:where(input[type="checkbox"]:not(.switch)):indeterminate::before {
+  height: 2px;
+  clip-path: none;
+}
+
+:where(input[type="radio"])::before {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+:where(input[type="checkbox"]:not(.switch), input[type="radio"]):is(:checked, :indeterminate)::before {
+  transform: scale(1);
+}
+
+:where(input[type="checkbox"]:not(.switch), input[type="radio"]):focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+:where(input[type="checkbox"]:not(.switch), input[type="radio"]):disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 a {
@@ -682,7 +751,6 @@ select[multiple].input {
 
 .choice input {
   margin: 0;
-  accent-color: var(--color-accent);
 }
 
 /* A checkbox that looks like a toggle switch */
@@ -1434,7 +1502,6 @@ select[multiple].input {
   width: 14px;
   height: 14px;
   margin: 0 0 0 12px;
-  accent-color: var(--color-accent);
   cursor: pointer;
 }
 
