@@ -5,8 +5,7 @@ import { useSortable } from "../sortable.js";
 import Icon from "./Icon.vue";
 import PageIcon from "./PageIcon.vue";
 
-// The page tree of the sidebar: the home page first, listed pages (sortable), then unlisted pages and drafts in their
-// own groups.
+// The page tree of the sidebar: listed pages (sortable), then unlisted pages and drafts in their own groups.
 // Pages are expandable, the state is remembered in localStorage.
 const props = defineProps({
   parentId: { type: String, default: null },
@@ -41,16 +40,15 @@ async function load() {
 }
 
 const groups = computed(() => [
-  { status: "home", label: null },
   { status: "listed", label: null },
   { status: "unlisted", label: "Unlisted" },
   { status: "draft", label: "Drafts" },
 ]
-  .map((group) => ({ ...group, pages: pages.value.filter((page) => (page.isHome ? "home" : page.status) === group.status) }))
+  .map((group) => ({ ...group, pages: pages.value.filter((page) => page.status === group.status) }))
   .filter((group) => group.pages.length));
 
 const { bind } = useSortable(async (from, to) => {
-  const listed = pages.value.filter((page) => page.status === "listed" && !page.isHome);
+  const listed = pages.value.filter((page) => page.status === "listed");
   await api.patch(`/pages/${listed[from].id}`, { num: listed[to].num });
 });
 
