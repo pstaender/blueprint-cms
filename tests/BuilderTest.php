@@ -275,6 +275,25 @@ describe("file access and links", function () {
             ->toContain('href="https://example.com/photo.png"');
     });
 
+    it("resolves page and file references in markdown", function () {
+        $dir = copyProject(BLUEPRINT_PROJECT);
+
+        try {
+            createApp($dir);
+            $page = page("builder");
+            $notes = $page->file("notes.txt");
+            $notes->update([]);
+            $html = md("[Page](page://{$page->uid()}) [File](file://{$notes->uid()}) [Gone](page://missing)");
+
+            expect($page->uid())->not->toBeNull()
+                ->and($html)->toContain('href="/builder"')
+                ->toContain('href="/builder/notes.txt"')
+                ->toContain('href="page://missing"');
+        } finally {
+            removeProject($dir);
+        }
+    });
+
     it("resolves file links in textarea field values", function () {
         $field = new \Blueprint\FieldValue("text", "![Photo](photo.png)", new \Blueprint\Field(["name" => "text", "type" => "textarea"]), page("builder"));
 

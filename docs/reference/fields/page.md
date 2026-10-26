@@ -39,7 +39,7 @@ $field->validate("x");   // ["Date is not a valid date value"]
 |---|---|---|
 | `text` | single line text | `minlength`, `maxlength`, `pattern`, `counter`, `converter` |
 | `textarea` | multi line markdown | `buttons`, `size` (`small`, `medium`, `large`, `huge`), `files` |
-| `writer` | inline rich text (html) | `marks`, `nodes`, `inline` |
+| `writer` | markdown with an editor ([TinyMDE](https://github.com/jefago/tiny-markdown-editor)): toolbar, ⌘/Ctrl + B, I, K, links to pages (`page://uid`) and files of the page picked in dialogs, dropped files are inserted as links | `placeholder`, `size` (`small`, `medium`, `large`, `huge`) |
 | `email` | email address | |
 | `url` | url | |
 | `tel` | phone number | |

@@ -65,6 +65,19 @@ export function markdownLink(file, pageId) {
   return file.type === "image" ? `![${name}](${target})` : `[${name}](${target})`;
 }
 
+// files dragged from a file list or (to upload them into the page) from the computer
+export function isFileDrag(dataTransfer, pageId) {
+  const types = [...dataTransfer.types];
+  return types.includes(FILE_DRAG_TYPE) || (types.includes("Files") && Boolean(pageId));
+}
+
+// the markdown links of dropped files, uploads files from the computer first
+export async function droppedFileLinks(dataTransfer, pageId) {
+  const data = dataTransfer.getData(FILE_DRAG_TYPE);
+  const files = data ? [JSON.parse(data)] : (await uploadFiles(pageId, dataTransfer.files)).uploaded;
+  return files.map((file) => markdownLink(file, pageId)).join("\n");
+}
+
 export function formatSize(bytes) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;

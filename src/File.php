@@ -427,13 +427,22 @@ class File
     }
 
     /**
-     * Replaces relative file links in html (e.g. from markdown) with the file urls:
-     * `hello.jpg` (a file of the page) → /blog/hello.jpg, `blog/hello.jpg` → /blog/hello.jpg.
+     * Replaces relative file links and references in html (e.g. from markdown) with the urls:
+     * `hello.jpg` (a file of the page) → /blog/hello.jpg, `blog/hello.jpg` → /blog/hello.jpg,
+     * `page://uid` → the page's url, `file://uid` → the file's url.
      */
     public static function resolveUrls(string $html, ?Page $page): string
     {
         return (string) preg_replace_callback('/\b(src|href)="([^"]+)"/', function (array $matches) use ($page) {
             $reference = rawurldecode(html_entity_decode($matches[2], ENT_QUOTES | ENT_HTML5));
+
+            [$scheme, $uid] = Uid::parse($reference) ?? [null, null];
+
+            if ($scheme === "page" || $scheme === "file") {
+                $model = $scheme === "page" ? site()->findByUid($uid) : site()->findFileByUid($uid);
+
+                return $model === null ? $matches[0] : $matches[1] . '="' . esc($model->url()) . '"';
+            }
 
             if (preg_match('#^([a-z][a-z0-9+.\-]*:|/|\#|\?|\.)#i', $reference)) {
                 return $matches[0];

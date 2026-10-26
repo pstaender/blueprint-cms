@@ -534,6 +534,108 @@ select[multiple].input {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-focus) 30%, transparent);
 }
 
+/* Writer: markdown editor (TinyMDE), markup only dimmed, no colors */
+
+.writer {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  box-shadow: var(--shadow);
+}
+
+.writer:focus-within {
+  border-color: var(--color-focus);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-focus) 25%, transparent);
+}
+
+.writer.is-file-drop {
+  border-color: var(--color-focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-focus) 30%, transparent);
+}
+
+.writer.is-disabled {
+  opacity: 0.6;
+}
+
+.writer-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 4px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.writer-toolbar .icon-button.is-active {
+  background: var(--color-hover);
+  color: var(--color-text);
+}
+
+.writer-divider {
+  width: 1px;
+  margin: 4px;
+  background: var(--color-border);
+}
+
+.writer-editor {
+  display: flex;
+  flex-direction: column;
+  min-height: 160px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.writer .TinyMDE {
+  flex: 1;
+  padding: 8px 10px;
+  outline: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.writer .TinyMDE_empty {
+  position: relative;
+}
+
+.writer .TinyMDE_empty::before {
+  content: attr(data-placeholder);
+  position: absolute;
+  color: var(--color-text-dimmed);
+  pointer-events: none;
+}
+
+.writer .TMBlankLine {
+  height: 1.6em;
+}
+
+.writer :is(.TMH1, .TMH2, .TMH3, .TMH4, .TMH5, .TMH6, .TMSetextH1, .TMSetextH2) {
+  font-weight: 600;
+}
+
+.writer :is(.TMMark, .TMInfoString, .TMLinkDestination, .TMHTML, .TMHTMLBlock) {
+  color: var(--color-text-dimmed);
+}
+
+.writer :is(.TMCode, .TMFencedCodeBacktick, .TMFencedCodeTilde, .TMIndentedCode, .TMCodeFenceBacktickOpen,
+  .TMCodeFenceBacktickClose, .TMCodeFenceTildeOpen, .TMCodeFenceTildeClose) {
+  background: var(--color-hover);
+}
+
+.writer .TMCode {
+  border-radius: 3px;
+}
+
+.writer .TMBlockquote {
+  padding-left: 10px;
+  border-left: 2px solid var(--color-border);
+}
+
+.writer :is(.TMLink, .TMImage, .TMAutolink) {
+  text-decoration: underline;
+  text-decoration-color: var(--color-border);
+  text-underline-offset: 2px;
+}
+
 .textarea-small {
   min-height: 80px;
 }
@@ -902,11 +1004,35 @@ select[multiple].input {
   width: 100%;
 }
 
-.file-choices {
+.file-choices,
+.select-choices {
   max-height: 50vh;
   overflow-y: auto;
   margin: 0;
   list-style: none;
+}
+
+/* PageSelectDialog, FileSelectDialog */
+.select-choice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+}
+
+.select-choice .choice {
+  flex: 1;
+  min-width: 0;
+}
+
+.select-choice .item-icon {
+  flex-shrink: 0;
+}
+
+.select-choice .item-info {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .file-overview {
@@ -1297,7 +1423,7 @@ select[multiple].input {
 
 /* the label starts where the titles start: after the space of the item icons (18px + 12px gap) */
 .section-header .item-select {
-  margin-right: 40px;
+  margin-right: 35px;
   vertical-align: -2px;
 }
 

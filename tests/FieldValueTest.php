@@ -41,12 +41,12 @@ it("formats dates and times", function () {
         ->and((string) $this->page->createdAt()->addDay()->format("d."))->toBe("26.");
 });
 
-it("renders markdown safely and keeps writer html", function () {
+it("renders textarea and writer markdown safely", function () {
     expect((string) $this->page->text())
         ->toContain("<strong>bold</strong>")
         ->toContain("&lt;script")
         ->not->toContain("<script")
-        ->and((string) $this->page->html())->toBe("<p>Rich <strong>text</strong></p>");
+        ->and(trim((string) $this->page->html()))->toBe("<p>Rich <strong>text</strong> &lt;b>raw&lt;/b></p>");
 });
 
 it("handles empty values", function () {

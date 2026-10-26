@@ -72,7 +72,7 @@ content/01_blog/
   cover.jpg.json     {"uid": "…", "createdAt": "…", "modifiedAt": "…", "alt": "…"}
 ```
 
-Files are only public when they are used in the content, e.g. as `![hello](hello.jpg)` in a textarea (relative links are resolved to `/blog/hello.jpg`) or picked in a `filepicker`. In the panel, drag a file from a file list (or from your computer) into a textarea to insert such a link.
+Files are only public when they are used in the content, e.g. as `![hello](hello.jpg)` in a textarea (relative links are resolved to `/blog/hello.jpg`) or picked in a `filepicker`. In the panel, drag a file from a file list (or from your computer) into a textarea or writer field to insert such a link. Links in markdown may also use references: `[About](page://uid)`, `[Report](file://uid)` point to the page or file even after its slug changed (the writer field inserts page links like that).
 
 ```php
 <?php foreach ($page->files() as $file): ?>

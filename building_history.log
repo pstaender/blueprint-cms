@@ -296,3 +296,10 @@
 
 2026-10-26 – Markdown Extra as option
 - `md()` and textarea fields use plain Markdown by default; config `"markdown" => ["extra" => true]` enables Markdown Extra (tables, footnotes, …). Both go through `App::markdown($markdown, $markup)`. The docs project enables it in `config/config.php`.
+
+2026-10-26 – Writer field: markdown editor
+- `writer` stores markdown now (no longer html like Kirby's writer) and is rendered like `textarea`: escaped inline html, resolved file links. Breaking for html content in writer fields.
+- Panel: `WriterField.vue` uses tiny-markdown-editor (TinyMDE, exact version 0.2.34) for the live markdown highlighting, but not its command bar: its buttons are divs that only react to mousedown, so an own toolbar of native buttons (panel icons) calls TinyMDE's command api. Subtle styling in the panel's grays (markup dimmed), monospace font, no TinyMDE default css.
+- Toggling bold/italic/strikethrough/code with the caret right before the closing marker steps over it, TinyMDE alone would remove the formatting and select the word.
+- Links to pages are inserted as `[Title](page://uid)` (the url for pages without uid), chosen in `PageSelectDialog.vue` (browse level by level, search via `GET /pages?search=`); links to files of the page via `FileSelectDialog.vue`. Dropping files works as in textareas (shared `isFileDrag`/`droppedFileLinks` in files.js).
+- `File::resolveUrls()` resolves `page://uid` and `file://uid` in markdown links to urls, so references in markdown survive renamed slugs.

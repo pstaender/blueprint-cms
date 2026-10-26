@@ -10,7 +10,8 @@ import FilePicker from "./fields/FilePicker.vue";
 import BlocksField from "./fields/BlocksField.vue";
 import LayoutField from "./fields/LayoutField.vue";
 import IconField from "./fields/IconField.vue";
-import { FILE_DRAG_TYPE, markdownLink, uploadFiles } from "../files.js";
+import WriterField from "./fields/WriterField.vue";
+import { isFileDrag, droppedFileLinks } from "../files.js";
 
 // One blueprint field as native form element(s).
 const props = defineProps({
@@ -73,27 +74,16 @@ const textarea = ref(null);
 const isDropTarget = ref(false);
 
 function onDragover(event) {
-  const types = [...event.dataTransfer.types];
-  if (type.value !== "textarea" || (!types.includes(FILE_DRAG_TYPE) && !(types.includes("Files") && props.model?.id))) return;
+  if (type.value !== "textarea" || !isFileDrag(event.dataTransfer, props.model?.id)) return;
   event.preventDefault();
   isDropTarget.value = true;
 }
 
 async function onDrop(event) {
   isDropTarget.value = false;
-  const data = event.dataTransfer.getData(FILE_DRAG_TYPE);
-  let files = data ? [JSON.parse(data)] : [];
-
-  if (!data && event.dataTransfer.files.length && props.model?.id) {
-    event.preventDefault();
-    files = (await uploadFiles(props.model.id, event.dataTransfer.files)).uploaded;
-  } else if (data) {
-    event.preventDefault();
-  } else {
-    return;
-  }
-
-  insert(files.map((file) => markdownLink(file, props.model?.id)).join("\n"));
+  if (type.value !== "textarea" || !isFileDrag(event.dataTransfer, props.model?.id)) return;
+  event.preventDefault();
+  insert(await droppedFileLinks(event.dataTransfer, props.model?.id));
 }
 
 function insert(snippet) {
@@ -157,7 +147,9 @@ const entries = computed({
 
     <input v-else-if="type === 'time'" :id="id" v-model="time" class="input" type="time" :required="field.required" :disabled="field.disabled">
 
-    <textarea v-else-if="['textarea', 'writer', 'list'].includes(type)" :id="id" ref="textarea" v-model="text" class="input textarea"
+    <WriterField v-else-if="type === 'writer'" :id="id" :model-value="modelValue" :field="field" :model="model" @update:model-value="update" />
+
+    <textarea v-else-if="['textarea', 'list'].includes(type)" :id="id" ref="textarea" v-model="text" class="input textarea"
       :class="[`textarea-${field.size || 'medium'}`, { 'is-file-drop': isDropTarget }]" @dragover="onDragover"
       @dragleave="isDropTarget = false" @drop="onDrop" :placeholder="field.placeholder" :minlength="field.minlength"
       :maxlength="field.maxlength" :required="field.required" :disabled="field.disabled"></textarea>
