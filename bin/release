@@ -9,11 +9,6 @@
 
 declare(strict_types=1);
 
-use PHLAK\SemVer\Exceptions\InvalidVersionException;
-use PHLAK\SemVer\Version;
-
-require dirname(__DIR__) . "/vendor/autoload.php";
-
 const FIRST_VERSION = "0.1.0-alpha.1";
 const PRE_RELEASE_STAGES = ["alpha", "beta", "rc"];
 // semver.org's regex, without a `v` prefix and with complete major.minor.patch
@@ -39,18 +34,64 @@ function git(string ...$args): string
     return implode("\n", $output);
 }
 
-function latestVersion(): ?Version
+function latestVersion(): ?string
 {
     $latest = null;
 
     foreach (array_filter(explode("\n", git("tag", "--list", "v*"))) as $tag) {
-        if (preg_match(SEMVER_REGEX, substr($tag, 1))) {
-            $version = new Version(substr($tag, 1));
-            $latest = $latest === null || $version->gt($latest) ? $version : $latest;
+        $version = substr($tag, 1);
+
+        if (preg_match(SEMVER_REGEX, $version) && ($latest === null || compareVersions($version, $latest) > 0)) {
+            $latest = $version;
         }
     }
 
     return $latest;
+}
+
+/**
+ * The precedence of semver.org: major, minor, patch, a release is greater than its pre-releases, pre-release
+ * identifiers are compared one by one (numbers numerically and lower than text), the build is ignored.
+ */
+function compareVersions(string $a, string $b): int
+{
+    preg_match(SEMVER_REGEX, $a, $partsA);
+    preg_match(SEMVER_REGEX, $b, $partsB);
+    $result = [(int) $partsA[1], (int) $partsA[2], (int) $partsA[3]] <=> [(int) $partsB[1], (int) $partsB[2], (int) $partsB[3]];
+    $preReleaseA = $partsA[4] ?? "";
+    $preReleaseB = $partsB[4] ?? "";
+
+    if ($result !== 0 || $preReleaseA === $preReleaseB) {
+        return $result;
+    }
+
+    if ($preReleaseA === "" || $preReleaseB === "") {
+        return $preReleaseA === "" ? 1 : -1;
+    }
+
+    $identifiersA = explode(".", $preReleaseA);
+    $identifiersB = explode(".", $preReleaseB);
+
+    foreach ($identifiersA as $index => $identifierA) {
+        $identifierB = $identifiersB[$index] ?? null;
+
+        if ($identifierB === null) {
+            return 1;
+        }
+
+        $result = match (true) {
+            ctype_digit($identifierA) && ctype_digit($identifierB) => (int) $identifierA <=> (int) $identifierB,
+            ctype_digit($identifierA) => -1,
+            ctype_digit($identifierB) => 1,
+            default => strcmp($identifierA, $identifierB) <=> 0,
+        };
+
+        if ($result !== 0) {
+            return $result;
+        }
+    }
+
+    return -1;
 }
 
 /**
@@ -59,35 +100,41 @@ function latestVersion(): ?Version
  *
  * @return array<string, string> version => description
  */
-function suggestions(?Version $latest): array
+function suggestions(?string $latest): array
 {
     if ($latest === null) {
         return [FIRST_VERSION => "first version"];
     }
 
-    $release = "$latest->major.$latest->minor.$latest->patch";
+    preg_match(SEMVER_REGEX, $latest, $parts);
+    [, $major, $minor, $patch] = array_map("intval", $parts);
+    $preRelease = $parts[4] ?? "";
+    $release = "$major.$minor.$patch";
 
-    if ($latest->isPreRelease()) {
-        $suggestions = [(string) (clone $latest)->setBuild(null)->incrementPreRelease() => "next pre-release"];
-        $stage = explode(".", (string) $latest->preRelease)[0];
-        $index = array_search($stage, PRE_RELEASE_STAGES, true);
-
-        foreach (array_slice(PRE_RELEASE_STAGES, $index === false ? count(PRE_RELEASE_STAGES) : $index + 1) as $next) {
-            $suggestions["$release-$next.1"] = $next;
-        }
-
-        return $suggestions + [$release => "release"];
+    if ($preRelease === "") {
+        return [
+            "$major.$minor." . ($patch + 1) => "patch",
+            "$major." . ($minor + 1) . ".0" => "minor",
+            ($major + 1) . ".0.0" => "major",
+            "$major." . ($minor + 1) . ".0-alpha.1" => "next minor alpha",
+        ];
     }
 
-    return [
-        (string) (clone $latest)->incrementPatch() => "patch",
-        (string) (clone $latest)->incrementMinor() => "minor",
-        (string) (clone $latest)->incrementMajor() => "major",
-        (clone $latest)->incrementMinor() . "-alpha.1" => "next minor alpha",
-    ];
+    // alpha.1 → alpha.2, alpha → alpha.1
+    $identifiers = explode(".", $preRelease);
+    $last = array_pop($identifiers);
+    $next = ctype_digit($last) ? [...$identifiers, (int) $last + 1] : [...$identifiers, $last, 1];
+    $suggestions = ["$release-" . implode(".", $next) => "next pre-release"];
+    $index = array_search($identifiers[0] ?? $last, PRE_RELEASE_STAGES, true);
+
+    foreach (array_slice(PRE_RELEASE_STAGES, $index === false ? count(PRE_RELEASE_STAGES) : $index + 1) as $stage) {
+        $suggestions["$release-$stage.1"] = $stage;
+    }
+
+    return $suggestions + [$release => "release"];
 }
 
-function checkVersion(string $version, ?Version $latest): string
+function checkVersion(string $version, ?string $latest): string
 {
     $version = preg_replace('/^v/', "", trim($version));
 
@@ -95,12 +142,8 @@ function checkVersion(string $version, ?Version $latest): string
         fail("$version is no semantic version (major.minor.patch[-pre.release][+build], e.g. " . FIRST_VERSION . ")");
     }
 
-    try {
-        if ($latest !== null && !(new Version($version))->gt($latest)) {
-            fail("$version must be greater than the latest version $latest");
-        }
-    } catch (InvalidVersionException) {
-        fail("$version is no semantic version");
+    if ($latest !== null && compareVersions($version, $latest) <= 0) {
+        fail("$version must be greater than the latest version $latest");
     }
 
     if (git("tag", "--list", "v$version") !== "") {

@@ -12,6 +12,7 @@ use Blueprint\Page;
  * `/` → index.html, `/blog/` and `/blog/post` → blog/index.html and blog/post/index.html.
  * Also writes the used files of the pages, 404.html, redirect pages (content/redirects.json and pages that redirect)
  * and copies public/ without the front controller and the panel.
+ * With a base path (`/docs`) the site can be hosted in a subfolder: root-relative links in the html get the prefix.
  */
 class StaticSiteGenerator
 {
@@ -24,8 +25,12 @@ class StaticSiteGenerator
     public int $files = 0;
     public int $redirects = 0;
 
-    public function __construct(private readonly App $app, public readonly string $target)
+    public readonly string $basePath;
+
+    public function __construct(private readonly App $app, public readonly string $target, string $basePath = "")
     {
+        $basePath = trim($basePath, "/");
+        $this->basePath = $basePath === "" ? "" : "/$basePath";
     }
 
     /**
@@ -88,7 +93,7 @@ class StaticSiteGenerator
         mkdir($this->target, 0777, true);
 
         $this->writePages($this->app->site()->children());
-        $this->write("404.html", (string) $this->app->notFoundResponse()->getBody());
+        $this->write("404.html", $this->withBasePath((string) $this->app->notFoundResponse()->getBody()));
 
         foreach ($this->app->redirects()->all() as $path => $redirect) {
             $this->writeRedirect("/$path", $redirect["url"]);
@@ -112,7 +117,7 @@ class StaticSiteGenerator
         $status = $response->getStatusCode();
 
         if ($status === 200) {
-            $this->write(self::htmlPath($page->url()), (string) $response->getBody());
+            $this->write(self::htmlPath($page->url()), $this->withBasePath((string) $response->getBody()));
             $this->pages++;
         } elseif ($status >= 300 && $status < 400 && $response->hasHeader("Location")) {
             $this->writeRedirect($page->url(), $response->getHeaderLine("Location"));
@@ -130,11 +135,23 @@ class StaticSiteGenerator
 
     private function writeRedirect(string $path, string $url): void
     {
-        $url = esc($url);
+        $url = esc(str_starts_with($url, "/") && !str_starts_with($url, "//") ? $this->basePath . $url : $url);
         $this->write(self::htmlPath($path), "<!doctype html>\n<meta charset=\"utf-8\">\n<title>Redirect</title>\n"
             . "<meta http-equiv=\"refresh\" content=\"0; url=$url\">\n<link rel=\"canonical\" href=\"$url\">\n"
             . "<a href=\"$url\">$url</a>\n");
         $this->redirects++;
+    }
+
+    /**
+     * `href="/guides/"` → `href="/docs/guides/"`, also for src, action and poster; not for `//host` urls.
+     */
+    private function withBasePath(string $html): string
+    {
+        if ($this->basePath === "") {
+            return $html;
+        }
+
+        return preg_replace('#\b(href|src|action|poster)=(["\'])/(?!/)#i', "\$1=\$2$this->basePath/", $html);
     }
 
     /**

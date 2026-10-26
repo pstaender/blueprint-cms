@@ -80,6 +80,16 @@ describe("static site generator", function () {
             ->and("$this->target/panel")->not->toBeDirectory();
     });
 
+    it("prefixes root-relative links with --base-path", function () {
+        file_put_contents("$this->dir/site/templates/page.php", '<a href="/blog/">Blog</a><img src=\'/style.css\'><a href="//example.com/">x</a><a href="https://example.com/">y</a>');
+        [$code] = buildStaticSite([$this->target, "--base-path=/docs/"]);
+
+        expect($code)->toBe(0)
+            ->and(file_get_contents("$this->target/index.html"))->toBe('<a href="/docs/blog/">Blog</a><img src=\'/docs/style.css\'><a href="//example.com/">x</a><a href="https://example.com/">y</a>')
+            ->and(file_get_contents("$this->target/from-foo/index.html"))->toContain('url=/docs/to-bar"')
+            ->and(buildStaticSite([$this->target, "--clear-existing-target-folder", "--base-path"])[0])->toBe(1);
+    });
+
     it("doesn't replace an existing folder without --clear-existing-target-folder", function () {
         mkdir($this->target);
         file_put_contents("$this->target/old.html", "old");

@@ -1,0 +1,45 @@
+name: Docs
+
+# Renders docs/ with the static site generator plugin and publishes it to GitHub Pages
+# (Settings → Pages → Source: GitHub Actions).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          coverage: none
+      - run: composer install --no-dev --no-interaction --no-progress --prefer-dist
+      - id: pages
+        uses: actions/configure-pages@v5
+      # the base path is the repository's subfolder (/blueprint-cms) or empty with a custom domain
+      - run: bin/blueprint static:build _site --base-path="${{ steps.pages.outputs.base_path }}"
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

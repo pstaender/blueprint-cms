@@ -1,8 +1,12 @@
 # Blueprint CMS
 
+[![CI](https://github.com/pstaender/blueprint-cms/actions/workflows/ci.yml/badge.svg)](https://github.com/pstaender/blueprint-cms/actions/workflows/ci.yml) [![Docs](https://github.com/pstaender/blueprint-cms/actions/workflows/docs.yml/badge.svg)](https://pstaender.github.io/blueprint-cms/)
+
 A flat file CMS for PHP, inspired by [Kirby](https://getkirby.com). Content lives in plain files (JSON and Markdown with YAML front matter), no database needed. Blueprints (YAML or PHP) describe the fields of pages, files, users and the site; they drive the templates' field methods, the validation and the admin panel.
 
 > **Alpha:** Blueprint CMS is in an early alpha state. APIs, file formats and the panel can still change without notice, and it isn't ready for production sites yet.
+
+To get a first impression, have a look at the [documentation of Blueprint CMS](https://pstaender.github.io/blueprint-cms/guides/getting-started).
 
 ## Features
 
@@ -22,9 +26,9 @@ PHP >= 8.3, [Composer](https://getcomposer.org) and Node.js (to build the panel)
 
 ```sh
 composer install
-composer panel:build                          # builds the panel into public/panel
-bin/blueprint user:create admin@example.com   # asks for a password
-composer serve                                # http://localhost:8000, panel at /panel
+composer panel:build                # builds the panel into public/panel
+bin/blueprint user:create admin     # asks for a password
+composer serve                      # http://localhost:8000, panel at /panel
 composer test
 ```
 

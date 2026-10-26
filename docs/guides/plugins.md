@@ -34,6 +34,7 @@ The site's own files win over the files of plugins, plugins win over the core (`
 bin/blueprint static:build                                      # into static/
 bin/blueprint static:build ../build                             # relative to the working directory
 bin/blueprint static:build --clear-existing-target-folder       # replaces an existing folder
+bin/blueprint static:build --base-path=/my-site                 # hosted in a subfolder
 ```
 
 The command stops if the folder exists, unless `--clear-existing-target-folder` is given. The project folder, its parents and the content, site and public folders are refused.
@@ -44,4 +45,4 @@ The command stops if the folder exists, unless `--clear-existing-target-folder` 
 - the redirects of `content/redirects.json` and of pages that redirect as html pages with a `meta refresh`
 - `public/` without `index.php`, `panel/` and dot files (after rendering, so the optimized images are included)
 
-Links are site paths (`/blog/`), so the static site must be served from the root of a domain. Every page is rendered once at build time, so templates and page php files can't depend on query parameters or a logged in user.
+Links are site paths (`/blog/`), so the static site is meant for the root of a domain. For a subfolder (like GitHub Pages without an own domain: `https://user.github.io/my-site/`) `--base-path=/my-site` prefixes the root-relative `href`, `src`, `action` and `poster` attributes of the html and the redirects; urls built in JavaScript or CSS aren't changed. Every page is rendered once at build time, so templates and page php files can't depend on query parameters or a logged in user.

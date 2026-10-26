@@ -24,8 +24,7 @@
         "symfony/yaml": "^7.4"
     },
     "require-dev": {
-        "pestphp/pest": "^4.7",
-        "phlak/semver": "^6.1"
+        "pestphp/pest": "^4.7"
     },
     "config": {
         "allow-plugins": {
