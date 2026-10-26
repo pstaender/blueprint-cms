@@ -3,3 +3,7 @@ title: User
 fields:
   name:
     type: text
+  line:
+      type: line
+  email:
+    type: text

@@ -5,13 +5,13 @@ fields:
     type: text
   pages:
     type: pagelist
-  createdAt:
-    label: Created
-    type: datetime
-    disabled: true
-    width: 1/2
-  modifiedAt:
-    label: Modified
-    type: datetime
-    disabled: true
-    width: 1/2
+  # createdAt:
+  #   label: Created
+  #   type: datetime
+  #   disabled: true
+  #   width: 1/2
+  # modifiedAt:
+  #   label: Modified
+  #   type: datetime
+  #   disabled: true
+  #   width: 1/2
