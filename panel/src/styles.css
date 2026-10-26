@@ -182,7 +182,8 @@ textarea {
   background: var(--color-hover);
 }
 
-.sidebar-link.router-link-active {
+.sidebar-link.router-link-active,
+.sidebar-link.tree-link-open {
   background: var(--color-surface);
   box-shadow: var(--shadow);
   font-weight: 500;

@@ -32,7 +32,7 @@ Then log in at http://localhost:8000/panel.
 
 - edit the site, pages and users with the fields of their blueprints (⌘/Ctrl + S saves). Saving only sends the changed fields; if someone else has changed one of them in the meantime, the panel asks whether to load their version or overwrite it with yours
 - validation by the blueprint, errors are shown below the fields
-- a nested page tree in the sidebar: listed pages first (sortable by drag & drop), then the groups "Unlisted" and "Drafts"; expandable. Pages show the `icon` of their [blueprint](/reference/blueprints/pages#icon), the home page a house unless its blueprint has one
+- a nested page tree in the sidebar: listed pages first (sortable by drag & drop), then the groups "Unlisted" and "Drafts"; expandable, the open page is highlighted and its parents are expanded. Pages show the `icon` of their [blueprint](/reference/blueprints/pages#icon), the home page a house unless its blueprint has one
 - create pages (as drafts), change their status (draft, unlisted, listed), sort, move and delete them. Right click a page in the tree (or its ⋯ button) to move it or change its status; the page settings also have its parent. Every page can be a draft, except the home page
 - page lists (subpages, `pagelist`): select pages with the checkboxes (or all of them) to change their status, move or delete them together
 - page settings: slug, type and storage format (`page.json`, `page.md` or `page.json` + `page.content.md`)

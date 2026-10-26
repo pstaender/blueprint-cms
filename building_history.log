@@ -282,3 +282,6 @@
 
 2026-10-26 – Docs: panel link only for logged in users
 - The "Edit in panel" link in the docs header is only shown when a user is logged in (and the panel is enabled) and opens the current page in the panel (`/panel/pages/{id}`, `/panel/site` without a page).
+
+2026-10-26 – Panel: open page in the tree
+- The sidebar tree highlights the open page (also while one of its files is open, `route.params.id`) and expands its parents (stored like manually expanded pages), then scrolls it into view.
