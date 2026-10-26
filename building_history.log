@@ -269,3 +269,6 @@
 
 2026-10-26 – Docs search
 - The docs header has a search field: a client side fuzzy search (Fuse.js 7.0.0 from jsDelivr) over the pages listed in `#docs-menu` (title, weighted higher, and the section path like "Reference › Blueprints"). "/" focuses it, arrow keys + Enter open a result, Escape closes. Without Fuse (offline) it falls back to a substring search. Full text search can come later.
+
+2026-10-26 – House icon for the site
+- The `site` icon (sidebar "Site") is the house again, like `home`; the earth drawing stays available as `earth`.
