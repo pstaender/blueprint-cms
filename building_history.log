@@ -277,4 +277,4 @@
 - `public/assets/images/blueprint_cms.svg` (the project logo) is the docs favicon and sits next to the site name in the docs header; on narrow screens only the logo is shown, the name stays for screen readers.
 
 2026-10-26 – speed-highlight default theme
-- The docs use speed-highlight's `default` theme (light) and its dark variant `dark` instead of github-light/-dark.
+- The docs use speed-highlight's `dark` theme (the dark variant of `default`) in both color schemes instead of github-light/-dark, so code blocks are always dark (`--color-pre-*`, also the copy button).
