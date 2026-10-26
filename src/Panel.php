@@ -549,6 +549,13 @@ class Panel
     {
         $user = $this->findUser($uid);
         $input = self::input($request);
+        $current = User::current();
+
+        // password changes need the password of the logged in user, except for admins
+        if (($input["password"] ?? "") !== "" && !$current->isAdmin() && !$current->verifyPassword((string) ($input["currentPassword"] ?? ""))) {
+            throw new ApiError("The current password is wrong", 422, ["errors" => ["currentPassword" => ["The current password is wrong"]]]);
+        }
+
         $values = isset($input["data"]) && is_array($input["data"])
             ? $this->validatedValues($user->blueprint(), $user->data()->toArray(), $input["data"])
             : [];

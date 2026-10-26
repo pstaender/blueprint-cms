@@ -34,7 +34,7 @@ A JSON REST API under `/panel/api`, implemented in [`src/Panel.php`](../../../sr
 | `GET` | `/users` | | all users (without passwords) |
 | `POST` | `/users` | `{email, password, role?}` | create a user |
 | `GET` | `/users/{uid}` | | user data, `role`, `blueprint` |
-| `PATCH` | `/users/{uid}` | `{data?, email?, role?, password?}` | |
+| `PATCH` | `/users/{uid}` | `{data?, email?, role?, password?, currentPassword?}` | a new `password` needs the logged in user's `currentPassword` (422 if wrong), except for admins |
 | `DELETE` | `/users/{uid}` | | (not yourself) |
 
 `ref` is the value pickers store: `page://uid`, `file://uid`, `user://uid` (the path or filename for models without uid).

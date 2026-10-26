@@ -31,9 +31,11 @@ function load(data) {
 }
 
 const isCurrent = computed(() => session.user?.uid === props.uid);
+// admins change passwords without confirming them with their own password
+const needsCurrentPassword = computed(() => session.user?.role !== "admin");
 
 function start(name) {
-  form.value = { email: user.value.email, role: user.value.role, password: "" };
+  form.value = { email: user.value.email, role: user.value.role, password: "", currentPassword: "" };
   error.value = null;
   dialog.value = name;
 }
@@ -46,7 +48,7 @@ async function saveDialog() {
       dialog.value = null;
       return router.push("/users");
     }
-    const changes = dialog.value === "password" ? { password: form.value.password } : { email: form.value.email, role: form.value.role };
+    const changes = dialog.value === "password" ? { password: form.value.password, currentPassword: form.value.currentPassword } : { email: form.value.email, role: form.value.role };
     load(await api.patch(`/users/${props.uid}`, changes));
     if (isCurrent.value) Object.assign(session.user, { email: user.value.email, role: user.value.role });
     dialog.value = null;
@@ -97,10 +99,16 @@ onMounted(async () => load(await api.get(`/users/${props.uid}`)));
         </label>
         <RoleInput v-model="form.role" />
       </template>
-      <label v-else-if="dialog === 'password'" class="field">
-        <span class="field-label">New password</span>
-        <input v-model="form.password" class="input" type="password" minlength="8" autocomplete="new-password" required>
-      </label>
+      <template v-else-if="dialog === 'password'">
+        <label v-if="needsCurrentPassword" class="field">
+          <span class="field-label">{{ isCurrent ? "Current password" : "Your password" }}</span>
+          <input v-model="form.currentPassword" class="input" type="password" autocomplete="current-password" required>
+        </label>
+        <label class="field">
+          <span class="field-label">New password</span>
+          <input v-model="form.password" class="input" type="password" minlength="8" autocomplete="new-password" required>
+        </label>
+      </template>
       <p v-else-if="dialog === 'delete'">Do you really want to delete <strong>{{ user.email }}</strong>?</p>
     </Dialog>
   </div>

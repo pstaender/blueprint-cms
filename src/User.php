@@ -33,6 +33,7 @@ class User
     }
 
     public const DEFAULT_ROLE = "user";
+    public const ADMIN_ROLE = "admin";
 
     /**
      * The available roles: `user` and every user blueprint (site/blueprints/users/{role}.yml) except `default`.
@@ -105,6 +106,11 @@ class User
         $hash = $this->data->password;
 
         return is_string($hash) && password_get_info($hash)["algo"] !== null && password_verify($password, $hash);
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role() === self::ADMIN_ROLE;
     }
 
     public function changePassword(string $password): self

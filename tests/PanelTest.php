@@ -139,11 +139,26 @@ it("manages users", function () {
         ->and($user["blueprint"]["name"])->toBe("users/editor")
         ->and(api($this->app, "POST", "/users", ["email" => "x@example.com", "password" => "short"], $csrf)[0])->toBe(400);
 
-    [, $user] = api($this->app, "PATCH", "/users/{$user["uid"]}", ["data" => ["bio" => "Hi"], "password" => "another-password"], $csrf);
+    $path = "/users/{$user["uid"]}";
+    [$status, $result] = api($this->app, "PATCH", $path, ["password" => "another-password", "currentPassword" => "wrong"], $csrf);
+    expect($status)->toBe(422)
+        ->and($result["errors"])->toHaveKey("currentPassword")
+        ->and(api($this->app, "PATCH", $path, ["password" => "another-password"], $csrf)[0])->toBe(422);
+
+    [, $user] = api($this->app, "PATCH", $path, ["data" => ["bio" => "Hi"], "password" => "another-password", "currentPassword" => "secret-password"], $csrf);
     expect($user["bio"])->toBe("Hi")
         ->and(User::find("new@example.com")->verifyPassword("another-password"))->toBeTrue()
         ->and(array_column(api($this->app, "GET", "/users")[1], "email"))->toContain("new@example.com")
         ->and(api($this->app, "DELETE", "/users/" . User::find("panel@example.com")->uid(), csrf: $csrf)[0])->toBe(400);
+
+    User::create("chief@example.com", "admin-password", "admin");
+    $response = $this->app->request("/panel/api/session", "POST", ["email" => "chief@example.com", "password" => "admin-password"]);
+    $csrf = json_decode(body($response), true)["csrf"];
+
+    expect(api($this->app, "PATCH", $path, ["password" => "admin-changed"], $csrf)[0])->toBe(200)
+        ->and(User::find("new@example.com")->verifyPassword("admin-changed"))->toBeTrue()
+        ->and(User::find("chief@example.com")->isAdmin())->toBeTrue()
+        ->and(User::find("chief@example.com")->blueprint()->name)->toBe("users/admin");
 });
 
 it("serves the panel app for all panel urls", function () {
@@ -262,7 +277,7 @@ it("lists the roles and only accepts existing roles", function () {
     $uid = User::find("panel@example.com")->uid();
 
     expect($status)->toBe(200)
-        ->and($roles)->toBe([["name" => "user", "title" => "User"], ["name" => "editor", "title" => "Editor"]])
+        ->and($roles)->toBe([["name" => "user", "title" => "User"], ["name" => "admin", "title" => "Admin"], ["name" => "editor", "title" => "Editor"]])
         ->and(api($this->app, "POST", "/users", ["email" => "x@example.com", "password" => "long-enough", "role" => "boss"], $csrf)[0])->toBe(400)
         ->and(api($this->app, "PATCH", "/users/$uid", ["role" => "boss"], $csrf)[0])->toBe(400)
         ->and(api($this->app, "PATCH", "/users/$uid", ["role" => "user"], $csrf)[1]["role"])->toBe("user");
@@ -273,7 +288,7 @@ it("keeps a role that has no blueprint anymore", function () {
     unlink("$this->dir/site/blueprints/users/editor.yml");
     $uid = User::find("panel@example.com")->uid();
 
-    expect(User::roles())->toBe(["user"])
+    expect(User::roles())->toBe(["user", "admin"])
         ->and(api($this->app, "PATCH", "/users/$uid", ["role" => "editor", "data" => ["name" => "Panel"]], $csrf)[0])->toBe(200);
 });
 
