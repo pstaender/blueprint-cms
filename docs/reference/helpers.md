@@ -14,7 +14,7 @@ Global functions for templates, defined in `src/helpers.php`.
 | `esc($value)` | escapes for html output |
 | `md($markdown, $page = null)` | markdown (Markdown Extra) to html, relative file links (`hello.jpg`, `blog/hello.jpg`) point to the files of `$page` (default: the current page) |
 | `partial("head", $vars = [])` | returns the output of `site/templates/partials/head.php` (or of an absolute path to a php file), throws if it doesn't exist: `<?= partial("head") ?>` |
-| `snippet($name, $data = [], $return = false, $slots = false)` | renders `site/snippets/{name}.php` like Kirby; `$name` can be a list (first existing), missing snippets render nothing |
+| `snippet($name, $data = [], $return = false, $slots = false)` | renders `site/templates/snippets/{name}.php` like Kirby; `$name` can be a list (first existing), missing snippets render nothing |
 | `endsnippet()`, `slot($name = "default")`, `endslot()` | snippets with slots, see [Templates](/guides/templates#snippets) |
 | `static_file_url("/assets/app.css")` | `/assets/app.css?1700000000` (modification time of the file in `public/`) |
 | `redirect("/test", 302)` | stops rendering and redirects |

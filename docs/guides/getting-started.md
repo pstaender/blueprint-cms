@@ -33,8 +33,8 @@ site/
   config/           site config (overridden by config/)
   templates/        php templates, one per page type
     partials/       partials, see partial()
-  snippets/         snippets (Kirby style), see snippet()
-    blocks/         block snippets, e.g. heading.php
+    snippets/       snippets (Kirby style), see snippet()
+      blocks/       block snippets, e.g. heading.php
 ```
 
 ## Request lifecycle

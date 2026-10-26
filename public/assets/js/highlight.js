@@ -1,5 +1,5 @@
 // Code highlighting for the docs: ```php, ```yaml, … blocks (classes from md()) with speed-highlight.
-// A module, loaded by site/snippets/layout.php.
+// A module, loaded by site/templates/snippets/layout.php.
 
 // speed-highlight (https://github.com/speed-highlight/core), loaded only on pages with code
 const HIGHLIGHT = "https://cdn.jsdelivr.net/npm/@speed-highlight/core@2.1.0/dist/index.js";

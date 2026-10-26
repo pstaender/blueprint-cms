@@ -8,7 +8,7 @@ use Illuminate\Support\Collection;
 
 /**
  * A row of a layout field: {"id": "…", "attrs": {}, "columns": [{"id": "…", "width": "1/2", "blocks": [...]}]}.
- * Echo renders site/snippets/blocks/layout.php.
+ * Echo renders site/templates/snippets/blocks/layout.php.
  */
 class Layout
 {

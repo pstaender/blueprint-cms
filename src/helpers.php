@@ -78,7 +78,7 @@ function partial(string $name, array $variables = []): string
 }
 
 /**
- * Renders site/snippets/{name}.php like Kirby, e.g. snippet("header"), snippet(["teaser-" . $page->type(), "teaser"])
+ * Renders site/templates/snippets/{name}.php like Kirby, e.g. snippet("header"), snippet(["teaser-" . $page->type(), "teaser"])
  * (the first existing one). Missing snippets render nothing. With `slots: true` the snippet is closed by endsnippet(),
  * see Snippet.
  */

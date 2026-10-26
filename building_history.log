@@ -229,3 +229,7 @@
   speed-highlight 2.1.0 from jsDelivr when a page has ```lang blocks, colors the `<code>` inline so our `<pre>`
   styles stay, github-light/-dark themes by color scheme. speed-highlight has no php, so a small own grammar is
   registered with `setLoader()`; `sh` → `bash` etc.
+
+2026-10-26 – Snippets in site/templates/snippets
+- Snippets (and block snippets) moved from `site/snippets/` to `site/templates/snippets/`, as in the original spec,
+  next to `site/templates/partials/`.

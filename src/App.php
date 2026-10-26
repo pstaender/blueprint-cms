@@ -263,7 +263,7 @@ class App
     }
 
     /**
-     * Renders site/snippets/{name}.php or the core src/views/{name}.php, e.g. "blocks/heading".
+     * Renders site/templates/snippets/{name}.php or the core src/views/{name}.php, e.g. "blocks/heading".
      * With a list of names the first existing snippet is used. Missing snippets render nothing (a comment in debug mode).
      */
     public function renderSnippet(string|array $name, array $variables = []): string
@@ -273,7 +273,7 @@ class App
                 continue;
             }
 
-            foreach ([$this->siteDir() . "/snippets/$candidate.php", __DIR__ . "/views/$candidate.php"] as $file) {
+            foreach ([$this->siteDir() . "/templates/snippets/$candidate.php", __DIR__ . "/views/$candidate.php"] as $file) {
                 if (is_file($file)) {
                     return $this->capture($file, $variables + ["page" => Page::current(), "site" => $this->site()])[0];
                 }

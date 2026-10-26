@@ -35,10 +35,10 @@ return ["title" => "Computed title", "template" => "article"];
 
 ## Blocks
 
-Echoing a `blocks` field renders every block with `site/snippets/blocks/{type}.php` (core: `src/views/blocks/`). The snippet gets `$block`:
+Echoing a `blocks` field renders every block with `site/templates/snippets/blocks/{type}.php` (core: `src/views/blocks/`). The snippet gets `$block`:
 
 ```php
-<?php // site/snippets/blocks/heading.php ?>
+<?php // site/templates/snippets/blocks/heading.php ?>
 <h2 class="headline"><?= $block->text() ?></h2>
 ```
 
@@ -50,7 +50,7 @@ See [Blocks](/reference/blueprints/blocks).
 
 ## Snippets
 
-Snippets work like in Kirby: `snippet("teaser", ["item" => $child])` renders `site/snippets/teaser.php` with the data, `$page` and `$site`. A missing snippet renders nothing; with a list the first existing one is used: `snippet(["teaser-" . $child->type(), "teaser"])`. `snippet("teaser", $data, true)` returns the html instead of echoing it.
+Snippets work like in Kirby: `snippet("teaser", ["item" => $child])` renders `site/templates/snippets/teaser.php` with the data, `$page` and `$site`. A missing snippet renders nothing; with a list the first existing one is used: `snippet(["teaser-" . $child->type(), "teaser"])`. `snippet("teaser", $data, true)` returns the html instead of echoing it.
 
 Snippets with slots wrap content:
 
@@ -62,7 +62,7 @@ Snippets with slots wrap content:
 ```
 
 ```php
-<?php // site/snippets/card.php ?>
+<?php // site/templates/snippets/card.php ?>
 <div class="<?= esc($class) ?>">
   <?= $slots->title() ?>
   <?= $slot ?>
