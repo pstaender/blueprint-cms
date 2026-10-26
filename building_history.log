@@ -303,3 +303,9 @@
 - Toggling bold/italic/strikethrough/code with the caret right before the closing marker steps over it, TinyMDE alone would remove the formatting and select the word.
 - Links to pages are inserted as `[Title](page://uid)` (the url for pages without uid), chosen in `PageSelectDialog.vue` (browse level by level, search via `GET /pages?search=`); links to files of the page via `FileSelectDialog.vue`. Dropping files works as in textareas (shared `isFileDrag`/`droppedFileLinks` in files.js).
 - `File::resolveUrls()` resolves `page://uid` and `file://uid` in markdown links to urls, so references in markdown survive renamed slugs.
+
+2026-10-26 – Passkeys, accent color
+- Panel login with passkeys (WebAuthn) besides email + password, if the browser supports them (`PublicKeyCredential` and `getPublicKey()`). Passkeys are discoverable (resident keys) with required user verification, so they replace both email and password.
+- No library: new passkeys send their public key as SPKI (`getPublicKey()`) and no attestation is requested, so the server only checks the client data (type, one time challenge from the session, origin host = request host, https except on localhost) and the authenticator data (rp id hash, user present + verified flags, counter), logins are verified with `openssl_verify`. ES256 and RS256.
+- Stored in the user's `passkeys` in users.json; the api only shows id, name and dates. Only the user can add passkeys to their account, the user and admins can delete them (user view).
+- `--color-accent: #068ef5` for checkboxes, radios, switches and the focus color.

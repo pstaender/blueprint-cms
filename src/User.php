@@ -158,12 +158,16 @@ class User
     }
 
     /**
-     * The data without the password hash, with the effective role.
+     * The data without the password hash and passkey keys, with the effective role.
      */
     public function toArray(): array
     {
         $data = $this->data->toArray();
         unset($data["password"]);
+
+        if (isset($data["passkeys"])) {
+            $data["passkeys"] = Passkey::summaries($this);
+        }
 
         return [...$data, "role" => $this->role()];
     }

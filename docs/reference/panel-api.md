@@ -4,7 +4,7 @@ sort: 7
 ---
 A JSON REST API under `/panel/api`, implemented in `src/Panel.php`.
 
-- All endpoints except the login need a session (cookie, `HttpOnly`, `SameSite=Lax`).
+- All endpoints except the login (also with a passkey) need a session (cookie, `HttpOnly`, `SameSite=Lax`).
 - Changes (`POST`, `PATCH`, `DELETE`) need the `X-CSRF-Token` header with the token from the login/session response.
 - Page ids are slug paths with `/` (unlike Kirby's `+`): `/pages/blog/newest_entry`. Subresources start with `~`, which slugs can't contain, so a page may be called `files` or `children`: `/pages/blog/~files/cover.jpg`. The panel uses the same urls: `/panel/pages/blog/newest_entry`, `/panel/pages/blog/~files/cover.jpg`.
 - `PATCH` with `{data: {...}}` only changes the given fields (`null` or `""` removes one), the others stay. The panel only sends the changed fields, so editors don't overwrite each other's changes in other fields.
@@ -16,6 +16,8 @@ A JSON REST API under `/panel/api`, implemented in `src/Panel.php`.
 | `POST` | `/session` | `{email, password}` | log in, returns `{user, csrf, site}` |
 | `GET` | `/session` | | the logged in user |
 | `DELETE` | `/session` | | log out |
+| `POST` | `/session/~passkey-options` | | options for `navigator.credentials.get()` (binary values base64url encoded), the challenge is valid for 5 minutes |
+| `POST` | `/session/~passkey` | `{id, clientDataJSON, authenticatorData, signature, userHandle}` (base64url) | log in with a passkey, like `POST /session` |
 | `GET` | `/site` | | `{title, blueprint, data, children}` |
 | `PATCH` | `/site` | `{data: {...}}` | save fields |
 | `POST` | `/site/~children` | `{title, slug?, type?}` | create a draft at the root |
@@ -39,6 +41,11 @@ A JSON REST API under `/panel/api`, implemented in `src/Panel.php`.
 | `GET` | `/users/{uid}` | | user data, `role`, `blueprint`; non-admins only themselves (403 for other users, also for `PATCH`) |
 | `PATCH` | `/users/{uid}` | `{data?, email?, role?, password?, currentPassword?}` | a new `password` needs the logged in user's `currentPassword` (422 if wrong), except for admins; changing the `role` needs an admin (403) |
 | `DELETE` | `/users/{uid}` | | admins only, not yourself |
+| `POST` | `/users/{uid}/~passkey-options` | | options for `navigator.credentials.create()`, only for your own account |
+| `POST` | `/users/{uid}/~passkeys` | `{name, id, publicKey, algorithm, clientDataJSON, authenticatorData}` | add a passkey to your own account: `publicKey` from `response.getPublicKey()` (SPKI), `algorithm` from `getPublicKeyAlgorithm()` (ES256 or RS256) |
+| `DELETE` | `/users/{uid}/~passkeys/{id}` | | delete a passkey (your own, admins also those of others) |
+
+Passkeys need user verification (pin, biometrics) and an https origin with the request's host as relying party id (`http` only on `localhost`). Users list their passkeys as `passkeys: [{id, name, createdAt, lastUsedAt}]`.
 
 `ref` is the value pickers store: `page://uid`, `file://uid`, `user://uid` (the path or filename for models without uid).
 

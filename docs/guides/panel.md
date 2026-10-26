@@ -26,7 +26,7 @@ bin/blueprint media:clear                           # deletes optimized images
 
 See [Command line](/guides/cli) for all commands.
 
-Then log in at http://localhost:8000/panel.
+Then log in at http://localhost:8000/panel, with email and password or (in browsers that support them) a passkey. Passkeys are added in your user view ("Add passkey") and stored with your user; every user can delete their own passkeys there, admins also those of others. They need https, except on `localhost`.
 
 ## What it does
 

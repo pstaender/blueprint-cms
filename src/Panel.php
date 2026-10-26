@@ -27,6 +27,8 @@ class Panel
         ["POST", "#^/session$#", "login"],
         ["GET", "#^/session$#", "session"],
         ["DELETE", "#^/session$#", "logout"],
+        ["POST", "#^/session/~passkey-options$#", "passkeyLoginOptions"],
+        ["POST", "#^/session/~passkey$#", "passkeyLogin"],
         ["GET", "#^/site$#", "getSite"],
         ["PATCH", "#^/site$#", "updateSite"],
         ["POST", "#^/site/~children$#", "createPage"],
@@ -47,10 +49,15 @@ class Panel
         ["GET", "#^/roles$#", "listRoles"],
         ["GET", "#^/users$#", "listUsers"],
         ["POST", "#^/users$#", "createUser"],
+        ["POST", "#^/users/([^/]+)/~passkey-options$#", "passkeyCreationOptions"],
+        ["POST", "#^/users/([^/]+)/~passkeys$#", "createPasskey"],
+        ["DELETE", "#^/users/([^/]+)/~passkeys/([^/]+)$#", "deletePasskey"],
         ["GET", "#^/users/([^/]+)$#", "getUser"],
         ["PATCH", "#^/users/([^/]+)$#", "updateUser"],
         ["DELETE", "#^/users/([^/]+)$#", "deleteUser"],
     ];
+
+    private const PUBLIC_HANDLERS = ["login", "passkeyLoginOptions", "passkeyLogin"];
 
     public function __construct(private readonly App $app)
     {
@@ -95,7 +102,7 @@ class Panel
                 continue;
             }
 
-            if ($handler !== "login") {
+            if (!in_array($handler, self::PUBLIC_HANDLERS, true)) {
                 $this->authorize($request);
             }
 
@@ -149,6 +156,29 @@ class Panel
         if ($user === null || !$user->verifyPassword((string) ($input["password"] ?? ""))) {
             usleep(random_int(200_000, 400_000));
             throw new ApiError("Invalid email or password", 401);
+        }
+
+        Session::login($user);
+        User::setCurrent($user);
+
+        return $this->session();
+    }
+
+    private function passkeyLoginOptions(ServerRequestInterface $request): ResponseInterface
+    {
+        return self::json(Passkey::requestOptions($request->getUri()->getHost()));
+    }
+
+    /**
+     * Body: the assertion of `navigator.credentials.get()`, see Passkey::authenticate().
+     */
+    private function passkeyLogin(ServerRequestInterface $request): ResponseInterface
+    {
+        try {
+            $user = Passkey::authenticate(self::input($request), $request->getUri()->getHost());
+        } catch (ApiError $error) {
+            usleep(random_int(200_000, 400_000));
+            throw $error;
         }
 
         Session::login($user);
@@ -599,6 +629,46 @@ class Panel
         }
 
         return $this->getUser($request, $user->uid());
+    }
+
+    /**
+     * Passkeys can only be added by the user themselves (it's created on their device).
+     */
+    private function passkeyCreationOptions(ServerRequestInterface $request, string $uid): ResponseInterface
+    {
+        return self::json(Passkey::creationOptions($this->findCurrentUser($uid), $request->getUri()->getHost()));
+    }
+
+    /**
+     * Body: {"name": "…", …} and the credential of `navigator.credentials.create()`, see Passkey::register().
+     */
+    private function createPasskey(ServerRequestInterface $request, string $uid): ResponseInterface
+    {
+        $input = self::input($request);
+        $user = Passkey::register($this->findCurrentUser($uid), $input, $request->getUri()->getHost(), (string) ($input["name"] ?? ""));
+
+        return $this->getUser($request, $user->uid())->withStatus(201);
+    }
+
+    /**
+     * Users delete their own passkeys, admins also those of others.
+     */
+    private function deletePasskey(ServerRequestInterface $request, string $uid, string $id): ResponseInterface
+    {
+        $user = Passkey::remove($this->findAccessibleUser($uid), $id);
+
+        return $this->getUser($request, $user->uid());
+    }
+
+    private function findCurrentUser(string $uid): User
+    {
+        $user = $this->findUser($uid);
+
+        if (!$user->isSame(User::current())) {
+            throw new ApiError("Passkeys can only be added to your own account", 403);
+        }
+
+        return $user;
     }
 
     private function deleteUser(ServerRequestInterface $request, string $uid): ResponseInterface

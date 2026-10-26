@@ -8,6 +8,7 @@ import ViewHeader from "../components/ViewHeader.vue";
 import Dialog from "../components/Dialog.vue";
 import Icon from "../components/Icon.vue";
 import RoleInput from "../components/RoleInput.vue";
+import { passkeysSupported, createPasskey, isCancelled } from "../passkeys.js";
 
 const props = defineProps({ uid: { type: String, required: true } });
 const router = useRouter();
@@ -34,8 +35,8 @@ const isCurrent = computed(() => session.user?.uid === props.uid);
 // admins change passwords without confirming them with their own password
 const needsCurrentPassword = computed(() => session.user?.role !== "admin");
 
-function start(name) {
-  form.value = { email: user.value.email, role: user.value.role, password: "", currentPassword: "" };
+function start(name, passkey = null) {
+  form.value = { email: user.value.email, role: user.value.role, password: "", currentPassword: "", name: "", passkey };
   error.value = null;
   dialog.value = name;
 }
@@ -48,6 +49,15 @@ async function saveDialog() {
       dialog.value = null;
       return router.push("/users");
     }
+    // only the passkeys change, unsaved changes in the form stay
+    if (dialog.value === "passkey" || dialog.value === "deletePasskey") {
+      const result = dialog.value === "passkey"
+        ? await createPasskey(props.uid, form.value.name)
+        : await api.delete(`/users/${props.uid}/~passkeys/${encodeURIComponent(form.value.passkey.id)}`);
+      user.value.passkeys = result.passkeys ?? [];
+      dialog.value = null;
+      return;
+    }
     const changes = dialog.value === "password"
       ? { password: form.value.password, currentPassword: form.value.currentPassword }
       : { email: form.value.email, ...(session.user?.role === "admin" ? { role: form.value.role } : {}) };
@@ -55,11 +65,17 @@ async function saveDialog() {
     if (isCurrent.value) Object.assign(session.user, { email: user.value.email, role: user.value.role });
     dialog.value = null;
   } catch (e) {
-    error.value = e.message;
+    if (!isCancelled(e)) error.value = e.message;
   } finally {
     busy.value = false;
   }
 }
+
+const formatDate = (date) => new Date(date).toLocaleDateString();
+const passkeyInfo = (passkey) => [
+  passkey.createdAt && `added ${formatDate(passkey.createdAt)}`,
+  passkey.lastUsedAt ? `last used ${formatDate(passkey.lastUsedAt)}` : "not used yet",
+].filter(Boolean).join(" · ");
 
 onMounted(async () => load(await api.get(`/users/${props.uid}`)));
 </script>
@@ -87,11 +103,33 @@ onMounted(async () => load(await api.get(`/users/${props.uid}`)));
 
     <ModelForm :blueprint="user.blueprint" :values="values" :errors="errors" />
 
+    <section class="section">
+      <header class="section-header">
+        <h3 class="field-label">Passkeys</h3>
+        <button v-if="isCurrent && passkeysSupported" type="button" class="button button-small" @click="start('passkey')">
+          <Icon name="plus" /> Add passkey
+        </button>
+      </header>
+      <ul v-if="user.passkeys?.length" class="items">
+        <li v-for="passkey in user.passkeys" :key="passkey.id" class="item">
+          <div class="item-link">
+            <span class="item-icon"><Icon name="key" /></span>
+            <span class="item-title">{{ passkey.name }}</span>
+            <span class="item-info">{{ passkeyInfo(passkey) }}</span>
+            <button type="button" class="icon-button" :title="`Delete ${passkey.name}`" @click="start('deletePasskey', passkey)"><Icon name="trash" /></button>
+          </div>
+        </li>
+      </ul>
+      <p v-else class="empty">
+        {{ !isCurrent ? "No passkeys" : passkeysSupported ? "No passkeys yet: add one to log in without a password" : "This browser doesn't support passkeys" }}
+      </p>
+    </section>
+
     <Dialog
       :open="dialog !== null"
-      :title="{ account: 'Account', password: 'Change password', delete: 'Delete user' }[dialog]"
-      :submit-label="dialog === 'delete' ? 'Delete' : 'Save'"
-      :danger="dialog === 'delete'"
+      :title="{ account: 'Account', password: 'Change password', delete: 'Delete user', passkey: 'Add passkey', deletePasskey: 'Delete passkey' }[dialog]"
+      :submit-label="{ delete: 'Delete', deletePasskey: 'Delete', passkey: 'Add' }[dialog] ?? 'Save'"
+      :danger="dialog === 'delete' || dialog === 'deletePasskey'"
       :busy="busy"
       @update:open="dialog = $event ? dialog : null"
       @submit="saveDialog"
@@ -115,6 +153,16 @@ onMounted(async () => load(await api.get(`/users/${props.uid}`)));
         </label>
       </template>
       <p v-else-if="dialog === 'delete'">Do you really want to delete <strong>{{ user.email }}</strong>?</p>
+      <template v-else-if="dialog === 'passkey'">
+        <label class="field">
+          <span class="field-label">Name</span>
+          <input v-model="form.name" class="input" type="text" placeholder="e.g. Laptop, Phone" maxlength="64">
+        </label>
+        <small class="field-help">Your browser asks for the device (or password manager) that stores the passkey.</small>
+      </template>
+      <p v-else-if="dialog === 'deletePasskey'">
+        Do you really want to delete the passkey <strong>{{ form.passkey.name }}</strong>? It can't be used to log in anymore.
+      </p>
     </Dialog>
   </div>
 </template>

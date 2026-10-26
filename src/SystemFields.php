@@ -32,14 +32,22 @@ class SystemFields
      */
     public static function applyDates(array $data, array $existing = []): array
     {
-        // milliseconds, so modifiedAt also tells saves within the same second apart (conflict check)
-        $now = (new \DateTimeImmutable())->format("Y-m-d\\TH:i:s.vP");
+        $now = self::now();
 
         return [
             "createdAt" => self::filled($existing["createdAt"] ?? null) ?? self::filled($data["createdAt"] ?? null) ?? $now,
             "modifiedAt" => $now,
             ...array_diff_key($data, array_flip(self::NAMES)),
         ];
+    }
+
+    /**
+     * The current time as stored in the data, with milliseconds, so modifiedAt also tells saves within the same
+     * second apart (conflict check).
+     */
+    public static function now(): string
+    {
+        return (new \DateTimeImmutable())->format("Y-m-d\\TH:i:s.vP");
     }
 
     /**

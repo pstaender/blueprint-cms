@@ -60,7 +60,7 @@ Files are served under the page url: `/blog/cover.jpg`, but **only if they are u
 ]
 ```
 
-`password` is a `password_hash()`, set it with `bin/blueprint user:password admin`.
+`password` is a `password_hash()`, set it with `bin/blueprint user:password admin`. `passkeys` holds the user's passkeys (added in the panel): `[{id, name, publicKey, algorithm, signCount, createdAt, lastUsedAt}]`, the public key base64url encoded (SPKI); delete an entry to remove a passkey.
 
 ## content/redirects.json
 

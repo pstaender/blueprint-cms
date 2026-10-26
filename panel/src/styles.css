@@ -8,7 +8,8 @@
   --color-hover: rgba(0, 0, 0, 0.05);
   --color-primary: #16171a;
   --color-primary-text: #fff;
-  --color-focus: #4271ae;
+  --color-accent: #068ef5;
+  --color-focus: var(--color-accent);
   --color-positive: #5d800d;
   --color-positive-bg: #e6efcf;
   --color-negative: #c82829;
@@ -34,7 +35,6 @@
     --color-hover: rgba(255, 255, 255, 0.06);
     --color-primary: #ececee;
     --color-primary-text: #16171a;
-    --color-focus: #7aa2d6;
     --color-positive-bg: #2c3a14;
     --color-positive: #a5c66b;
     --color-negative-bg: #4a2222;
@@ -682,7 +682,7 @@ select[multiple].input {
 
 .choice input {
   margin: 0;
-  accent-color: var(--color-primary);
+  accent-color: var(--color-accent);
 }
 
 /* A checkbox that looks like a toggle switch */
@@ -714,7 +714,7 @@ select[multiple].input {
 }
 
 .switch:checked {
-  background: var(--color-text);
+  background: var(--color-accent);
 }
 
 .switch:checked::before {
@@ -1301,6 +1301,23 @@ select[multiple].input {
   font-weight: 600;
 }
 
+.login-button {
+  height: 2.5rem;
+  margin-top: 1rem;
+  text-align: center;
+  display: block;
+  font-weight: bold;
+}
+
+/* below the login button, centered with its icon */
+.login-button + .login-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 0;
+}
+
 /* Small screens */
 
 @media (max-width: 800px) {
@@ -1417,7 +1434,7 @@ select[multiple].input {
   width: 14px;
   height: 14px;
   margin: 0 0 0 12px;
-  accent-color: var(--color-primary);
+  accent-color: var(--color-accent);
   cursor: pointer;
 }
 
