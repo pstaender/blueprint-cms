@@ -22,7 +22,7 @@
   --radius: 5px;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.02);
   --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+  --font-mono: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
   color-scheme: light;
 }
 
@@ -61,7 +61,6 @@ body {
   line-height: 1.5;
   color: var(--color-text);
   background: var(--color-background);
-  -webkit-font-smoothing: antialiased;
   accent-color: var(--color-accent);
 }
 
@@ -727,6 +726,14 @@ select[multiple].input {
   white-space: pre-wrap;
   max-height: 240px;
   overflow: auto;
+}
+
+/* Chrome has no ui-monospace/SF Mono and falls back to Menlo, which only has regular and bold: a thin stroke
+   makes the monospaced text a bit heavier (not bold) in every browser */
+.textarea,
+.writer-editor,
+.code {
+  -webkit-text-stroke: 0.25px currentColor;
 }
 
 .choices {
