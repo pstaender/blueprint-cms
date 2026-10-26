@@ -5,9 +5,9 @@ fields:
   title:
     type: text
   content:
-    type: textarea
-  metaIndex:
-    label: Meta Index
+    type: writer
+  exlcudeFromSeoIndex:
+    label: Exclude from SEO Index
     type: toggle
   files:
     label: Files
@@ -22,6 +22,9 @@ fields:
     type: datetime
     disabled: true
     width: 1/2
+  subpages:
+    type: pagelist
+    # layout: cards
 
 tabs:
   content:
@@ -33,6 +36,6 @@ tabs:
           - files
   meta:
     fields:
-      - metaIndex
+      - exlcudeFromSeoIndex
       - createdAt
       - modifiedAt
