@@ -14,6 +14,7 @@
   --header-height: 56px;
   --menu-width: 270px;
   --toc-width: 220px;
+  --layout-max-width: 1440px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -58,17 +59,23 @@ a:hover {
 
 /* Header */
 
+/* the bar spans the window, its content is as wide as the layout */
 .docs-header {
   position: sticky;
   top: 0;
   z-index: 10;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+
+.docs-header-inner {
   display: flex;
   align-items: center;
   gap: 16px;
+  max-width: var(--layout-max-width);
   height: var(--header-height);
+  margin: 0 auto;
   padding: 0 24px;
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-bg);
 }
 
 .docs-logo {
@@ -104,7 +111,7 @@ a:hover {
 .docs-layout {
   display: grid;
   grid-template-columns: var(--menu-width) minmax(0, 1fr) var(--toc-width);
-  max-width: 1440px;
+  max-width: var(--layout-max-width);
   margin: 0 auto;
 }
 
@@ -470,7 +477,7 @@ a:hover {
 }
 
 @media (max-width: 800px) {
-  .docs-header {
+  .docs-header-inner {
     padding: 0 16px;
   }
 

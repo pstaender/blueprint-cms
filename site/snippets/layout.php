@@ -70,9 +70,11 @@ $title ??= $page?->title()->value();
 </head>
 <body>
     <header class="docs-header">
-        <button type="button" class="docs-menu-toggle" aria-controls="docs-menu" aria-expanded="false">Menu</button>
-        <a class="docs-logo" href="/"><?= esc($siteName) ?></a>
-        <a class="docs-header-link" href="/panel">Panel</a>
+        <div class="docs-header-inner">
+            <button type="button" class="docs-menu-toggle" aria-controls="docs-menu" aria-expanded="false">Menu</button>
+            <a class="docs-logo" href="/"><?= esc($siteName) ?></a>
+            <a class="docs-header-link" href="/panel">Panel</a>
+        </div>
     </header>
     <div class="docs-layout">
         <nav id="docs-menu" class="docs-menu" aria-label="Documentation">
