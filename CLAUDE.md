@@ -8,7 +8,7 @@ Flat file CMS inspired by Kirby. PHP >= 8.3, namespace `Blueprint\` → `src/`. 
 - `composer test` (Pest, tests in `tests/`; they only use fixture projects in `tests/fixtures/`, never the project content)
 - `composer serve` → dev server on http://localhost:8000 (`public/index.php` is the front controller)
 - `composer panel:build` (Vue + Vite in `panel/` → `public/panel/`, gitignored), `composer panel:dev` (vite on :5173/panel/, proxies the API to :8000)
-- `bin/blueprint user:create <email> [role]`, `user:password <email>`, `user:list`, `content:uids`, `media:clear` (`Cli`: every php file in `src/cli/commands/` and `site/cli/` returns `["command", "description", "usage"?, "run" => fn (array $args)]`, run may return an int exit code; site commands override core ones)
+- `bin/blueprint user:create <email> [role]`, `user:password <email>`, `user:list`, `content:uids`, `media:clear` (`Cli`: every php file in `src/cli/commands/`, plugins' `cli/` and `site/cli/` returns `["command", "description", "usage"?, "run" => fn (array $args)]`, run may return an int exit code; site commands override plugin and core ones)
 
 ## Architecture
 
@@ -27,6 +27,7 @@ Flat file CMS inspired by Kirby. PHP >= 8.3, namespace `Blueprint\` → `src/`. 
 - `Data` – read-only, raw (unescaped) data: maps become `Data` (object/array access, missing keys → `null`), lists stay arrays.
 - `ContentFile` – reads json and markdown with yaml front matter (body → `content`).
 - `Site` – `content/site.json` + root pages. `User` – `content/users.json`, roles `user`, `admin` (core blueprint, `isAdmin()`; the first/only user is admin) + user blueprints, only admins see/create/edit/delete other users and change roles, password changes in the panel need the current user's password unless admin, current user from the session (`$_SESSION["blueprint.user"]` = uid). `Passkey` – WebAuthn login for the panel (ES256/RS256, user verification required), stored in the user's `passkeys`; the browser sends the public key (`getPublicKey()`), so there is no CBOR/attestation parsing, logins are checked with `openssl_verify`.
+- `Plugin` – folders in `site/plugins/` with `index.php` or `{folder}.php` (only that file is loaded, at `App::create`, alphabetically; it requires its other php code from anywhere). Plugins can have `blueprints/`, `templates/` (snippets, partials, 404) and `cli/` like the site: `App::siteDirs($folder)` = site first, then plugins, then core (`Blueprint::roots()`, templates, snippets, partials, `Cli`). `site/plugins/static-site-generator`: `bin/blueprint static:build [folder] [--clear-existing-target-folder]` renders listed + unlisted pages via `App::request()` into `static/` (url → `{path}/index.html`), used files, `404.html`, redirects as meta refresh pages, `public/` without `index.php`/`panel/`.
 - `Redirect` exception – thrown by `redirect()`, turned into a response by `App`.
 - `Blueprint` – `site/blueprints/{name}.{yml,yaml,php}`, falls back to core blueprints in `src/blueprints/`. Names are paths: `pages/article`, `site`, `users/editor`, `custom-fields/seo`. `Page::blueprint()`: `pages/{template}` → blueprint with `default: true` → `pages/default`; `User::blueprint()`: `users/{role}` (role defaults to `user`) → `users/user` → `users/default`; `Site::blueprint()`: `site`. Also `fields()`, `field()`, `tabs()`, `defaults()`, `validate($data)`, `toArray()`.
 - `BlueprintNormalizer` – raw props → tabs → columns → fields (`Blueprint::DEFAULT_FIELDS`: pages and the site get a `subpages` pagelist unless they have a pagelist or `subpages: false`; `false` removes any (inherited) field; Kirby v6 style: root `fields` are definitions referenced by name from tabs/columns when a layout exists; `fields: true` in a tab/column = all unused definitions; sections → fields; groups spliced; `extends`; string shortcuts; blocks/layout `fieldsets` and `layouts`). Invalid fields become `info` error fields instead of exceptions.
@@ -45,4 +46,4 @@ Modern PHP, keep it simple, flat class structure, camelCase, self-explaining nam
 
 ## Not implemented yet
 
-Translations, site files, plugins, controllers, models, routes in `site/`, sqlite/postgres.
+Translations, site files, panel customizations by plugins, controllers, models, routes in `site/`, sqlite/postgres.

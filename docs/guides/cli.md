@@ -35,4 +35,4 @@ return [
 bin/blueprint greet Ada
 ```
 
-`run` can return an integer as exit code, otherwise it is `0`; an exception prints its message and exits with `1`. The app is already created, so `site()`, `page()` and all classes can be used. The core commands are in `src/cli/commands/`, a site command with the same name replaces one of them.
+`run` can return an integer as exit code, otherwise it is `0`; an exception prints its message and exits with `1`. The app is already created, so `site()`, `page()` and all classes can be used. The core commands are in `src/cli/commands/`, [plugins](/guides/plugins) add commands in their `cli/` folder. A site command with the same name replaces a plugin or core command.

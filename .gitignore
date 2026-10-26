@@ -4,3 +4,4 @@ node_modules/
 /public/panel/
 /public/media/
 /docs/users.json
+/static/

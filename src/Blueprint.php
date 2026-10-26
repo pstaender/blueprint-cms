@@ -129,7 +129,7 @@ class Blueprint
     }
 
     /**
-     * The blueprint file in `site/blueprints` or (core) `src/blueprints`.
+     * The blueprint file in `site/blueprints`, a plugin's `blueprints` or (core) `src/blueprints`.
      */
     public static function file(string $name, bool $includeCore = true): ?string
     {
@@ -137,7 +137,7 @@ class Blueprint
             return null;
         }
 
-        foreach ($includeCore ? self::roots() : [self::roots()[0]] as $root) {
+        foreach (self::roots($includeCore) as $root) {
             foreach (self::EXTENSIONS as $extension) {
                 if (is_file("$root/$name.$extension")) {
                     return "$root/$name.$extension";
@@ -167,9 +167,9 @@ class Blueprint
         return $names;
     }
 
-    public static function roots(): array
+    public static function roots(bool $includeCore = true): array
     {
-        return [App::instance()->siteDir() . "/blueprints", __DIR__ . "/blueprints"];
+        return [...App::instance()->siteDirs("blueprints"), ...($includeCore ? [__DIR__ . "/blueprints"] : [])];
     }
 
     /**

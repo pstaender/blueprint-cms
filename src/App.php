@@ -22,6 +22,8 @@ class App
     private ?Site $site = null;
     private ?Redirects $redirects = null;
     private ?ImageOptimizer $imageOptimizer = null;
+    /** @var array<string, Plugin> */
+    private array $plugins = [];
 
     public function __construct(public readonly Config $config)
     {
@@ -43,8 +45,13 @@ class App
 
         $app = new self($config);
         $app->configurePhp();
+        self::$instance = $app;
 
-        return self::$instance = $app;
+        // plugins may use the app (App::instance(), site(), …) when they are loaded
+        $app->plugins = Plugin::scan($app->siteDir() . "/plugins");
+        array_map(fn(Plugin $plugin) => $plugin->load(), $app->plugins);
+
+        return $app;
     }
 
     public static function instance(): self
@@ -70,6 +77,22 @@ class App
     public function siteDir(): string
     {
         return $this->config->path("siteFolder");
+    }
+
+    /** @return array<string, Plugin> */
+    public function plugins(): array
+    {
+        return $this->plugins;
+    }
+
+    /**
+     * A folder of the site and the same folder of every plugin, e.g. siteDirs("templates"). The site comes first.
+     *
+     * @return string[]
+     */
+    public function siteDirs(string $folder): array
+    {
+        return [$this->siteDir() . "/$folder", ...array_map(fn(Plugin $plugin) => "$plugin->root/$folder", array_values($this->plugins))];
     }
 
     public function publicDir(): string
@@ -256,7 +279,7 @@ class App
     }
 
     /**
-     * Renders site/templates/{name}.php, falls back to page.php and default.php.
+     * Renders site/templates/{name}.php (or a plugin's), falls back to page.php and default.php.
      */
     public function renderTemplate(string $name, array $variables = []): string
     {
@@ -265,11 +288,11 @@ class App
 
     public function templateFile(string $name): string
     {
-        $dir = $this->siteDir() . "/templates";
-
         foreach ([$name, Page::DEFAULT_TYPE, "default"] as $template) {
-            if (preg_match('/^[\w-]+$/', $template) && is_file("$dir/$template.php")) {
-                return "$dir/$template.php";
+            foreach ($this->siteDirs("templates") as $dir) {
+                if (preg_match('/^[\w-]+$/', $template) && is_file("$dir/$template.php")) {
+                    return "$dir/$template.php";
+                }
             }
         }
 
@@ -277,7 +300,7 @@ class App
     }
 
     /**
-     * Renders site/templates/snippets/{name}.php or the core src/views/{name}.php, e.g. "blocks/heading".
+     * Renders site/templates/snippets/{name}.php, a plugin's or the core src/views/{name}.php, e.g. "blocks/heading".
      * With a list of names the first existing snippet is used. Missing snippets render nothing (a comment in debug mode).
      */
     public function renderSnippet(string|array $name, array $variables = []): string
@@ -287,10 +310,10 @@ class App
                 continue;
             }
 
-            foreach ([$this->siteDir() . "/templates/snippets/$candidate.php", __DIR__ . "/views/$candidate.php"] as $file) {
-                if (is_file($file)) {
-                    return $this->capture($file, $variables + ["page" => Page::current(), "site" => $this->site()])[0];
-                }
+            $file = self::firstFile([...array_map(fn(string $dir) => "$dir/snippets/$candidate.php", $this->siteDirs("templates")), __DIR__ . "/views/$candidate.php"]);
+
+            if ($file !== null) {
+                return $this->capture($file, $variables + ["page" => Page::current(), "site" => $this->site()])[0];
             }
         }
 
@@ -298,12 +321,13 @@ class App
     }
 
     /**
-     * Renders site/templates/partials/{name}.php, or an absolute path to a php file.
+     * Renders site/templates/partials/{name}.php (or a plugin's), or an absolute path to a php file.
      */
     public function renderPartial(string $name, array $variables = []): string
     {
         $isPath = str_starts_with($name, "/") || preg_match('#^[a-z]:[\\\\/]#i', $name);
-        $file = $isPath ? $name : $this->siteDir() . "/templates/partials/$name.php";
+        $files = array_map(fn(string $dir) => "$dir/partials/$name.php", $this->siteDirs("templates"));
+        $file = $isPath ? $name : (self::firstFile($files) ?? $files[0]);
 
         if ((!$isPath && str_contains($name, "..")) || !str_ends_with($file, ".php") || !is_file($file)) {
             throw new \InvalidArgumentException("Partial \"$name\" not found in $file");
@@ -370,14 +394,25 @@ class App
         ], Stream::create(fopen($file->root, "rb")));
     }
 
-    private function notFoundResponse(): ResponseInterface
+    public function notFoundResponse(): ResponseInterface
     {
-        $file = $this->siteDir() . "/templates/404.php";
-        $html = is_file($file)
+        $file = self::firstFile(array_map(fn(string $dir) => "$dir/404.php", $this->siteDirs("templates")));
+        $html = $file !== null
             ? $this->capture($file, ["page" => null, "site" => $this->site()])[0]
             : "<h1>404 Not Found</h1>";
 
         return new Response(404, ["Content-Type" => "text/html; charset=UTF-8"], $html);
+    }
+
+    private static function firstFile(array $files): ?string
+    {
+        foreach ($files as $file) {
+            if (is_file($file)) {
+                return $file;
+            }
+        }
+
+        return null;
     }
 
     private function errorResponse(\Throwable $error): ResponseInterface

@@ -316,3 +316,8 @@
 
 2026-10-26 – Field methods with a leading underscore
 - `$page->_url()` returns the field value even if the model has a method with that name; `HasFields::__call` strips one leading underscore (same as `field("url")`).
+
+2026-10-26 – Plugins, static site generator
+- Plugins are folders in `site/plugins/` with an `index.php` or `{folder name}.php` (like Kirby, plus the named file). Only that entry file is loaded, when the app is created (after `App::instance()` is set), in alphabetical order; the plugin's other php code can live anywhere (`src/` by convention), the entry file requires it. No autoloader, no plugin registry api yet.
+- A plugin can have `blueprints/`, `templates/` (snippets, partials, 404.php) and `cli/` like the site. Lookup order: site, plugins (alphabetical), core – one helper `App::siteDirs($folder)` used by templates, snippets, partials, the 404 template, `Blueprint::roots()` and `Cli`. Blueprints of plugins count as non-core for `Blueprint::forType()`.
+- First plugin: `site/plugins/static-site-generator`, command `static:build [folder] [--clear-existing-target-folder]` (default `static/`, gitignored). It renders every listed and unlisted page through `App::request()`, so the output is exactly what the app serves (page php files, optimized images); pages become `{path}/index.html`, redirecting pages and `redirects.json` become meta refresh pages. Used page files are copied, `public/` without `index.php`, `panel/` and dot files, plus `404.html` (`App::notFoundResponse()` is public now, `Redirects::all()` new). An existing target folder is only replaced with the flag; the project folder, its parents and the content/site/public folders are always refused (paths are resolved without `..` and symlinks).

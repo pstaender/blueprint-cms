@@ -1,0 +1,1 @@
+<span>plugin snippet</span>

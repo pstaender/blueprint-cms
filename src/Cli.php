@@ -5,24 +5,26 @@ declare(strict_types=1);
 namespace Blueprint;
 
 /**
- * Commands of bin/blueprint: php files in src/cli/commands/ and site/cli/ that return
+ * Commands of bin/blueprint: php files in src/cli/commands/, the plugins' cli/ and site/cli/ that return
  * ["command" => "name", "description" => "…", "usage" => "<args>" (optional), "run" => function (array $args)],
  * run can return an int as exit code (default 0).
- * Site commands override core commands with the same name.
+ * Site commands override plugin commands with the same name, plugin commands override core commands.
  */
 class Cli
 {
-    /** @return array<string, array> command name => definition, site commands have `userDefined` set */
+    /** @return array<string, array> command name => definition, site and plugin commands have `userDefined` set */
     public static function commands(): array
     {
         $commands = [];
-        foreach (["core" => __DIR__ . "/cli/commands", "site" => App::instance()->siteDir() . "/cli"] as $source => $dir) {
+        $dirs = [__DIR__ . "/cli/commands", ...array_reverse(App::instance()->siteDirs("cli"))];
+
+        foreach ($dirs as $index => $dir) {
             foreach (glob("$dir/*.php") ?: [] as $file) {
                 $command = require $file;
                 if (!is_array($command) || !is_string($command["command"] ?? null) || !is_callable($command["run"] ?? null)) {
                     throw new \UnexpectedValueException("$file must return an array with a command name and a run function");
                 }
-                $commands[$command["command"]] = [...$command, "userDefined" => $source === "site"];
+                $commands[$command["command"]] = [...$command, "userDefined" => $index > 0];
             }
         }
         ksort($commands);

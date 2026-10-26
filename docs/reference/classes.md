@@ -8,7 +8,7 @@ All classes live in the `Blueprint\` namespace in `src/`.
 
 Singleton: `App::create(Config $config)`, `App::instance()`.
 
-`config`, `isDebug()`, `projectDir()`, `contentDir()`, `siteDir()`, `publicDir()`, `site()`, `redirects()`, `run()`, `handle($request)`, `request($uri, $method = "GET")` (for tests), `renderPage($page)`, `renderTemplate($name, $vars)`, `renderPartial($name, $vars)`.
+`config`, `isDebug()`, `projectDir()`, `contentDir()`, `siteDir()`, `siteDirs($folder)` (the site's and the plugins' folder, e.g. `templates`), `plugins()`, `publicDir()`, `site()`, `redirects()`, `run()`, `handle($request)`, `request($uri, $method = "GET")` (for tests), `renderPage($page)`, `renderTemplate($name, $vars)`, `renderPartial($name, $vars)`.
 
 ## `Config`
 
@@ -84,6 +84,10 @@ The panel app and its [REST API](/reference/panel-api), `Session` (login, CSRF t
 ## `ImageOptimizer`
 
 Converts content images to AVIF (`url($file, $maxFileSize, $quality)`, `replaceImages($html, $optimize)`, `isSupported()`), with `GdImageFile` or `ImagickImage` (`Image`), see [Images](/guides/images). `App::imageOptimizer()`, `App::resolveFile($reference, $page)`.
+
+## `Plugin`
+
+`name`, `root`, `entryFile()`, `load()`, `Plugin::scan($dir)`, see [plugins](/guides/plugins).
 
 ## Others
 

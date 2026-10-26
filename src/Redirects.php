@@ -31,6 +31,12 @@ class Redirects
         return new self($redirects);
     }
 
+    /** @return array<string, array{url: string, status: int}> keyed by the path without leading and trailing slashes */
+    public function all(): array
+    {
+        return $this->redirects;
+    }
+
     public function find(string $path): ?Redirect
     {
         $redirect = $this->redirects[self::normalize($path)] ?? null;
