@@ -9,6 +9,7 @@ import FileList from "./fields/FileList.vue";
 import FilePicker from "./fields/FilePicker.vue";
 import BlocksField from "./fields/BlocksField.vue";
 import LayoutField from "./fields/LayoutField.vue";
+import IconField from "./fields/IconField.vue";
 import { FILE_DRAG_TYPE, markdownLink, uploadFiles } from "../files.js";
 
 // One blueprint field as native form element(s).
@@ -206,6 +207,8 @@ const entries = computed({
     <BlocksField v-else-if="type === 'blocks'" :model-value="modelValue" :field="field" :errors="errors" :path="path" :model="model" @update:model-value="update" />
 
     <LayoutField v-else-if="type === 'layout'" :model-value="modelValue" :field="field" :errors="errors" :path="path" :model="model" @update:model-value="update" />
+
+    <IconField v-else-if="type === 'icon'" :id="id" :model-value="modelValue" :field="field" @update:model-value="update" />
 
     <FilePicker v-else-if="type === 'filepicker'" :model-value="modelValue" :field="field" :model="model" @update:model-value="update" />
 

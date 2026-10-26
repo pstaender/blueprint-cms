@@ -342,13 +342,31 @@ class Panel
             "num" => $page->num,
             "url" => $page->url(),
             "type" => $page->type(),
-            "icon" => $page->blueprint()->get("icon") ?? ($page->isHome() ? "home" : null),
+            "icon" => self::pageIcon($page),
             "isHome" => $page->isHome(),
             "canHaveChildren" => $page->isFolder(),
             "statuses" => array_keys($page->blueprint()->get("status")),
             "parent" => $page->parent?->id(),
             "hasChildren" => $page->allChildren()->isNotEmpty(),
         ];
+    }
+
+    /**
+     * The value of the page's icon field, otherwise the icon of its blueprint.
+     */
+    private static function pageIcon(Page $page): ?string
+    {
+        $data = $page->data()->toArray();
+
+        foreach ($page->blueprint()->fields() as $field) {
+            $value = $data[$field->name] ?? null;
+
+            if ($field->type === "icon" && is_string($value) && $value !== "") {
+                return $value;
+            }
+        }
+
+        return $page->blueprint()->get("icon");
     }
 
     private function pageDetails(Page $page): array

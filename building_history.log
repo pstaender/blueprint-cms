@@ -289,3 +289,7 @@
 2026-10-26 – Panel api subresources with ~, no system fields in markdown
 - Subresources in the panel api and panel urls start with `~` (`/pages/{id}/~children`, `/pages/{id}/~files/{filename}`, `/site/~children`), which slugs cannot contain. The reserved slugs `children`/`files` are gone, a page may be called `files` (the docs page reference/blueprints/files was read as the file list of reference/blueprints).
 - Markdown pages (`{slug}.md`, `page.md`) do not store `uid`, `createdAt`, `modifiedAt`: both dates come from the file modification time (PHP has no creation time); a `uid`/`createdAt` in the front matter written by hand is kept. `content:uids` skips them. Converting a page to `md` drops its uid (references fall back to the path).
+
+2026-10-26 – Icon field
+- New field type `icon`: an icon name (datalist of the panel icons), emoji/short text, or an uploaded svg up to 50 KB stored inline as `data:image/svg+xml;base64,…` (`Field::isValidIcon`, `IconField.vue`). The value of a page's first `icon` field overrides its blueprint's icon in the panel (`Panel::pageIcon`).
+- The home page no longer gets a house icon by default, set it in its blueprint or icon field.

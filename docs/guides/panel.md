@@ -32,7 +32,7 @@ Then log in at http://localhost:8000/panel.
 
 - edit the site, pages and users with the fields of their blueprints (⌘/Ctrl + S saves). Saving only sends the changed fields; if someone else has changed one of them in the meantime, the panel asks whether to load their version or overwrite it with yours
 - validation by the blueprint, errors are shown below the fields
-- a nested page tree in the sidebar: listed pages first (sortable by drag & drop), then the groups "Unlisted" and "Drafts"; expandable, the open page is highlighted and its parents are expanded. Pages show the `icon` of their [blueprint](/reference/blueprints/pages#icon), the home page a house unless its blueprint has one
+- a nested page tree in the sidebar: listed pages first (sortable by drag & drop), then the groups "Unlisted" and "Drafts"; expandable, the open page is highlighted and its parents are expanded. Pages show the value of their `icon` field or the `icon` of their [blueprint](/reference/blueprints/pages#icon), see [Icons](#icons)
 - create pages (as drafts), change their status (draft, unlisted, listed), sort, move and delete them. Right click a page in the tree (or its ⋯ button) to move it or change its status; the page settings also have its parent. Every page can be a draft, except the home page
 - page lists (subpages, `pagelist`): select pages with the checkboxes (or all of them) to change their status, move or delete them together
 - page settings: slug, type and storage format (`page.json`, `page.md` or `page.json` + `page.content.md`)
@@ -51,6 +51,16 @@ icon: home                                  # the name of a panel icon
 icon: 👍                                    # any text, usually an emoji
 icon: data:image/svg+xml;base64,PHN2Zy…     # an inline image (data URI)
 ```
+
+A page can override the icon of its blueprint with a field of type `icon`:
+
+```yaml
+fields:
+  icon:
+    type: icon
+```
+
+There the editor types an icon name (suggested while typing) or an emoji, or uploads an svg (smaller than 50 KB), which is stored inline as `data:image/svg+xml;base64,…` in the page's data. The page tree and page lists show this icon, otherwise the blueprint's. Without either a page has no icon, also the home page.
 
 Inline images must be `data:image/…` URIs (other data URIs are ignored). They are used as a mask, so they are drawn in the text color of the panel (light and dark mode); transparent parts stay transparent.
 

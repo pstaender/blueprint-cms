@@ -14,7 +14,7 @@ class Field
 {
     public const TYPES = [
         "blocks", "buttons", "checkboxes", "color", "date", "datetime", "email", "entries", "filelist", "filepicker",
-        "gap", "headline", "hidden", "info", "layout", "line", "link", "list", "multiselect", "number",
+        "gap", "headline", "hidden", "icon", "info", "layout", "line", "link", "list", "multiselect", "number",
         "object", "pagelist", "pagepicker", "password", "radio", "range", "select", "slug", "stats",
         "structure", "tags", "tel", "text", "textarea", "time", "toggle", "toggles", "url", "userpicker",
         "writer",
@@ -38,6 +38,11 @@ class Field
      * Fields whose value is a list, `min`/`max` limit the number of entries.
      */
     public const DATE_TYPES = ["date", "datetime", "time"];
+
+    /**
+     * Max. size of an svg uploaded into an icon field (stored inline as data uri).
+     */
+    public const MAX_ICON_SVG_SIZE = 50 * 1024;
 
     public const LIST_TYPES = [
         "blocks", "checkboxes", "entries", "filepicker", "layout", "multiselect", "pagepicker", "structure",
@@ -176,6 +181,7 @@ class Field
             "date", "datetime" => strtotime($value) !== false,
             "time" => preg_match('/^\d{1,2}:\d{2}(:\d{2})?$/', $value) === 1,
             "select", "radio", "toggles" => $this->staticOptions() === null || in_array($value, $this->staticOptions(), true),
+            "icon" => self::isValidIcon($value),
             default => true,
         };
 
@@ -184,6 +190,24 @@ class Field
         }
 
         return $errors;
+    }
+
+    /**
+     * An icon name or emoji/short text (one line), or an svg as `data:image/svg+xml` uri up to MAX_ICON_SVG_SIZE.
+     */
+    public static function isValidIcon(string $value): bool
+    {
+        if (!str_starts_with($value, "data:")) {
+            return mb_strlen($value) <= 32 && !preg_match('/[\r\n]/', $value);
+        }
+
+        if (!preg_match('#^data:image/svg\+xml(;base64)?,(.*)$#s', $value, $matches)) {
+            return false;
+        }
+
+        $svg = $matches[1] !== "" ? base64_decode($matches[2], true) : rawurldecode($matches[2]);
+
+        return is_string($svg) && strlen($svg) <= self::MAX_ICON_SVG_SIZE && str_contains($svg, "<svg");
     }
 
     /**

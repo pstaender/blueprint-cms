@@ -60,7 +60,7 @@ it("reads and updates the site", function () {
         ->and(array_column($site["children"], "id"))->toContain("about", "home");
 
     $home = array_values(array_filter($site["children"], fn ($page) => $page["isHome"]))[0];
-    // the home page gets the icon of the default blueprint (article), the house is only a fallback
+    // the home page gets the icon of its blueprint (the default one: article), there's no house by default
     expect($home["id"])->toBe("home")->and($home["icon"])->toBe("📝");
 
     [$status, $result] = api($this->app, "PATCH", "/site", ["data" => ["name" => ""]], $csrf);
@@ -393,4 +393,21 @@ it("changes the content format", function () {
         ->and($page["contentFormat"])->toBe("md")
         ->and(is_file("$this->dir/content/about/page.md"))->toBeTrue()
         ->and(api($this->app, "PATCH", "/pages/about", ["contentFormat" => "xml"], $csrf)[0])->toBe(400);
+});
+
+it("shows the value of an icon field instead of the blueprint's icon", function () {
+    file_put_contents("$this->dir/site/blueprints/pages/iconic.yml", "title: Iconic\nicon: page\nfields:\n  icon:\n    type: icon\n");
+    $csrf = login($this->app);
+    api($this->app, "POST", "/site/~children", ["title" => "Iconic", "type" => "iconic"], $csrf);
+
+    expect(api($this->app, "GET", "/pages/iconic")[1]["icon"])->toBe("page");
+
+    $svg = "data:image/svg+xml;base64," . base64_encode('<svg xmlns="http://www.w3.org/2000/svg"><path d="M0 0h1"/></svg>');
+    expect(api($this->app, "PATCH", "/pages/iconic", ["data" => ["icon" => "🚀"]], $csrf)[1]["icon"])->toBe("🚀")
+        ->and(api($this->app, "PATCH", "/pages/iconic", ["data" => ["icon" => $svg]], $csrf)[1]["icon"])->toBe($svg);
+
+    $tooLarge = "data:image/svg+xml;base64," . base64_encode("<svg>" . str_repeat(" ", 51 * 1024) . "</svg>");
+    foreach ([$tooLarge, "data:text/html,<svg>", "data:image/svg+xml,no svg", "a\nb"] as $invalid) {
+        expect(api($this->app, "PATCH", "/pages/iconic", ["data" => ["icon" => $invalid]], $csrf)[0])->toBe(422);
+    }
 });
