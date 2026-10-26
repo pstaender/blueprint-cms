@@ -263,3 +263,6 @@
 - The icon set grew to ~220 icons with the names of Kirby's panel icons (no brand logos), all hand-drawn in the existing line style. Generated from helpers (circles, rounded rects, gear) and reviewed on a contact sheet; `icons.js` keeps the plain path data.
 - An icon is a stroke path or `{d, fill}` with a filled path (circle-filled, star-filled, status-*, grid-*).
 - Blueprint `icon` also accepts `data:image/…` URIs (other data URIs are ignored). They are rendered as a CSS mask in the text color, so foreign svgs fit the theme and can't run scripts.
+
+2026-10-26 – Panel icons in the docs
+- The icon data moved to `panel/src/icons.json` (imported by `icons.js`), so the docs page `docs/reference/panel-icons` can read it: its `page.php` returns the text of `page.md` plus a grid of all icons, rendered with the docs template.
