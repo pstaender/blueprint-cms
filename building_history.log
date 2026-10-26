@@ -241,3 +241,8 @@
   print the message and exit with 1. Unknown/no command prints the usage generated from all commands, site
   commands in an own "User defined commands:" section.
 - `askPassword()` became `Cli::askPassword()`.
+
+2026-10-26 – Page icons in the sidebar
+- The page tree shows the home page first, with a house icon unless its blueprint sets `icon`; other pages show their blueprint's `icon` too (page summaries now contain `isHome`, `icon` falls back to `home` for the home page).
+- `icon` is a panel icon name or any text (emoji), rendered by `PageIcon.vue`. The icon paths moved to `panel/src/icons.js`; `site` is now a globe so the house is unique to the home page.
+- The icons are hand-written line paths (Feather/Lucide style, not copied), documented in the panel guide.

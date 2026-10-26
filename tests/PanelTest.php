@@ -59,6 +59,10 @@ it("reads and updates the site", function () {
         ->and($site["blueprint"]["title"])->toBe("Website")
         ->and(array_column($site["children"], "id"))->toContain("about", "home");
 
+    $home = array_values(array_filter($site["children"], fn ($page) => $page["isHome"]))[0];
+    // the home page gets the icon of the default blueprint (article), the house is only a fallback
+    expect($home["id"])->toBe("home")->and($home["icon"])->toBe("📝");
+
     [$status, $result] = api($this->app, "PATCH", "/site", ["data" => ["name" => ""]], $csrf);
     expect($status)->toBe(422)->and($result["errors"])->toHaveKey("name");
 

@@ -28,6 +28,10 @@ fields:
     type: date
 ```
 
+## icon
+
+`icon` is shown next to the pages of this type in the panel: the name of a panel icon (`icon: image`) or any text like an emoji (`icon: 📝`), see [Panel guide](/guides/panel#icons).
+
 ## default
 
 `default: true` marks the blueprint that is used when no `pages/{type}` blueprint exists. Lookup:

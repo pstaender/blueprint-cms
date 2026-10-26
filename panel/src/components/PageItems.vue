@@ -4,6 +4,7 @@ import { useRouter } from "vue-router";
 import { api } from "../api.js";
 import { useSortable } from "../sortable.js";
 import Icon from "./Icon.vue";
+import PageIcon from "./PageIcon.vue";
 import StatusDot from "./StatusDot.vue";
 import Dialog from "./Dialog.vue";
 
@@ -85,7 +86,7 @@ async function create() {
         <RouterLink :to="`/pages/${page.id}`" class="item-link" draggable="false">
           <span class="item-icon">
             <Icon v-if="page.status === 'listed'" name="grip" class="drag-hint" />
-            <template v-else>{{ page.icon || "" }}</template>
+            <PageIcon v-else :icon="page.icon" />
           </span>
           <span class="item-title">{{ page.title }}</span>
           <span class="item-info">{{ page.type }}</span>

@@ -23,7 +23,7 @@ A JSON REST API under `/panel/api`, implemented in `src/Panel.php`.
 | `GET` | `/pages/{id}` | | `{id, uid, ref, title, status, num, url, type, blueprint, data, breadcrumb, children, files, …}` |
 | `PATCH` | `/pages/{id}` | `{data?, contentFormat?, slug?, type?, status?, num?}` | save fields, change the storage format (`json`, `md`, `json+md`), rename the slug, change the type, status (`draft`, `unlisted`, `listed`) or position |
 | `DELETE` | `/pages/{id}` | | delete the page and its subpages |
-| `GET` | `/pages/{id}/children` | | subpages (summaries), e.g. for the page tree |
+| `GET` | `/pages/{id}/children` | | subpages (summaries `{id, uid, ref, title, status, num, url, type, icon, isHome, hasChildren}`, `icon` is the blueprint's or `home` for the home page), e.g. for the page tree |
 | `POST` | `/pages/{id}/children` | `{title, slug?, type?}` | create a draft |
 | `GET` | `/pages/{id}/files` | | files of the page |
 | `POST` | `/pages/{id}/files?filename=…&template=…` | the file (raw body) | upload a file |

@@ -339,7 +339,8 @@ class Panel
             "num" => $page->num,
             "url" => $page->url(),
             "type" => $page->type(),
-            "icon" => $page->blueprint()->get("icon"),
+            "icon" => $page->blueprint()->get("icon") ?? ($page->isHome() ? "home" : null),
+            "isHome" => $page->isHome(),
             "hasChildren" => $page->allChildren()->isNotEmpty(),
         ];
     }
@@ -354,7 +355,6 @@ class Panel
 
         return [
             ...$this->pageSummary($page),
-            "isHome" => $page->isHome(),
             "isEditable" => $page->isEditable(),
             "contentFormat" => $page->contentFormat(),
             "canHaveChildren" => $page->isFolder(),

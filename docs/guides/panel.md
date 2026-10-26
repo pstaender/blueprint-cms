@@ -32,7 +32,7 @@ Then log in at http://localhost:8000/panel.
 
 - edit the site, pages and users with the fields of their blueprints (⌘/Ctrl + S saves). Saving only sends the changed fields; if someone else has changed one of them in the meantime, the panel asks whether to load their version or overwrite it with yours
 - validation by the blueprint, errors are shown below the fields
-- a nested page tree in the sidebar: listed pages first (sortable by drag & drop), then the groups "Unlisted" and "Drafts"; expandable
+- a nested page tree in the sidebar: the home page first, then listed pages (sortable by drag & drop), then the groups "Unlisted" and "Drafts"; expandable. Pages show the `icon` of their [blueprint](/reference/blueprints/pages#icon), the home page a house unless its blueprint has one
 - create pages (as drafts), change their status (draft, unlisted, listed), sort and delete them
 - page settings: slug, type and storage format (`page.json`, `page.md` or `page.json` + `page.content.md`)
 - `pagelist` fields list subpages (sortable), `pagepicker`/`userpicker` are native selects
@@ -40,6 +40,12 @@ Then log in at http://localhost:8000/panel.
 - drag a file from a file list or from your computer into a textarea: inserts `![name](file.jpg)` (images) or `[name](file.pdf)`; only used files are public, file lists mark unused ones
 - block and layout editors: add, hide, duplicate, sort (drag the handle) and remove blocks and rows
 - admins create, edit and delete users and change roles; everybody else only sees their own account (email, fields, password confirmed with the current password)
+
+## Icons
+
+A blueprint's `icon` is either the name of a panel icon or any text, usually an emoji (`icon: 📝`). Panel icons: `site`, `home`, `page`, `file`, `image`, `blocks`, `user`, `users`, `settings`, `edit`, `upload`, `open`, `copy`, `eye`, `trash`, `check`, … (all in `panel/src/icons.js`).
+
+The icons are simple 24×24 line paths written by hand for Blueprint CMS, in the style of [Feather](https://feathericons.com) and [Lucide](https://lucide.dev) but not copied from them, so no third party license applies.
 
 ## Development
 
