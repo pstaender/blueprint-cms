@@ -33,16 +33,16 @@ function user(?string $emailOrUid = null): ?User
 }
 
 /**
- * Markdown to html (inline html allowed). Relative file links like `![](hello.jpg)` point to the
- * files of the given (or current) page.
+ * Markdown to html. Relative file links like `![](hello.jpg)` point to the files of the given (or current) page.
+ * Inline html is escaped, `html: true` allows it – only for content that panel users can't edit, it may contain scripts.
  */
-function md(?string $markdown, ?Page $page = null): string
+function md(?string $markdown, ?Page $page = null, bool $html = false): string
 {
     if ($markdown === null || $markdown === "") {
         return "";
     }
 
-    return File::resolveUrls(App::instance()->markdown($markdown), $page ?? Page::current());
+    return File::resolveUrls(App::instance()->markdown($markdown, $html), $page ?? Page::current());
 }
 
 /**
@@ -55,6 +55,14 @@ function esc(mixed $value): string
     }
 
     return htmlspecialchars((string) $value, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8");
+}
+
+/**
+ * The nonce that allows an inline script with the `csp` config: <script nonce="<?= csp_nonce() ?>">…</script>
+ */
+function csp_nonce(): string
+{
+    return App::instance()->cspNonce();
 }
 
 /**

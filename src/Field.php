@@ -44,6 +44,11 @@ class Field
      */
     public const MAX_ICON_SVG_SIZE = 50 * 1024;
 
+    /**
+     * Schemes allowed in rendered links (markdown, url and link fields), relative urls are always allowed.
+     */
+    public const SAFE_URL_SCHEMES = ["http", "https", "mailto", "tel", "page", "file"];
+
     public const LIST_TYPES = [
         "blocks", "checkboxes", "entries", "filepicker", "layout", "multiselect", "pagepicker", "structure",
         "tags", "userpicker",
@@ -177,7 +182,7 @@ class Field
 
         $isValid = match ($this->type) {
             "email" => filter_var($value, FILTER_VALIDATE_EMAIL) !== false,
-            "url" => filter_var($value, FILTER_VALIDATE_URL) !== false,
+            "url" => filter_var($value, FILTER_VALIDATE_URL) !== false && self::isSafeUrl($value),
             "date", "datetime" => strtotime($value) !== false,
             "time" => preg_match('/^\d{1,2}:\d{2}(:\d{2})?$/', $value) === 1,
             "select", "radio", "toggles" => $this->staticOptions() === null || in_array($value, $this->staticOptions(), true),
@@ -208,6 +213,21 @@ class Field
         $svg = $matches[1] !== "" ? base64_decode($matches[2], true) : rawurldecode($matches[2]);
 
         return is_string($svg) && strlen($svg) <= self::MAX_ICON_SVG_SIZE && str_contains($svg, "<svg");
+    }
+
+    /**
+     * A relative url or one with a SAFE_URL_SCHEMES scheme, so no `javascript:` or `data:` links.
+     * Browsers ignore leading control characters and spaces and tabs/newlines anywhere, e.g. in `java\tscript:`.
+     */
+    public static function isSafeUrl(string $url): bool
+    {
+        $url = (string) preg_replace('/[\t\n\r]/', "", ltrim($url, "\x00..\x20"));
+
+        if (!preg_match('/^([a-z][a-z0-9+.\-]*):/i', $url, $matches)) {
+            return true;
+        }
+
+        return in_array(strtolower($matches[1]), self::SAFE_URL_SCHEMES, true);
     }
 
     /**

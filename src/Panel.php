@@ -59,6 +59,15 @@ class Panel
 
     private const PUBLIC_HANDLERS = ["login", "passkeyLoginOptions", "passkeyLogin"];
 
+    /**
+     * The built Vue app has no inline scripts. Inline styles come from style bindings, data uris from svg icons.
+     * The panel can't be framed (clickjacking).
+     */
+    public const CSP = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; "
+        . "connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
+
+    private const API_CSP = "default-src 'none'; frame-ancestors 'none'";
+
     public function __construct(private readonly App $app)
     {
     }
@@ -139,11 +148,13 @@ class Panel
 
         $file = $this->app->publicDir() . self::PATH . "/index.html";
 
+        $headers = ["Content-Type" => "text/html; charset=UTF-8", "Content-Security-Policy" => self::CSP, "X-Content-Type-Options" => "nosniff"];
+
         if (!is_file($file)) {
-            return new Response(503, ["Content-Type" => "text/html; charset=UTF-8"], "<h1>The panel is not built yet</h1><p>Run <code>npm install && npm run build</code> in <code>panel/</code>.</p>");
+            return new Response(503, $headers, "<h1>The panel is not built yet</h1><p>Run <code>npm install && npm run build</code> in <code>panel/</code>.</p>");
         }
 
-        return new Response(200, ["Content-Type" => "text/html; charset=UTF-8"], (string) file_get_contents($file));
+        return new Response(200, $headers, (string) file_get_contents($file));
     }
 
     // Session
@@ -779,7 +790,12 @@ class Panel
     {
         return new Response(
             $status,
-            ["Content-Type" => "application/json; charset=UTF-8", "Cache-Control" => "no-store"],
+            [
+                "Content-Type" => "application/json; charset=UTF-8",
+                "Cache-Control" => "no-store",
+                "Content-Security-Policy" => self::API_CSP,
+                "X-Content-Type-Options" => "nosniff",
+            ],
             json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
         );
     }

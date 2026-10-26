@@ -331,3 +331,15 @@
 - `.github/workflows/ci.yml`: Pest on PHP 8.3, 8.4, 8.5 (the versions Pest supports), plus the panel build (Node 24, `npm ci`)
 - `.github/workflows/docs.yml`: on pushes to main, `bin/blueprint static:build _site` renders the docs (the repo's config uses `docs/` as content) and `actions/deploy-pages` publishes them to https://pstaender.github.io/blueprint-cms/
 - GitHub Pages serves the project in a subfolder, so the static site generator got `--base-path=/blueprint-cms`: root-relative `href`/`src`/`action`/`poster` attributes and redirect urls get the prefix (a regex over the rendered html, no template changes); the workflow takes it from `actions/configure-pages` (empty with a custom domain)
+
+2026-10-26 – Security: no html or script links from editors
+- Any panel user (also the `user` role) could put scripts into the site: `md()` allowed inline html, markdown kept `javascript:` links, `list` fields were output as raw html, url/link fields weren't checked. The site and the panel share an origin, so such a script in an admin's browser could read the CSRF token and create an admin.
+- `md()` / `App::markdown()` escape inline html by default, `md($text, html: true)` allows it for content panel users can't edit. Markdown links and images with schemes other than `Field::SAFE_URL_SCHEMES` (http, https, mailto, tel, page, file) or relative urls become `#` (`url_filter_func`); Markdown Extra's `{key=value}` attributes are already ignored without markup.
+- `list` fields are rendered like `textarea` (markdown, escaped html). `url` and `link` field values with unsafe schemes are output as empty strings, `url` validation rejects them (`FILTER_VALIDATE_URL` accepts `javascript://…`).
+- The docs page panel-icons renders its generated svg list itself after the markdown instead of appending html to the content.
+
+2026-10-26 – Content Security Policy
+- Rendered pages (also 404 and 500) get a `Content-Security-Policy` from the config `csp` (directive => sources, merged recursively, `false` removes a directive or the header) and `nosniff`. Default: only the site's own scripts, inline styles allowed (layout block), images `'self' data: https:`, media `'self' https:`, YouTube/Vimeo frames for the video block, `object-src 'none'`, `frame-ancestors 'self'`. `csp_nonce()` returns a per-request nonce, it's added to script-src only if a template used it.
+- The docs (site/config/config.php) allow jsDelivr in script-src and style-src (Fuse.js, speed-highlight and its theme).
+- Files that aren't in `File::INLINE_MIMES` are served as `application/octet-stream`: with `script-src 'self'` an uploaded file detected as javascript could otherwise be included by a `<script src>` (the sandbox csp of the file response doesn't apply to the including page).
+- The panel shell sends `Panel::CSP` (no inline scripts, inline styles for Vue style bindings, `data:`/`blob:` images for icons and previews, `frame-ancestors 'none'` against clickjacking), API responses `default-src 'none'; frame-ancestors 'none'` and `nosniff`. Checked in headless Chrome: docs and panel (login, page editing, users) without violations.

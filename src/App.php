@@ -24,6 +24,7 @@ class App
     private ?ImageOptimizer $imageOptimizer = null;
     /** @var array<string, Plugin> */
     private array $plugins = [];
+    private ?string $cspNonce = null;
 
     public function __construct(public readonly Config $config)
     {
@@ -178,12 +179,14 @@ class App
 
     /**
      * Markdown to html, with Markdown Extra (tables, footnotes, definition lists, …) if `markdown.extra` is enabled.
-     * Without `$markup`, inline html is escaped.
+     * Inline html is escaped unless `$markup` is true (only for trusted content), links with unsafe schemes
+     * (`javascript:`, see Field::isSafeUrl()) point to `#`.
      */
-    public function markdown(string $markdown, bool $markup = true): string
+    public function markdown(string $markdown, bool $markup = false): string
     {
         $parser = $this->config->get("markdown.extra") ? new MarkdownExtra() : new Markdown();
         $parser->no_markup = !$markup;
+        $parser->url_filter_func = fn(string $url) => Field::isSafeUrl($url) ? $url : "#";
 
         return $parser->transform($markdown);
     }
@@ -223,6 +226,7 @@ class App
     {
         $uri = $request->getUri();
         $path = rawurldecode($uri->getPath());
+        $this->cspNonce = null;
 
         try {
             if ($redirect = $this->redirects()->find($path)) {
@@ -248,7 +252,7 @@ class App
                 $html = optimized_content_images($html);
             }
 
-            return new Response(200, ["Content-Type" => "text/html; charset=UTF-8"], $html);
+            return $this->htmlResponse(200, $html);
         } catch (Redirect $redirect) {
             return new Response($redirect->status, ["Location" => $redirect->url]);
         } finally {
@@ -379,13 +383,17 @@ class App
         return $file !== null && (User::current() !== null || $file->isUsed()) ? $file : null;
     }
 
+    /**
+     * Other types are sent as application/octet-stream, so an uploaded file is never loaded as a script
+     * or stylesheet of a page (the csp allows scripts from the site's origin).
+     */
     private function fileResponse(File $file): ResponseInterface
     {
         $mime = $file->mime();
         $isInline = in_array($mime, File::INLINE_MIMES, true);
 
         return new Response(200, [
-            "Content-Type" => $mime,
+            "Content-Type" => $isInline ? $mime : "application/octet-stream",
             "Content-Length" => (string) $file->size(),
             "Content-Disposition" => ($isInline ? "inline" : "attachment") . "; filename=\"" . $file->filename() . "\"",
             "X-Content-Type-Options" => "nosniff",
@@ -401,7 +409,60 @@ class App
             ? $this->capture($file, ["page" => null, "site" => $this->site()])[0]
             : "<h1>404 Not Found</h1>";
 
-        return new Response(404, ["Content-Type" => "text/html; charset=UTF-8"], $html);
+        return $this->htmlResponse(404, $html);
+    }
+
+    /**
+     * A rendered page with the security headers.
+     */
+    private function htmlResponse(int $status, string $html): ResponseInterface
+    {
+        $csp = $this->contentSecurityPolicy();
+
+        return new Response($status, array_filter([
+            "Content-Type" => "text/html; charset=UTF-8",
+            "Content-Security-Policy" => $csp,
+            "X-Content-Type-Options" => "nosniff",
+        ]), $html);
+    }
+
+    /**
+     * A random nonce for inline scripts of the current request: <script nonce="<?= csp_nonce() ?>">.
+     */
+    public function cspNonce(): string
+    {
+        return $this->cspNonce ??= base64_encode(random_bytes(16));
+    }
+
+    /**
+     * The `csp` config as header value, with the nonce in script-src (or default-src) if a template used it.
+     */
+    public function contentSecurityPolicy(): ?string
+    {
+        $directives = $this->config->get("csp");
+
+        if (!is_array($directives)) {
+            return null;
+        }
+
+        $directives = array_filter($directives, fn($sources) => $sources === true || (is_string($sources) && $sources !== ""));
+
+        if ($this->cspNonce !== null) {
+            foreach (["script-src", "default-src"] as $name) {
+                if (is_string($directives[$name] ?? null)) {
+                    $directives["script-src"] = "$directives[$name] 'nonce-$this->cspNonce'";
+                    break;
+                }
+            }
+        }
+
+        $policy = implode("; ", array_map(
+            fn(string $name, string|bool $sources) => $sources === true ? $name : "$name $sources",
+            array_keys($directives),
+            $directives,
+        ));
+
+        return $policy !== "" ? $policy : null;
     }
 
     private static function firstFile(array $files): ?string
@@ -430,6 +491,6 @@ class App
             )
             : "<h1>500 Internal Server Error</h1>";
 
-        return new Response(500, ["Content-Type" => "text/html; charset=UTF-8"], $html);
+        return $this->htmlResponse(500, $html);
     }
 }

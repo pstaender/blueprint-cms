@@ -74,6 +74,8 @@ content/01_blog/
 
 Files are only public when they are used in the content, e.g. as `![hello](hello.jpg)` in a textarea (relative links are resolved to `/blog/hello.jpg`) or picked in a `filepicker`. In the panel, drag a file from a file list (or from your computer) into a textarea or writer field to insert such a link. Links in markdown may also use references: `[About](page://uid)`, `[Report](file://uid)` point to the page or file even after its slug changed (the writer field inserts page links like that).
 
+Images (except svg), audio, video, PDFs and plain text files are shown in the browser, all other files (also svg, html and javascript) are downloads (`application/octet-stream`), so an uploaded file can't run scripts on the site.
+
 ```php
 <?php foreach ($page->files() as $file): ?>
   <img src="<?= esc($file->url()) ?>" alt="<?= $file->alt() ?>">

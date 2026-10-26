@@ -17,6 +17,20 @@ class Config
         "optimizeContentImages" => false,
         // Markdown Extra (tables, footnotes, …) for md() and textarea fields
         "markdown" => ["extra" => false],
+        // Content-Security-Policy of rendered pages: directive => sources (true for directives without sources,
+        // false/null removes one), `"csp" => false` sends none. Templates get a nonce for inline scripts with csp_nonce().
+        "csp" => [
+            "default-src" => "'self'",
+            "script-src" => "'self'",
+            "style-src" => "'self' 'unsafe-inline'",
+            "img-src" => "'self' data: https:",
+            "media-src" => "'self' https:",
+            "frame-src" => "https://www.youtube-nocookie.com https://player.vimeo.com",
+            "object-src" => "'none'",
+            "base-uri" => "'self'",
+            "form-action" => "'self'",
+            "frame-ancestors" => "'self'",
+        ],
     ];
 
     public function __construct(

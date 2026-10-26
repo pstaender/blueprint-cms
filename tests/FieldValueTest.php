@@ -1,6 +1,7 @@
 <?php
 
 use Blueprint\App;
+use Blueprint\Field;
 use Blueprint\FieldValue;
 use Blueprint\Page;
 use Blueprint\User;
@@ -158,4 +159,41 @@ it("uses Markdown Extra only if markdown.extra is enabled", function () {
 
     createApp(BLUEPRINT_PROJECT, ["markdown" => ["extra" => true]]);
     expect(md($table))->toContain("<table>")->toContain('class="footnote');
+});
+
+it("escapes inline html in md() unless html is allowed", function () {
+    expect(md("Hi <script>alert(1)</script>"))->toContain("&lt;script>")->not->toContain("<script>")
+        ->and(md("Hi <b>there</b>", html: true))->toContain("<b>there</b>");
+});
+
+it("neutralizes links with unsafe schemes in markdown", function () {
+    $markdown = "[a](javascript:alert(1)) [b](JaVaScRiPt:alert(1)) [c](data:text/html,x) ![d](vbscript:x) [e](https://example.com) [f](/blog) [g](mailto:a@example.com)";
+
+    foreach ([md($markdown), md($markdown, html: true), (string) new FieldValue("text", $markdown, new Field(["name" => "text", "type" => "textarea"]))] as $html) {
+        expect($html)->not->toContain("javascript")->not->toContain("JaVa")->not->toContain("data:")->not->toContain("vbscript")
+            ->toContain('href="https://example.com"')->toContain('href="/blog"')->toContain("href=\"#\"");
+    }
+});
+
+it("renders list fields as markdown with escaped html", function () {
+    $value = new FieldValue("items", "- one\n- <img src=x onerror=alert(1)>", new Field(["name" => "items", "type" => "list"]));
+
+    expect((string) $value)->toContain("<li>one</li>")->not->toContain("<img");
+});
+
+it("outputs only safe urls of url and link fields", function () {
+    $url = fn(string $value, string $type = "url") => (string) new FieldValue("link", $value, new Field(["name" => "link", "type" => $type]));
+
+    expect($url("javascript:alert(1)"))->toBe("")
+        ->and($url(" \x01java\nscript:alert(1)", "link"))->toBe("")
+        ->and($url("https://example.com/?a=1&b=2"))->toBe("https://example.com/?a=1&amp;b=2")
+        ->and($url("page://abc", "link"))->toBe("page://abc")
+        ->and($url("/blog"))->toBe("/blog");
+});
+
+it("rejects url field values with unsafe schemes", function () {
+    $field = new Field(["name" => "link", "type" => "url"]);
+
+    expect($field->validate("javascript://example.com/%0Aalert(1)"))->not->toBe([])
+        ->and($field->validate("https://example.com"))->toBe([]);
 });

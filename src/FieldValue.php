@@ -89,8 +89,8 @@ class FieldValue implements \IteratorAggregate, \Countable, \JsonSerializable, \
 
         $type = $this->type();
         $output = match ($type) {
-            "textarea", "writer" => File::resolveUrls(self::markdown((string) $this->value), $this->page()),
-            "list" => (string) $this->value,
+            "textarea", "writer", "list" => File::resolveUrls(self::markdown((string) $this->value), $this->page()),
+            "url", "link" => Field::isSafeUrl(self::stringify($this->value)) ? self::stringify($this->value) : "",
             "date", "datetime", "time" => $this->toDate()?->format($this->dateFormat()) ?? "",
             "toggle" => $this->toBool() ? "true" : "false",
             "select", "radio", "toggles", "checkboxes", "multiselect", "tags" => implode(", ", $this->labels()),
