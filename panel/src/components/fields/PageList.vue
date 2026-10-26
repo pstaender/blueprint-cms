@@ -19,5 +19,5 @@ const pages = computed(() => {
 </script>
 
 <template>
-  <PageItems :label="field.label" :pages="pages" :layout="field.layout" :parent="model" :types="types" @sorted="model?.reload?.()" />
+  <PageItems :label="field.label" :pages="pages" :layout="field.layout" :parent="model" :types="types" @changed="model?.reload?.()" />
 </template>

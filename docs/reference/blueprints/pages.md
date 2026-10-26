@@ -52,7 +52,7 @@ The status of a page is defined by its folder name:
 | `unlisted` | `about` | public, not in navigations |
 | `listed` | `01_about` | public, sorted by number |
 
-`status` defines which ones are available in the panel. `true` uses the default label, a string is the label, a map can set `label` and `text`, `false` disables it. `draft` always exists. Without `status`, all three are available.
+`status` defines which ones are available in the panel. `true` uses the default label, a string is the label, a map can set `label` and `text`, `false` disables it, except for `draft`: every page (but the home page) can be taken offline as a draft. Without `status`, all three are available.
 
 ## options
 

@@ -1,7 +1,7 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import { api } from "../api.js";
+import { api, session } from "../api.js";
 import { useEditing } from "../editing.js";
 import { reloadFiles } from "../files.js";
 import ModelForm from "../components/ModelForm.vue";
@@ -11,6 +11,7 @@ import FileList from "../components/fields/FileList.vue";
 import Dialog from "../components/Dialog.vue";
 import Icon from "../components/Icon.vue";
 import StatusDot from "../components/StatusDot.vue";
+import ParentSelect from "../components/ParentSelect.vue";
 
 const props = defineProps({ id: { type: String, required: true } });
 const router = useRouter();
@@ -19,7 +20,7 @@ const loadError = ref(null);
 const dialog = ref(null);
 const busy = ref(false);
 const dialogError = ref(null);
-const settings = ref({ slug: "", type: "", contentFormat: "json" });
+const settings = ref({ slug: "", parent: "", type: "", contentFormat: "json" });
 
 const contentFormats = [
   { value: "json", label: "JSON (recommended)", files: "page.json" },
@@ -70,7 +71,12 @@ async function changeStatus(event) {
 }
 
 async function openSettings() {
-  settings.value = { slug: page.value.path.split("/").pop(), type: page.value.type, contentFormat: page.value.contentFormat };
+  settings.value = {
+    slug: page.value.path.split("/").pop(),
+    parent: page.value.parent ?? "",
+    type: page.value.type,
+    contentFormat: page.value.contentFormat,
+  };
   dialogError.value = null;
   dialog.value = "settings";
   types.value = await api.get("/blueprints/pages");
@@ -99,6 +105,16 @@ async function submitDialog() {
     busy.value = false;
   }
 }
+
+// changes elsewhere (e.g. the status in the page tree), only without unsaved changes
+watch(() => session.changes, async () => {
+  if (isDirty.value || busy.value || saving.value || dialog.value) return;
+  try {
+    load(await api.get(`/pages/${props.id}`));
+  } catch {
+    // moved or deleted, the tree follows a moved page
+  }
+});
 
 onMounted(async () => {
   try {
@@ -140,7 +156,7 @@ onMounted(async () => {
     <p v-if="!page.isEditable" class="notice notice-info">This page is rendered by a php file and can't be edited.</p>
     <ModelForm v-else :blueprint="page.blueprint" :values="values" :errors="errors" :model="model" />
 
-    <PageItems v-if="!fieldTypes.includes('pagelist') && page.children.length" label="Subpages" :pages="page.children" :parent="model" @sorted="reloadChildren" />
+    <PageItems v-if="!fieldTypes.includes('pagelist') && page.children.length" label="Subpages" :pages="page.children" :parent="model" @changed="reloadChildren" />
     <FileList v-if="!fieldTypes.includes('filelist') && page.files.length" :field="{ label: 'Files', type: 'filelist' }" :model="model" />
 
     <Dialog
@@ -159,6 +175,10 @@ onMounted(async () => {
           <span class="field-label">Slug</span>
           <input v-model="settings.slug" class="input" type="text" pattern="[a-z0-9][a-z0-9_\-]*" :disabled="page.isHome" required>
           <small class="field-help">{{ page.url.replace(/[^/]+\/?$/, "") }}{{ settings.slug }}</small>
+        </label>
+        <label v-if="!page.isHome" class="field">
+          <span class="field-label">Parent</span>
+          <ParentSelect v-model="settings.parent" :exclude="[page.id]" />
         </label>
         <label class="field">
           <span class="field-label">Type</span>

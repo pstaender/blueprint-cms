@@ -79,7 +79,7 @@ defineExpose({ show, close });
             :href="item.href"
             target="_blank"
             @click="close"
-          ><Icon :name="item.icon" /> {{ item.label }}</a>
+          ><Icon v-if="item.icon" :name="item.icon" /><span v-else class="icon"></span> {{ item.label }}</a>
           <button
             v-else
             type="button"
@@ -88,7 +88,7 @@ defineExpose({ show, close });
             role="menuitem"
             :aria-disabled="item.disabled ? 'true' : undefined"
             @click="select(item)"
-          ><Icon :name="item.icon" /> {{ item.label }}</button>
+          ><Icon v-if="item.icon" :name="item.icon" /><span v-else class="icon"></span> {{ item.label }}</button>
         </li>
       </template>
     </ul>

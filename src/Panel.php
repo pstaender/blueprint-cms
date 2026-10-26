@@ -255,6 +255,11 @@ class Panel
             $page = $page->changeSlug(self::unreservedSlug((string) $input["slug"]));
         }
 
+        // parent: a page id, null or "" for the root
+        if (array_key_exists("parent", $input)) {
+            $page = $page->changeParent($input["parent"] ? $this->findPage((string) $input["parent"]) : null);
+        }
+
         if (isset($input["status"]) && $input["status"] !== $page->status()) {
             $page = $page->changeStatus((string) $input["status"]);
         }
@@ -341,6 +346,9 @@ class Panel
             "type" => $page->type(),
             "icon" => $page->blueprint()->get("icon") ?? ($page->isHome() ? "home" : null),
             "isHome" => $page->isHome(),
+            "canHaveChildren" => $page->isFolder(),
+            "statuses" => array_keys($page->blueprint()->get("status")),
+            "parent" => $page->parent?->id(),
             "hasChildren" => $page->allChildren()->isNotEmpty(),
         ];
     }
@@ -357,7 +365,6 @@ class Panel
             ...$this->pageSummary($page),
             "isEditable" => $page->isEditable(),
             "contentFormat" => $page->contentFormat(),
-            "canHaveChildren" => $page->isFolder(),
             "blueprint" => $page->blueprint()->toArray(),
             "data" => $page->data()->toArray(),
             "breadcrumb" => $breadcrumb,

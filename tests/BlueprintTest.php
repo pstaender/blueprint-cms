@@ -1,6 +1,7 @@
 <?php
 
 use Blueprint\Blueprint;
+use Blueprint\BlueprintNormalizer;
 use Blueprint\Field;
 use Blueprint\User;
 
@@ -71,7 +72,8 @@ it("extends blueprints and normalizes options and status", function () {
         ->and($blueprint->get("options.changeSlug"))->toBe(["admin" => true, "*" => false])
         ->and($blueprint->get("options.update"))->toBeNull()
         ->and(array_keys($blueprint->get("status")))->toBe(["draft", "listed"])
-        ->and($blueprint->get("status.draft.label"))->toBe("Not ready");
+        ->and($blueprint->get("status.draft.label"))->toBe("Not ready")
+        ->and(array_keys(BlueprintNormalizer::normalizeStatus(["draft" => false, "listed" => true])))->toBe(["draft", "listed"]);
 });
 
 it("loads php blueprints", function () {

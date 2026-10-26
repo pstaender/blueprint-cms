@@ -246,3 +246,9 @@
 - The page tree shows a house icon for the home page unless its blueprint sets `icon`; other pages show their blueprint's `icon` too (page summaries now contain `isHome`, `icon` falls back to `home` for the home page).
 - `icon` is a panel icon name or any text (emoji), rendered by `PageIcon.vue`. The icon paths moved to `panel/src/icons.js`; `site` is now a globe so the house is unique to the home page.
 - The icons are hand-written line paths (Feather/Lucide style, not copied), documented in the panel guide.
+
+2026-10-26 – Moving pages, drafts and bulk actions
+- `Page::changeParent(?Page)` moves a page (with subpages and files) into a folder page or the root; it keeps its status, listed pages get the next number of the new siblings. Not for the home page, not into itself or its subpages, not if the slug exists there. API: `PATCH /pages/{id}` with `parent`.
+- The draft status can't be disabled by a blueprint anymore (`draft: false` is ignored), every page but the home page can be taken offline.
+- Page tree: context menu (right click / ⋯) with "Move to …" and the statuses. Page settings: parent select (`ParentSelect.vue`). Page lists: checkboxes + select all, bulk status / move / delete (one request per page, failures are collected).
+- The page view reloads after changes elsewhere (`session.changes`) when it has no unsaved changes; the tree follows the open page when it is moved.

@@ -174,7 +174,8 @@ class BlueprintNormalizer
         foreach ($defaults as $key => $default) {
             $options = $status[$key] ?? ($key === "draft" ? true : false);
 
-            if ($options === false) {
+            // draft can't be disabled, every page can be taken offline
+            if ($options === false && $key !== "draft") {
                 continue;
             }
 

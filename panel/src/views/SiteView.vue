@@ -37,6 +37,6 @@ onMounted(load);
       </template>
     </ViewHeader>
     <ModelForm :blueprint="site.blueprint" :values="values" :errors="errors" :model="model" />
-    <PageItems v-if="!hasPageList" :pages="site.children" :parent="model" @sorted="reloadChildren" />
+    <PageItems v-if="!hasPageList" :pages="site.children" :parent="model" @changed="reloadChildren" />
   </div>
 </template>

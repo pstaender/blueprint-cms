@@ -100,6 +100,27 @@ it("updates pages and keeps data that isn't in the blueprint", function () {
     expect($status)->toBe(422)->and($result["errors"]["title"])->toBe(["Title is required"]);
 });
 
+it("moves pages to another parent", function () {
+    $csrf = login($this->app);
+    api($this->app, "PATCH", "/pages/about", ["status" => "listed"], $csrf);
+
+    [$status, $page] = api($this->app, "PATCH", "/pages/about", ["parent" => "showcase"], $csrf);
+    expect($status)->toBe(200)
+        ->and($page["id"])->toBe("showcase/about")
+        ->and($page["parent"])->toBe("showcase")
+        ->and($page["status"])->toBe("listed")
+        ->and(is_file("$this->dir/content/showcase/01_about/page.json"))->toBeTrue()
+        ->and(api($this->app, "GET", "/pages/about")[0])->toBe(404);
+
+    expect(api($this->app, "PATCH", "/pages/showcase", ["parent" => "showcase/about"], $csrf)[0])->toBe(400)
+        ->and(api($this->app, "PATCH", "/pages/home", ["parent" => "showcase"], $csrf)[0])->toBe(400);
+
+    [, $page] = api($this->app, "PATCH", "/pages/showcase/about", ["parent" => null, "status" => "draft"], $csrf);
+    expect($page["id"])->toBe("about")
+        ->and($page["parent"])->toBeNull()
+        ->and(is_file("$this->dir/content/.about/page.json"))->toBeTrue();
+});
+
 it("creates, publishes, sorts and deletes pages", function () {
     $csrf = login($this->app);
 

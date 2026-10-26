@@ -475,6 +475,44 @@ class Page
     }
 
     /**
+     * Moves the page with its subpages and files below another folder page (null = root). It keeps its status,
+     * listed pages are appended to the listed pages of the new parent.
+     */
+    public function changeParent(?self $parent): self
+    {
+        if ($this->isHome()) {
+            throw new \LogicException("The home page can't be moved");
+        }
+
+        if ($parent?->root === $this->parent?->root) {
+            return $this;
+        }
+
+        if ($parent !== null && !$parent->isFolder()) {
+            throw new \LogicException("Pages can only be moved into folder pages");
+        }
+
+        if ($parent !== null && str_starts_with("$parent->root/", "$this->root/")) {
+            throw new \LogicException("A page can't be moved into itself or its subpages");
+        }
+
+        $siblings = $parent?->allChildren() ?? App::instance()->site()->allChildren();
+
+        if ($siblings->contains(fn(self $page) => $page->slug === $this->slug)) {
+            throw new \InvalidArgumentException("A page with the slug \"$this->slug\" already exists there");
+        }
+
+        $num = (int) $siblings->max(fn(self $page) => $page->num ?? 0) + 1;
+        $name = match ($this->status()) {
+            "draft" => ".$this->slug",
+            "unlisted" => $this->slug,
+            "listed" => sprintf("%02d_%s", $num, $this->slug),
+        };
+
+        return $this->moveInto($parent?->root ?? App::instance()->contentDir(), $name, $parent);
+    }
+
+    /**
      * Moves a listed page to the given position among its listed siblings and renumbers them.
      */
     public function changeNum(int $position): self
@@ -540,8 +578,13 @@ class Page
 
     private function moveTo(string $name): self
     {
+        return $this->moveInto(dirname($this->root), $name, $this->parent);
+    }
+
+    private function moveInto(string $dir, string $name, ?self $parent): self
+    {
         $extension = $this->isFolder() ? "" : "." . pathinfo($this->root, PATHINFO_EXTENSION);
-        $target = dirname($this->root) . "/$name$extension";
+        $target = "$dir/$name$extension";
 
         if ($target === $this->root) {
             return $this;
@@ -554,7 +597,7 @@ class Page
         rename($this->root, $target);
         App::instance()->refreshSite();
 
-        return self::fromPath($target, $this->parent);
+        return self::fromPath($target, $parent);
     }
 
     private static function deletePath(string $path): void

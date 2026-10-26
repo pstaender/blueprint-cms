@@ -802,6 +802,20 @@ select[multiple].input {
   min-width: 0;
 }
 
+.tree-options {
+  flex-shrink: 0;
+  opacity: 0;
+}
+
+.tree-row:hover .tree-options,
+.tree-options:focus-visible {
+  opacity: 1;
+}
+
+.tree-error {
+  margin: 4px 0;
+}
+
 .tree-title {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1205,6 +1219,29 @@ select[multiple].input {
 
 .item-with-options {
   position: relative;
+}
+
+.item-selectable {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.item-selectable .item-link {
+  flex: 1;
+  min-width: 0;
+}
+
+.item-select {
+  flex-shrink: 0;
+  margin: 0 4px 0 0;
+  vertical-align: -2px;
+}
+
+.bulk-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .item-with-options .item-link {
