@@ -713,7 +713,7 @@ select[multiple].input {
 
 /* inline code: backtick, code, backtick together as one box (like GitHub's .2em .4em) */
 .writer :is(.TMCode, .TMMark_TMCode) {
-  padding: 0.2em 0;
+  padding: 0.1em 0;
   background: var(--color-hover);
 }
 
@@ -764,7 +764,7 @@ select[multiple].input {
 .textarea,
 .writer-editor,
 .code {
-  -webkit-text-stroke: 0.25px currentColor;
+  -webkit-text-stroke: 0.15px currentColor;
 }
 
 .choices {
