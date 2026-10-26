@@ -27,6 +27,15 @@ it("serves folder pages with page.md", function () {
         ->and(body($response))->toContain("A very boring page");
 });
 
+it("renders pages for every request method", function () {
+    foreach (["POST", "PUT", "PATCH", "DELETE"] as $method) {
+        $response = $this->app->request("/imprint", $method);
+
+        expect($response->getStatusCode())->toBe(200)
+            ->and(body($response))->toContain("A very boring page");
+    }
+});
+
 it("redirects pages with subpages to their trailing slash url", function () {
     $response = $this->app->request("/blog?page=2");
 

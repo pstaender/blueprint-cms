@@ -74,7 +74,7 @@
   native as possible, behind a login at /panel, communication via REST API, page rendering independent of the panel.
 - Backend: Panel class with its own small regex route table (page ids contain slashes, so ids use "+" like Kirby:
   /panel/api/pages/blog+newest_entry). App's catch-all route now accepts all methods and only hands /panel to the
-  panel when `panel` is enabled; with panel=false, /panel is a normal page path and non-GET requests get 405.
+  panel when `panel` is enabled; with panel=false, /panel is a normal page path and non-GET requests get 405 (since 2026-10-26: 404, pages answer every method).
 - Auth: password_hash in users.json, session cookie (HttpOnly, SameSite=Lax), session id regenerated on login, a
   CSRF token per session required as X-CSRF-Token header for changes. No sign up/installer: users are created with
   bin/blueprint (avoids an unauthenticated "create first admin" endpoint). Failed logins are delayed slightly.
@@ -354,3 +354,6 @@
 2026-10-26 – Symfony VarDumper
 - `dd()` and `dump()` come from `symfony/var-dumper` (a runtime dependency, templates use them): collapsible html dumps in the browser, colored output in the cli, `->dump()`/`->dd()` of collections work too. Composer loads the dependency's functions first, so symfony's `dd()` wins (unlike the own one it doesn't discard the output buffers, html rendered before the `dd()` call is sent too). The own `dd()` (var_dump in `<pre>`) stays as a fallback and `Dumper` is only registered when the VarDumper class exists: a website that symlinks the package into its vendor folder without installing its new dependencies would otherwise fail at `App::create`. The dump's inline script isn't blocked by the CSP, since `dd()` exits before the response headers are sent.
 - `symfony/var-dumper: *` (the version illuminate/support works with). `Dumper` (registered in `App::create`) gives the html dumps an own light/dark theme (css variables, `prefers-color-scheme`) instead of Symfony's dark one, the cli keeps the `CliDumper`.
+
+2026-10-26 – Pages answer every request method
+- The 405 for non-GET/HEAD page requests is gone: pages render for POST, PUT, PATCH and DELETE too (the methods the router registers), so a page's php file or template can handle a form via `$_POST`. Rendering a page has no side effects by itself; a template that changes something on POST is responsible for its own CSRF check (the panel keeps its own routing, session check and `X-CSRF-Token`).

@@ -200,6 +200,51 @@ textarea {
   color: var(--color-text-dimmed);
 }
 
+.icon-choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+  gap: 4px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.icon-choice input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.icon-choice-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  color: var(--color-text-dimmed);
+  cursor: pointer;
+}
+
+.icon-choice-tile:hover {
+  background: var(--color-hover);
+  color: var(--color-text);
+}
+
+.icon-choice input:checked + .icon-choice-tile {
+  border-color: var(--color-accent);
+  color: var(--color-text);
+}
+
+.icon-choice input:focus-visible + .icon-choice-tile {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 1px;
+}
+
+.icon-choice-name {
+  color: var(--color-text-dimmed);
+  font-size: 13px;
+}
+
 .text-icon {
   display: inline-flex;
   justify-content: center;
@@ -231,10 +276,14 @@ textarea {
   flex-direction: column;
   gap: 20px;
   height: 100vh;
-  overflow-y: auto;
+  overflow: hidden;
   padding: 16px 12px;
   background: var(--color-sidebar);
   border-right: 1px solid var(--color-border);
+}
+
+.sidebar > * {
+  flex-shrink: 0;
 }
 
 .sidebar-brand {
@@ -258,6 +307,49 @@ textarea {
   font-size: 12px;
   font-weight: 500;
   color: var(--color-text-dimmed);
+}
+
+/* the page tree takes the remaining height and scrolls */
+.sidebar .sidebar-pages {
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  margin: 0 -12px;
+  padding: 0 12px;
+}
+
+.sidebar-pages .sidebar-heading {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: 0;
+  padding: 0 0 4px;
+  background: var(--color-sidebar);
+}
+
+.sidebar-heading-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 2px 4px;
+  border: 0;
+  border-radius: var(--radius);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sidebar-heading-toggle:hover {
+  background: var(--color-hover);
+  color: var(--color-text);
+}
+
+.sidebar-heading-toggle .icon {
+  width: 12px;
+  height: 12px;
 }
 
 .sidebar-link {
@@ -1442,6 +1534,7 @@ select[multiple].input {
   .sidebar {
     position: static;
     height: auto;
+    overflow: visible;
     border-right: 0;
     border-bottom: 1px solid var(--color-border);
   }

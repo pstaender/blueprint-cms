@@ -219,10 +219,6 @@ class App
             return (new Panel($this))->handle($request);
         }
 
-        if (!in_array($request->getMethod(), ["GET", "HEAD"], true)) {
-            return new Response(405, ["Allow" => "GET, HEAD"]);
-        }
-
         return $this->handlePage($request);
     }
 

@@ -249,7 +249,7 @@ it("doesn't handle /panel when the panel is disabled", function () {
     $app = createApp($this->dir, ["panel" => false]);
 
     expect($app->request("/panel")->getStatusCode())->toBe(404)
-        ->and($app->request("/panel/api/session", "POST")->getStatusCode())->toBe(405)
+        ->and($app->request("/panel/api/session", "POST")->getStatusCode())->toBe(404)
         ->and($app->request("/about")->getStatusCode())->toBe(200);
 });
 

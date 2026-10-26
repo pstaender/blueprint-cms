@@ -57,7 +57,7 @@ $field->validate("x");   // ["Date is not a valid date value"]
 | `datetime` | date and time (same as `date` with `time: true`) | `display`, `min`, `max` |
 | `time` | time | `display`, `step` |
 | `color` | color | `format`, `alpha`, `options` |
-| `icon` | panel icon name, emoji or an uploaded svg (< 50 KB, stored as `data:image/svg+xml;base64,…`); overrides the blueprint's icon of the page in the panel | |
+| `icon` | panel icon name (typed or picked in a dialog), emoji or an uploaded svg (< 50 KB, stored as `data:image/svg+xml;base64,…`); overrides the blueprint's icon of the page in the panel | |
 
 ## Choices
 

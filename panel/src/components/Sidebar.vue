@@ -1,7 +1,28 @@
 <script setup>
+import { ref, watch } from "vue";
 import { session, logout } from "../api.js";
 import Icon from "./Icon.vue";
 import PageTree from "./PageTree.vue";
+
+// The page tree scrolls on its own (brand, site/users and the footer stay visible) and can be collapsed.
+const STORAGE_KEY = "blueprint.sidebar.pagesCollapsed";
+const pagesCollapsed = ref(readCollapsed());
+
+function readCollapsed() {
+  try {
+    return localStorage.getItem(STORAGE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+watch(pagesCollapsed, (collapsed) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, collapsed ? "1" : "0");
+  } catch {
+    // the sidebar still works without storage
+  }
+});
 </script>
 
 <template>
@@ -15,9 +36,13 @@ import PageTree from "./PageTree.vue";
       <RouterLink v-if="session.user?.role === 'admin'" to="/users" class="sidebar-link"><Icon name="users" /> Users</RouterLink>
     </nav>
 
-    <nav class="sidebar-nav">
-      <h3 class="sidebar-heading">Pages</h3>
-      <PageTree />
+    <nav class="sidebar-nav sidebar-pages">
+      <h3 class="sidebar-heading">
+        <button type="button" class="sidebar-heading-toggle" :aria-expanded="!pagesCollapsed" @click="pagesCollapsed = !pagesCollapsed">
+          <Icon name="chevron" :class="{ 'icon-open': !pagesCollapsed }" /> Pages
+        </button>
+      </h3>
+      <PageTree v-show="!pagesCollapsed" />
     </nav>
 
     <footer class="sidebar-footer">
