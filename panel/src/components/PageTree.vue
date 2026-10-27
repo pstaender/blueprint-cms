@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, onMounted, nextTick } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { api, session } from "../api.js";
 import { useSortable } from "../sortable.js";
@@ -11,7 +11,7 @@ import ParentSelect from "./ParentSelect.vue";
 
 // The page tree of the sidebar: listed pages (sortable), then unlisted pages and drafts in their own groups.
 // Pages are expandable, the state is remembered in localStorage. The open page (also while one of its files is open)
-// is highlighted, its parents are expanded. Right click a page to move it or change its status.
+// is highlighted, its parents are expanded (the sidebar scrolls it into view). Right click a page to move it or change its status.
 const props = defineProps({
   parentId: { type: String, default: null },
   depth: { type: Number, default: 0 },
@@ -46,10 +46,9 @@ function store(next) {
   expanded.value = next;
 }
 
-const root = ref(null);
 const openId = computed(() => route.params.id ?? null);
 
-// expands the parents of the open page and scrolls it into view
+// expands the parents of the open page
 watch(openId, (id) => {
   if (!id) return;
   const parts = id.split("/");
@@ -57,12 +56,6 @@ watch(openId, (id) => {
   const current = readExpanded();
   if (parents.some((parent) => !current.includes(parent))) store([...new Set([...current, ...parents])]);
 }, { immediate: true });
-
-watch([openId, pages], async () => {
-  if (!pages.value.some((page) => page.id === openId.value)) return;
-  await nextTick();
-  root.value?.querySelector(".tree-link-open")?.scrollIntoView({ block: "nearest" });
-});
 
 async function load() {
   pages.value = props.parentId ? await api.get(`/pages/${props.parentId}/~children`) : (await api.get("/site")).children;
@@ -135,7 +128,7 @@ watch(() => session.changes, load);
 </script>
 
 <template>
-  <div ref="root" class="tree" :class="{ 'tree-nested': depth > 0 }">
+  <div class="tree" :class="{ 'tree-nested': depth > 0 }">
     <template v-for="group in groups" :key="group.status">
       <h4 v-if="group.label" class="tree-group" :style="{ paddingLeft: `${depth * 14 + 24}px` }">{{ group.label }}</h4>
       <ul class="tree-list">

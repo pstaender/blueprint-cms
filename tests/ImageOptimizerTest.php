@@ -43,12 +43,12 @@ it("replaces local images in html", function () {
         ->toContain('<img src="/nope.png">');
 })->skip(!ImageOptimizer::isSupported(), "no AVIF support");
 
-it("optimizes all images of rendered pages with optimizeContentImages", function () {
+it("optimizes all images of rendered pages with content.optimizeImages", function () {
     file_put_contents("$this->dir/site/templates/builder.php", '<?= $page->body() ?>');
 
     expect(body($this->app->request("/builder")))->toContain('src="/builder/photo.png"');
 
-    $app = createApp($this->dir, ["optimizeContentImages" => true]);
+    $app = createApp($this->dir, ["content" => ["optimizeImages" => true]]);
 
     expect(body($app->request("/builder")))->toMatch('#src="/media/images/[0-9a-f]{64}/photo\.avif"#');
 })->skip(!ImageOptimizer::isSupported(), "no AVIF support");

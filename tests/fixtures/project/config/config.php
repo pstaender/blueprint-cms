@@ -1,1 +1,1 @@
-<?php return ["custom" => "project"];
+<?php return ["custom" => "project", "content" => ["allowPHP" => true]];

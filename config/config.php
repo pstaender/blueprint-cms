@@ -1,7 +1,12 @@
 <?php
 
 return [
-    "optimizeContentImages" => true,
     "contentFolder" => PROJECT_DIR . '/docs',
+    "content" => [
+        "optimizeImages" => true,
+        "allowPHP" => [
+            "edit" => ["admin"],
+        ],
+    ],
     "markdown" => ["extra" => true],
 ];

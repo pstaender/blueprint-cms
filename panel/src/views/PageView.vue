@@ -12,6 +12,7 @@ import Dialog from "../components/Dialog.vue";
 import Icon from "../components/Icon.vue";
 import StatusDot from "../components/StatusDot.vue";
 import ParentSelect from "../components/ParentSelect.vue";
+import CodeEditor from "../components/CodeEditor.vue";
 
 const props = defineProps({ id: { type: String, required: true } });
 const router = useRouter();
@@ -29,15 +30,71 @@ const contentFormats = [
 ];
 const types = ref([]);
 
-const { values, errors, message, saving, isDirty, conflict, reset, submit, overwrite, loadLatest } = useEditing(async (body) => {
+const form = useEditing(async (body) => {
   load(await api.patch(`/pages/${props.id}`, body));
   // saving can change which files are used (public)
   await reloadFiles(props.id);
 }, async () => load(await api.get(`/pages/${props.id}`)));
+const { values, errors } = form;
+
+// the page's php file (with `content.allowPHP.edit`), checked for syntax errors before it's saved
+const syntaxError = ref(null);
+let forceSave = false;
+const code = useEditing(async (body) => {
+  const force = forceSave;
+  forceSave = false;
+  try {
+    // without `modifiedAt` (overwrite) there's no hash, so the file is overwritten
+    const updated = await api.put(`/pages/${props.id}/~php`, { code: body.data.code, hash: body.modifiedAt, force });
+    page.value = { ...page.value, php: updated.php };
+    code.reset({ code: updated.php.code }, updated.php.hash);
+    syntaxError.value = null;
+  } catch (e) {
+    syntaxError.value = e.body?.syntaxError ?? null;
+    throw e;
+  }
+}, async () => load(await api.get(`/pages/${props.id}`)));
+
+// the error belongs to the code that was saved, editing it (or closing the notice) removes it
+function dismissSyntaxError() {
+  if (!syntaxError.value) return;
+  syntaxError.value = null;
+  code.message.value = null;
+}
+
+watch(() => code.values.value.code, dismissSyntaxError);
+
+function saveDespiteSyntaxError() {
+  forceSave = true;
+  code.submit();
+}
+
+const isDirty = computed(() => form.isDirty.value || code.isDirty.value);
+const saving = computed(() => form.saving.value || code.saving.value);
+// a syntax error has its own notice
+const message = computed(() => (syntaxError.value ? null : code.message.value) ?? form.message.value);
+const conflict = computed(() => code.conflict.value ?? form.conflict.value);
+
+function save() {
+  code.submit();
+  form.submit();
+}
+
+function discard() {
+  form.reset(page.value.data, page.value.data.modifiedAt);
+  code.reset({ code: page.value.php?.code ?? "" }, page.value.php?.hash);
+  form.message.value = code.message.value = null;
+  syntaxError.value = null;
+}
+
+function overwrite() {
+  if (code.conflict.value) code.overwrite();
+  if (form.conflict.value) form.overwrite();
+}
 
 function load(data) {
   page.value = data;
-  reset(data.data, data.data.modifiedAt);
+  discard();
 }
 
 async function reloadChildren() {
@@ -63,7 +120,7 @@ async function changeStatus(event) {
     if (updated.id !== props.id) router.replace(`/pages/${updated.id}`);
     load(updated);
   } catch (e) {
-    message.value = { type: "negative", text: e.message };
+    form.message.value = { type: "negative", text: e.message };
     event.target.value = page.value.status;
   } finally {
     busy.value = false;
@@ -135,10 +192,10 @@ onMounted(async () => {
       :saving="saving"
       :message="message"
       :conflict="conflict"
-      @save="submit"
-      @discard="reset(page.data, page.data.modifiedAt)"
+      @save="save"
+      @discard="discard"
       @overwrite="overwrite"
-      @reload="loadLatest"
+      @reload="form.loadLatest"
     >
       <template #actions>
         <a class="button" :href="page.url" target="_blank"><Icon name="open" /> Open</a>
@@ -153,8 +210,22 @@ onMounted(async () => {
       </template>
     </ViewHeader>
 
-    <p v-if="!page.isEditable" class="notice notice-info">This page is rendered by a php file and can't be edited.</p>
-    <ModelForm v-else :blueprint="page.blueprint" :values="values" :errors="errors" :model="model" />
+    <p v-if="syntaxError" class="notice notice-negative syntax-error">
+      <span>Line {{ syntaxError.line }}: <code>{{ syntaxError.message }}</code></span>
+      <button type="button" class="button button-small" :disabled="saving" @click="saveDespiteSyntaxError">Save anyway</button>
+      <button type="button" class="icon-button syntax-error-close" title="Close" @click="dismissSyntaxError"><Icon name="close" /></button>
+    </p>
+    <ModelForm v-if="page.isEditable" :blueprint="page.blueprint" :values="values" :errors="errors" :model="model" />
+    <div v-if="page.php?.canEdit" class="field code-field">
+      <span id="php-editor-label" class="field-label">PHP <small class="field-help">{{ page.php.file }}</small></span>
+      <CodeEditor
+        v-model="code.values.value.code"
+        labelledby="php-editor-label"
+        :error-line="syntaxError?.line"
+        :error-message="syntaxError?.message"
+      />
+    </div>
+    <p v-else-if="!page.isEditable" class="notice notice-info">This page is rendered by a php file and can't be edited.</p>
 
     <!-- pages rendered by a php file have no form for their subpages field -->
     <PageItems v-if="!page.isEditable && page.children.length" label="Subpages" :pages="page.children" :parent="model" @changed="reloadChildren" />

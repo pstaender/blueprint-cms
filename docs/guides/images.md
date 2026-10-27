@@ -9,7 +9,7 @@ Content images (files of pages) can be converted to [AVIF](https://en.wikipedia.
 ```php
 <?php // config/config.php
 return [
-    "optimizeContentImages" => true,
+    "content" => ["optimizeImages" => true],
 ];
 ```
 

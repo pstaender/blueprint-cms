@@ -60,6 +60,7 @@ export const api = {
   get: (path) => request("GET", path),
   post: (path, data) => request("POST", path, data ?? {}),
   patch: (path, data) => request("PATCH", path, data ?? {}),
+  put: (path, data) => request("PUT", path, data ?? {}),
   delete: (path) => request("DELETE", path),
   // the request body is the file itself
   upload: (pageId, file, template) => {

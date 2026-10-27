@@ -411,3 +411,53 @@ it("shows the value of an icon field instead of the blueprint's icon", function 
         expect(api($this->app, "PATCH", "/pages/iconic", ["data" => ["icon" => $invalid]], $csrf)[0])->toBe(422);
     }
 });
+
+describe("php files in the content folder", function () {
+    beforeEach(function () {
+        file_put_contents("$this->dir/content/script.php", "<?php echo 'old';");
+        User::create("php-admin@example.com", "secret-password", "admin");
+    });
+
+    it("are only editable by the roles and users in content.allowPHP.edit", function () {
+        $app = createApp($this->dir, ["content" => ["allowPHP" => ["edit" => ["admin"]]]]);
+        $csrf = login($app);
+        [, $page] = api($app, "GET", "/pages/script");
+
+        expect($page["php"])->toBe(["file" => "script.php", "canEdit" => false, "code" => null, "hash" => null])
+            ->and($page["icon"])->toBe("php")
+            ->and(api($app, "PUT", "/pages/script/~php", ["code" => "<?php echo 'new';"], $csrf)[0])->toBe(403);
+
+        $app = createApp($this->dir, ["content" => ["allowPHP" => ["edit" => ["panel@example.com"]]]]);
+        $csrf = login($app);
+        [, $page] = api($app, "GET", "/pages/script");
+        [$status] = api($app, "PUT", "/pages/script/~php", ["code" => "<?php echo 'new';", "hash" => $page["php"]["hash"]], $csrf);
+
+        expect($page["php"]["code"])->toBe("<?php echo 'old';")
+            ->and($status)->toBe(200)
+            ->and(body($app->request("/script")))->toBe("new");
+
+        $app = createApp($this->dir, ["content" => ["allowPHP" => true]]);
+        $csrf = login($app, "php-admin@example.com");
+
+        expect(api($app, "PUT", "/pages/script/~php", ["code" => "<?php"], $csrf)[0])->toBe(403);
+    });
+
+    it("checks the syntax before saving, force saves anyway", function () {
+        $app = createApp($this->dir, ["content" => ["allowPHP" => ["edit" => ["editor"]]]]);
+        $csrf = login($app);
+        [$status, $body] = api($app, "PUT", "/pages/script/~php", ["code" => "<?php\necho 'broken'\necho 1;"], $csrf);
+
+        expect($status)->toBe(422)
+            ->and($body["syntaxError"]["line"])->toBe(3)
+            ->and(file_get_contents("$this->dir/content/script.php"))->toBe("<?php echo 'old';")
+            ->and(api($app, "PUT", "/pages/script/~php", ["code" => "<?php\necho 'broken'", "force" => true], $csrf)[0])->toBe(200)
+            ->and(file_get_contents("$this->dir/content/script.php"))->toBe("<?php\necho 'broken'");
+    });
+
+    it("rejects changes to a file that has changed in the meantime", function () {
+        $app = createApp($this->dir, ["content" => ["allowPHP" => ["edit" => ["editor"]]]]);
+        $csrf = login($app);
+
+        expect(api($app, "PUT", "/pages/script/~php", ["code" => "<?php", "hash" => sha1("other")], $csrf)[0])->toBe(409);
+    });
+});

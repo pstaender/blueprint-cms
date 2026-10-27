@@ -13,8 +13,13 @@ class Config
         "panel" => true,
         "contentFolder" => "content",
         "siteFolder" => "site",
-        // converts all local <img> of rendered pages to AVIF, see ImageOptimizer
-        "optimizeContentImages" => false,
+        "content" => [
+            // converts all local <img> of rendered pages to AVIF, see ImageOptimizer
+            "optimizeImages" => false,
+            // php files in the content folder (`page.php`, `{slug}.php`) are only executed if enabled: `true` or
+            // `["edit" => ["admin", "jane@example.com"]]` (roles or user emails/names that may edit them in the panel)
+            "allowPHP" => false,
+        ],
         // Markdown Extra (tables, footnotes, …) for md() and textarea fields
         "markdown" => ["extra" => false],
         // Content-Security-Policy of rendered pages: directive => sources (true for directives without sources,

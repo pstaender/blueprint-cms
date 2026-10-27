@@ -23,6 +23,7 @@ it("sends the content security policy with pages", function () {
 
 it("adds the nonce of csp_nonce() to script-src", function () {
     file_put_contents("$this->dir/content/inline.php", '<script nonce="<?= csp_nonce() ?>">1</script>');
+    $this->app = createApp($this->dir, ["content" => ["allowPHP" => true]]);
     $response = $this->app->request("/inline");
     preg_match('/nonce="([^"]+)"/', body($response), $matches);
 

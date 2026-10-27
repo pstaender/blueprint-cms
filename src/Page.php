@@ -11,6 +11,7 @@ use Illuminate\Support\Collection;
  * or a single {slug}.md / {slug}.php file.
  *
  * Folder/file names: `01_blog` → num 1, slug "blog"; a leading `.` marks a draft.
+ * php files are ignored unless `content.allowPHP` is enabled.
  */
 class Page
 {
@@ -62,7 +63,7 @@ class Page
                 return null;
             }
         } elseif (is_file($path) && in_array(pathinfo($name, PATHINFO_EXTENSION), self::FILE_EXTENSIONS, true)) {
-            if (in_array($name, self::CONTENT_FILES, true)) {
+            if (in_array($name, self::CONTENT_FILES, true) || (str_ends_with($name, ".php") && !self::phpFilesEnabled())) {
                 return null;
             }
             $name = pathinfo($name, PATHINFO_FILENAME);
@@ -112,7 +113,7 @@ class Page
     private static function folderHasContent(string $dir): bool
     {
         foreach (self::CONTENT_FILES as $file) {
-            if (is_file("$dir/$file")) {
+            if (is_file("$dir/$file") && ($file !== "page.php" || self::phpFilesEnabled())) {
                 return true;
             }
         }
@@ -192,13 +193,53 @@ class Page
     }
 
     /**
+     * `content.allowPHP` is `true` or an array (with the `edit` permissions).
+     */
+    public static function phpFilesEnabled(): bool
+    {
+        $value = App::instance()->config->get("content.allowPHP");
+
+        return $value === true || is_array($value);
+    }
+
+    /**
      * A page.php (or {slug}.php) renders the page itself instead of a template.
      */
     public function phpFile(): ?string
     {
         $file = $this->isFolder() ? "$this->root/page.php" : $this->root;
 
-        return str_ends_with($file, ".php") && is_file($file) ? $file : null;
+        return self::phpFilesEnabled() && str_ends_with($file, ".php") && is_file($file) ? $file : null;
+    }
+
+    /**
+     * Overwrites the page's php file, e.g. from the panel. Check the code with phpSyntaxError() before.
+     */
+    public function updatePhp(string $code): void
+    {
+        $file = $this->phpFile() ?? throw new \LogicException("The page \"{$this->id()}\" has no php file");
+
+        if (file_put_contents($file, $code, LOCK_EX) === false) {
+            throw new \RuntimeException("Can't write $file");
+        }
+
+        if (function_exists("opcache_invalidate")) {
+            opcache_invalidate($file, true);
+        }
+    }
+
+    /**
+     * Parses the code without executing it (like `php -l`), returns the syntax error or null.
+     */
+    public static function phpSyntaxError(string $code): ?\ParseError
+    {
+        try {
+            token_get_all($code, TOKEN_PARSE);
+
+            return null;
+        } catch (\ParseError $error) {
+            return $error;
+        }
     }
 
     public const DEFAULT_TYPE = "page";

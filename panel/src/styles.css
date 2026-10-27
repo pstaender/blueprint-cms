@@ -23,6 +23,15 @@
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.02);
   --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
+  /* syntax highlighting of the code editor (Tomorrow) */
+  --code-keyword: #8959a8;
+  --code-string: #718c00;
+  --code-number: #f5871f;
+  --code-comment: #8e908c;
+  --code-variable: #c82829;
+  --code-function: #4271ae;
+  --code-class: #c99e00;
+  --code-tag: #3e999f;
   color-scheme: light;
 }
 
@@ -44,6 +53,14 @@
     --color-negative: #f08080;
     --color-info-bg: #1f3247;
     --color-info: #8ab4e0;
+    --code-keyword: #b294bb;
+    --code-string: #b5bd68;
+    --code-number: #de935f;
+    --code-comment: #969896;
+    --code-variable: #cc6666;
+    --code-function: #81a2be;
+    --code-class: #f0c674;
+    --code-tag: #8abeb7;
     color-scheme: dark;
   }
 }
@@ -162,6 +179,8 @@ textarea {
 
 .icon-fill {
   fill: currentColor;
+  /* inner subpaths are holes, e.g. the letters of the php icon */
+  fill-rule: evenodd;
   stroke: none;
 }
 
@@ -374,6 +393,11 @@ textarea {
 }
 
 .sidebar-link.router-link-active,
+/* not hidden below the sticky "Pages" heading when it's scrolled into view */
+.sidebar-pages .tree-link {
+  scroll-margin-top: 32px;
+}
+
 .sidebar-link.tree-link-open {
   background: var(--color-surface);
   box-shadow: var(--shadow);
@@ -1682,4 +1706,82 @@ select[multiple].input {
 
 .conflict span {
   flex: 1;
+}
+
+/* Code editor (php files in the content folder) */
+
+/* below the fields of pages that have both */
+.columns + .code-field {
+  margin-top: 24px;
+}
+
+.code-editor {
+  height: calc(100vh - 200px);
+  min-height: 300px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.code-editor .cm-editor {
+  height: 100%;
+  font-size: 13px;
+}
+
+.code-editor .cm-editor.cm-focused {
+  outline: none;
+}
+
+.code-editor:focus-within {
+  border-color: var(--color-focus);
+}
+
+.code-editor .cm-scroller {
+  font-family: var(--font-mono);
+  line-height: 1.6;
+}
+
+.code-editor .cm-gutters {
+  background: var(--color-background);
+  border-right: 1px solid var(--color-border);
+  color: var(--color-text-dimmed);
+}
+
+.code-editor .cm-activeLine,
+.code-editor .cm-activeLineGutter {
+  background: var(--color-hover);
+}
+
+.code-editor .cm-cursor {
+  border-left-color: var(--color-text);
+}
+
+.code-editor .cm-tooltip,
+.code-editor .cm-panels {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+.code-editor-loading {
+  margin: 0;
+  padding: 12px;
+  color: var(--color-text-dimmed);
+}
+
+.syntax-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.syntax-error-close {
+  margin-left: auto;
+}
+
+.syntax-error code {
+  font-family: var(--font-mono);
 }

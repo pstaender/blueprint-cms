@@ -19,7 +19,18 @@ Templates get `$page` and `$site`. Field methods like `$page->date()` return val
 
 ## Page php files
 
-A `page.php` (or `{slug}.php`) renders the page itself:
+php files in the content folder are ignored unless they are enabled in the config:
+
+```php
+<?php // config/config.php
+return [
+    "content" => [
+        "allowPHP" => true,
+    ],
+];
+```
+
+A `page.php` (or `{slug}.php`) then renders the page itself:
 
 ```php
 <?php // content/hello/page.php ?>
@@ -32,6 +43,10 @@ If it returns an array, the array is merged into the page data and the page is r
 <?php
 return ["title" => "Computed title", "template" => "article"];
 ```
+
+### Editing in the panel
+
+With `"allowPHP" => ["edit" => ["admin", "jane@example.com"]]` these roles and users can edit the php files in the panel: the page shows a php editor (syntax highlighting, Tab indents) instead of its fields. Entries that aren't a role are users, matched by email or `name`. Before saving, the code is checked for syntax errors (like `php -l`); the error and its line are shown and the file can still be saved with *Save anyway*. Anyone who can edit them can run any code on the server, so only allow trusted users.
 
 ## Blocks
 

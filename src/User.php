@@ -232,6 +232,33 @@ class User
         return Blueprint::load("users/" . $this->role(), "users/user", "users/default");
     }
 
+    /**
+     * `content.allowPHP.edit` lists roles and users (email or `name`) that may edit php files in the content folder.
+     * Entries that aren't a role are users.
+     */
+    public function canEditPhpFiles(): bool
+    {
+        $allowed = App::instance()->config->get("content.allowPHP.edit");
+
+        if (!Page::phpFilesEnabled() || !is_array($allowed)) {
+            return false;
+        }
+
+        $roles = self::roles();
+
+        foreach ($allowed as $entry) {
+            $isAllowed = in_array($entry, $roles, true)
+                ? $entry === $this->role()
+                : in_array($entry, [$this->email(), $this->data->name], true);
+
+            if ($isAllowed) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function email(): string
     {
         return (string) $this->data->email;

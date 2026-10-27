@@ -255,7 +255,7 @@ class App
 
             $html = $this->renderPage($page);
 
-            if ($this->config->get("optimizeContentImages")) {
+            if ($this->config->get("content.optimizeImages")) {
                 $html = optimized_content_images($html);
             }
 

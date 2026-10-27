@@ -23,6 +23,14 @@ it("lets page php files handle every request method", function () {
     }
 });
 
+it("ignores php files in the content folder unless content.allowPHP is enabled", function () {
+    $app = createApp(FIXTURE_PROJECT, ["content" => ["allowPHP" => false]]);
+
+    expect($app->request("/echo")->getStatusCode())->toBe(404)
+        ->and($app->request("/data-page")->getStatusCode())->toBe(404)
+        ->and(createApp(FIXTURE_PROJECT, ["content" => ["allowPHP" => ["edit" => []]]])->request("/echo")->getStatusCode())->toBe(200);
+});
+
 it("redirects from templates with redirect()", function () {
     $response = $this->app->request("/go");
 

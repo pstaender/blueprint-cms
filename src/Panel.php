@@ -42,6 +42,7 @@ class Panel
         ["PATCH", "#^/pages/(.+?)/~files/([^/]+)$#", "updateFile"],
         ["PUT", "#^/pages/(.+?)/~files/([^/]+)$#", "replaceFile"],
         ["DELETE", "#^/pages/(.+?)/~files/([^/]+)$#", "deleteFile"],
+        ["PUT", "#^/pages/(.+?)/~php$#", "updatePagePhp"],
         ["GET", "#^/pages/(.+)$#", "getPage"],
         ["PATCH", "#^/pages/(.+)$#", "updatePage"],
         ["DELETE", "#^/pages/(.+)$#", "deletePage"],
@@ -312,6 +313,42 @@ class Panel
         return self::json($this->pageDetails($this->findPage($page->id())));
     }
 
+    /**
+     * Body: {"code": "<?php …", "hash": "…", "force": false}. Only for users in `content.allowPHP.edit`.
+     * The code is checked for syntax errors first (422 with `syntaxError`), `force` saves it anyway.
+     * `hash` (sha1 of the loaded code) → 409 if the file has changed in the meantime.
+     */
+    private function updatePagePhp(ServerRequestInterface $request, string $id): ResponseInterface
+    {
+        $page = $this->findPage($id);
+        $file = $page->phpFile() ?? throw new ApiError("The page \"$id\" has no php file", 400);
+
+        if (!User::current()->canEditPhpFiles()) {
+            throw new ApiError("You are not allowed to edit php files", 403);
+        }
+
+        $input = self::input($request);
+        $code = $input["code"] ?? null;
+
+        if (!is_string($code)) {
+            throw new ApiError("The code is missing", 400);
+        }
+
+        if (isset($input["hash"]) && $input["hash"] !== sha1_file($file)) {
+            throw new ApiError("Someone else has changed this in the meantime", 409, ["conflicts" => []]);
+        }
+
+        if (($input["force"] ?? false) !== true && $error = Page::phpSyntaxError($code)) {
+            throw new ApiError("The code has a syntax error", 422, [
+                "syntaxError" => ["message" => $error->getMessage(), "line" => $error->getLine()],
+            ]);
+        }
+
+        $page->updatePhp($code);
+
+        return self::json($this->pageDetails($page));
+    }
+
     private function deletePage(ServerRequestInterface $request, string $id): ResponseInterface
     {
         $this->findPage($id)->delete();
@@ -393,7 +430,7 @@ class Panel
     }
 
     /**
-     * The value of the page's icon field, otherwise the icon of its blueprint.
+     * The value of the page's icon field, otherwise the icon of its blueprint, for php pages `php`.
      */
     private static function pageIcon(Page $page): ?string
     {
@@ -407,7 +444,7 @@ class Panel
             }
         }
 
-        return $page->blueprint()->get("icon");
+        return $page->blueprint()->get("icon") ?? ($page->phpFile() !== null ? "php" : null);
     }
 
     private function pageDetails(Page $page): array
@@ -421,6 +458,7 @@ class Panel
         return [
             ...$this->pageSummary($page),
             "isEditable" => $page->isEditable(),
+            "php" => $this->phpDetails($page),
             "contentFormat" => $page->contentFormat(),
             "blueprint" => $page->blueprint()->toArray(),
             "data" => $page->data()->toArray(),
@@ -428,6 +466,22 @@ class Panel
             "children" => $page->allChildren()->map($this->pageSummary(...))->all(),
             "files" => $page->files()->map($this->fileSummary(...))->all(),
         ];
+    }
+
+    /**
+     * The code of the page's php file, only for users who may edit it.
+     */
+    private function phpDetails(Page $page): ?array
+    {
+        $file = $page->phpFile();
+
+        if ($file === null) {
+            return null;
+        }
+
+        $code = User::current()?->canEditPhpFiles() ? (string) file_get_contents($file) : null;
+
+        return ["file" => basename($file), "canEdit" => $code !== null, "code" => $code, "hash" => $code === null ? null : sha1($code)];
     }
 
     // Files

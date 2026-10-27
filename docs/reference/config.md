@@ -10,7 +10,8 @@ See [Configuration guide](/guides/configuration) for how config files are merged
 | `panel` | `true` | enables the [panel](/guides/panel) at `/panel` |
 | `contentFolder` | `"content"` | relative to the project dir or absolute |
 | `siteFolder` | `"site"` | relative to the project dir or absolute |
-| `optimizeContentImages` | `false` | converts all local images of rendered pages to AVIF, see [Images](/guides/images) |
+| `content.optimizeImages` | `false` | converts all local images of rendered pages to AVIF, see [Images](/guides/images) |
+| `content.allowPHP` | `false` | executes php files in the content folder (`page.php`, `{slug}.php`): `true`, or `["edit" => [...]]` to also let these roles or users (email or `name`) edit them in the panel, see [Page php files](/guides/templates#page-php-files) |
 | `markdown.extra` | `false` | [Markdown Extra](https://michelf.ca/projects/php-markdown/extra/) for `md()`, textarea and writer fields: tables, footnotes, definition lists, fenced code blocks with attributes, `{#id .class}`, abbreviations; otherwise plain Markdown |
 | `csp` | see below | the `Content-Security-Policy` header of rendered pages, `false` sends none |
 

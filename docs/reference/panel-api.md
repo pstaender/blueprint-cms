@@ -25,6 +25,7 @@ A JSON REST API under `/panel/api`, implemented in `src/Panel.php`.
 | `GET` | `/pages/{id}` | | `{id, uid, ref, title, status, num, url, type, blueprint, data, breadcrumb, children, files, …}` |
 | `PATCH` | `/pages/{id}` | `{data?, contentFormat?, slug?, type?, parent?, status?, num?}` | save fields, change the storage format (`json`, `md`, `json+md`), rename the slug, change the type, move it (`parent`: a folder page id, `null`/`""` = root; keeps its status, subpages and files), change the status (`draft`, `unlisted`, `listed`) or position |
 | `DELETE` | `/pages/{id}` | | delete the page and its subpages |
+| `PUT` | `/pages/{id}/~php` | `{code, hash?, force?}` | save the page's php file (only for the roles/users in `content.allowPHP.edit`, otherwise 403); a syntax error → 422 with `syntaxError: {message, line}` unless `force: true`; `hash` (`php.hash` of `GET /pages/{id}`) → 409 if the file has changed in the meantime. `GET /pages/{id}` has `php: {file, canEdit, code, hash}` (`code` only for editors) or `null` |
 | `GET` | `/pages/{id}/~children` | | subpages (summaries `{id, uid, ref, title, status, num, url, type, icon, isHome, canHaveChildren, statuses, parent, hasChildren}`, `icon` is the value of the page's `icon` field or the blueprint's), e.g. for the page tree |
 | `POST` | `/pages/{id}/~children` | `{title, slug?, type?}` | create a draft |
 | `GET` | `/pages/{id}/~files` | | files of the page |
