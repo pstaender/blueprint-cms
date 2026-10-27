@@ -107,6 +107,41 @@ async function deletePermanently() {
   }
 }
 
+// previous and next record of the open one, in the order of its list (records or trash) and across its pages
+function listOf(uid) {
+  const lists = [
+    { items: records.value, page, total: collection.value?.total ?? 0, params: {} },
+    { items: trashed.value, page: trashPage, total: trashTotal.value, params: { trash: 1 } },
+  ];
+  for (const list of lists) {
+    const index = list.items.findIndex((record) => record.uid === uid);
+    if (index !== -1) return { ...list, index, position: (list.page.value - 1) * perPage.value + index };
+  }
+  return null;
+}
+
+function siblingsOf(uid) {
+  const list = listOf(uid);
+  return { prev: !!list && list.position > 0, next: !!list && list.position < list.total - 1 };
+}
+
+async function goToSibling(uid, step) {
+  const list = listOf(uid);
+  if (!list) return;
+  const position = list.position + step;
+  if (position < 0 || position >= list.total) return;
+  let sibling = list.items[list.index + step];
+  if (!sibling) {
+    // on another page of the list, which is shown then
+    sibling = (await api.get(`/models/${props.name}?${query({ ...list.params, offset: position, limit: 1 })}`)).records[0];
+    if (!sibling) return;
+    list.page.value = Math.floor(position / perPage.value) + 1;
+  }
+  await router.push(`/models/${props.name}/${sibling.uid}`);
+}
+
+provide("recordSiblings", { siblingsOf, goToSibling });
+
 function firstPage() {
   if (page.value === 1 && trashPage.value === 1) return load();
   page.value = trashPage.value = 1;

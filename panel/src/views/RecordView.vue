@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, inject, onMounted } from "vue";
+import { ref, computed, inject, onMounted, onBeforeUnmount } from "vue";
 import { useRouter } from "vue-router";
 import { api } from "../api.js";
 import { useEditing } from "../editing.js";
@@ -12,6 +12,7 @@ import Icon from "../components/Icon.vue";
 const props = defineProps({ name: { type: String, required: true }, uid: { type: String, default: null } });
 const router = useRouter();
 const collection = inject("collection");
+const { siblingsOf, goToSibling } = inject("recordSiblings");
 const record = ref(null);
 const loadError = ref(null);
 const dialog = ref(null);
@@ -44,6 +45,21 @@ function startNew() {
   for (const [name, field] of Object.entries(blueprint.fields)) {
     if (field.default !== undefined && field.default !== null) values.value[name] = field.default;
   }
+}
+
+// previous and next record of the list next to it
+const siblings = computed(() => (props.uid ? siblingsOf(props.uid) : { prev: false, next: false }));
+
+function go(step) {
+  if (!form.isDirty.value) goToSibling(props.uid, step);
+}
+
+// ← / → switch records, unless typing in a field or a dialog is open
+function onKeydown(event) {
+  if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey || dialog.value) return;
+  if (event.target.closest?.("input, textarea, select, [contenteditable], dialog")) return;
+  if (event.key === "ArrowLeft" && siblings.value.prev) go(-1);
+  else if (event.key === "ArrowRight" && siblings.value.next) go(1);
 }
 
 async function submitDialog() {
@@ -85,6 +101,7 @@ const formatSize = (bytes) => (bytes < 1024 ? `${bytes} B` : bytes < 1024 ** 2 ?
 const formatDate = (date) => (date ? new Date(date).toLocaleString() : "");
 
 onMounted(async () => {
+  window.addEventListener("keydown", onKeydown);
   if (!props.uid) return startNew();
   try {
     load(await api.get(path.value));
@@ -92,6 +109,7 @@ onMounted(async () => {
     loadError.value = e.message;
   }
 });
+onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
 </script>
 
 <template>
@@ -109,6 +127,10 @@ onMounted(async () => {
       @reload="form.loadLatest"
     >
       <template #actions>
+        <span v-if="siblings.prev || siblings.next" class="button-group">
+          <button type="button" class="button" title="Previous record (←)" :disabled="!siblings.prev || form.isDirty.value" @click="go(-1)"><Icon name="angle-left" /></button>
+          <button type="button" class="button" title="Next record (→)" :disabled="!siblings.next || form.isDirty.value" @click="go(1)"><Icon name="angle-right" /></button>
+        </span>
         <button v-if="record.isTrashed" type="button" class="button" @click="restore"><Icon name="undo" /> Restore</button>
         <button v-if="uid" type="button" class="button" :title="moveToTrash ? 'Move to the trash' : 'Delete permanently'" @click="dialog = 'delete'"><Icon name="trash" /></button>
       </template>

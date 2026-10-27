@@ -73,7 +73,7 @@ fields:
 
 ## Panel
 
-Models with `panel: true` are listed under *Collections* in the sidebar, for every logged in user. A collection shows its records next to the open record: search (in `searchableFields`), sort by created or modified date (newest or oldest first), page through them (`perPage`, arrows below the list), add, edit, delete and upload files (unless `files: false`). The title of a record in the list is its `title` or `name` field, the first searchable field with a value or the uid; models can override `panelTitle()`:
+Models with `panel: true` are listed under *Collections* in the sidebar, for every logged in user. A collection shows its records next to the open record: search (in `searchableFields`), sort by created or modified date (newest or oldest first), page through them (`perPage`, arrows below the list), step to the previous or next record with the arrows in the header of the open record (or ← / →, also across pages), add, edit, delete and upload files (unless `files: false`). The title of a record in the list is its `title` or `name` field, the first searchable field with a value or the uid; models can override `panelTitle()`:
 
 ```php
 public function panelTitle(): string
