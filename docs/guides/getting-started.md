@@ -1,26 +1,23 @@
 ---
-title: Getting started
+title: 'Getting started'
 sort: 1
 ---
 ## Requirements
 
 PHP >= 8.3 and [Composer](https://getcomposer.org).
 
-```sh
-composer install
-composer serve   # http://localhost:8000
-composer test
-composer panel:build   # the admin panel, see Panel guide
-```
-
 ## As a composer package
 
-A website can require Blueprint instead of being a copy of the repository:
+Install Blueprint as requirement via composer:
 
 ```sh
 composer require pstaender/blueprintcms
-vendor/bin/blueprint public:build   # public/index.php, public/.htaccess, public/panel/
-vendor/bin/blueprint user:create admin@example.com
+
+# builds public/index.php, public/.htaccess, public/panel/
+./vendor/bin/blueprint public:build
+./vendor/bin/blueprint user:create admin@example.com
+
+# starts development server
 php -S localhost:8000 -t public public/index.php
 ```
 
