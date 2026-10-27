@@ -7,13 +7,18 @@ namespace Blueprint;
 use Ahc\Cli\IO\Interactor;
 
 /**
- * The interactive setup of a website (`bin/blueprint setup`): public folder, users, .gitignore, composer scripts
- * and the most important config options. Every step can be run on its own.
+ * The interactive setup of a website (`bin/blueprint setup`): public folder, site folder, home page, users,
+ * .gitignore, composer scripts and the most important config options. Every step can be run on its own.
  */
 class Setup
 {
     public const GITIGNORE_TEMPLATE = __DIR__ . "/../.gitignore_template";
+    public const SITE_TEMPLATE = __DIR__ . "/../site_template";
     public const COMPOSER_SCRIPT = "blueprint public:setup";
+    public const SERVE_SCRIPT = [
+        "Composer\\Config::disableProcessTimeout",
+        "APP_ENV=development php -S localhost:8000 -t public public/index.php",
+    ];
 
     public function __construct(
         private readonly Interactor $io,
@@ -35,6 +40,10 @@ class Setup
     {
         $this->step("Public folder");
         $this->publicFolder();
+        $this->step("Site folder");
+        $this->siteFolder();
+        $this->step("Home page");
+        $this->homePage();
         $this->step("Users");
         $this->users();
         $this->step(".gitignore");
@@ -43,13 +52,48 @@ class Setup
         $this->composer();
         $this->step("Config");
         $this->config();
-        $this->io->eol()->ok("Setup finished, start the dev server with: php -S localhost:8000 -t public public/index.php", true);
+        $serve = self::hasServeScript($this->readComposer() ?? new \stdClass()) ? "composer serve" : "php -S localhost:8000 -t public public/index.php";
+        $this->io->eol()->ok("Setup finished, start the dev server with: $serve", true);
     }
 
     public function publicFolder(bool $force = false): void
     {
         foreach ((new PublicFolder())->copyTo(App::instance()->publicDir(), $force) as $line) {
             $this->io->write($line, true);
+        }
+    }
+
+    public function siteFolder(): void
+    {
+        $dir = App::instance()->siteDir();
+        if (is_dir($dir)) {
+            $this->io->write("There is a site folder already", true);
+
+            return;
+        }
+
+        $this->io->write("The site folder holds the blueprints and templates of the website.", true);
+        if ($this->io->confirm("Create a basic site folder (a page blueprint and a template with a layout)?", "y")) {
+            PublicFolder::copyFolder(self::SITE_TEMPLATE, $dir);
+            $this->io->ok("Created $dir", true);
+        }
+    }
+
+    public function homePage(): void
+    {
+        $dir = App::instance()->contentDir();
+        if (site()->find("home") !== null) {
+            $this->io->write("There is a home page already", true);
+
+            return;
+        }
+
+        if ($this->io->confirm("Create the home page (content/home.md)?", "y")) {
+            if (!is_dir($dir)) {
+                mkdir($dir, 0755, true);
+            }
+            file_put_contents("$dir/home.md", "---\ntitle: Home\n---\n# Welcome 👋\n\nWelcome to your new website, edit this page in the panel at [/panel](/panel).\n");
+            $this->io->ok("Created $dir/home.md", true);
         }
     }
 
@@ -138,29 +182,64 @@ class Setup
 
     public function composer(): void
     {
-        $file = "$this->projectDir/composer.json";
-        if (!is_file($file)) {
+        $composer = $this->readComposer();
+        if ($composer === null) {
             $this->io->write("There is no composer.json", true);
 
             return;
         }
 
-        $composer = json_decode(file_get_contents($file), flags: JSON_THROW_ON_ERROR);
         $updated = self::withComposerScripts($composer);
-
         if ($updated == $composer) {
             $this->io->write("composer.json already runs public:setup after install and update", true);
-
-            return;
+        } else {
+            $this->io->write("Composer can copy the panel into public/ after every install and update of Blueprint CMS:", true);
+            $this->io->comment('  "post-install-cmd": "' . self::COMPOSER_SCRIPT . '"' . PHP_EOL . '  "post-update-cmd": "' . self::COMPOSER_SCRIPT . '"', true);
+            if ($this->io->confirm("Add these scripts to composer.json?", "y")) {
+                $this->writeComposer($composer = $updated);
+            }
         }
 
-        $this->io->write("Composer can copy the panel into public/ after every install and update of Blueprint CMS:", true);
-        $this->io->comment('  "post-install-cmd": "' . self::COMPOSER_SCRIPT . '"' . PHP_EOL . '  "post-update-cmd": "' . self::COMPOSER_SCRIPT . '"', true);
-
-        if ($this->io->confirm("Add these scripts to composer.json?", "y")) {
-            file_put_contents($file, json_encode($updated, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . PHP_EOL);
-            $this->io->ok("Updated composer.json", true);
+        if (self::hasServeScript($composer)) {
+            $this->io->write("composer.json already has a script for the dev server", true);
+        } elseif (isset($composer->scripts->serve)) {
+            $this->io->write("composer.json has another serve script, the dev server would need: php -S localhost:8000 -t public public/index.php", true);
+        } else {
+            $this->io->write("A serve script starts the dev server with `composer serve`:", true);
+            $this->io->comment('  "serve": ' . json_encode(self::SERVE_SCRIPT, JSON_UNESCAPED_SLASHES), true);
+            if ($this->io->confirm("Add it to composer.json?", "y")) {
+                $composer->scripts ??= new \stdClass();
+                $composer->scripts->serve = self::SERVE_SCRIPT;
+                $this->writeComposer($composer);
+            }
         }
+    }
+
+    /** Any script that runs php's built-in server (`php -S`). */
+    public static function hasServeScript(\stdClass $composer): bool
+    {
+        foreach ((array) ($composer->scripts ?? []) as $commands) {
+            foreach ((array) $commands as $command) {
+                if (is_string($command) && preg_match('/\bphp\s+-S\s/', $command)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private function readComposer(): ?\stdClass
+    {
+        $file = "$this->projectDir/composer.json";
+
+        return is_file($file) ? json_decode(file_get_contents($file), flags: JSON_THROW_ON_ERROR) : null;
+    }
+
+    private function writeComposer(\stdClass $composer): void
+    {
+        file_put_contents("$this->projectDir/composer.json", json_encode($composer, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . PHP_EOL);
+        $this->io->ok("Updated composer.json", true);
     }
 
     /**

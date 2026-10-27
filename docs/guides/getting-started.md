@@ -14,20 +14,22 @@ Install Blueprint CMS as a requirement via composer:
 ```sh
 composer require pstaender/blueprintcms
 
-# copies public/index.php, public/.htaccess, public/panel/, creates the users, .gitignore and config
+# copies public/index.php, public/.htaccess, public/panel/, creates the site folder, home page, users, .gitignore and config
 ./vendor/bin/blueprint setup
 
-# starts development server
-php -S localhost:8000 -t public public/index.php
+# starts the development server (the serve script that setup adds to composer.json)
+composer serve
 ```
 
 `setup` asks step by step, each step can be skipped:
 
 1. copies `index.php`, `.htaccess` and the panel into `public/` (`public:setup`)
-2. creates an admin user if there are no users yet (`admin` is suggested as name, the password needs at least 8 characters), then other users (role `user` or one of the [user blueprints](/reference/blueprints/users))
-3. adds the missing lines of Blueprint's recommended `.gitignore` (`setup:gitignore`)
-4. adds `public:setup` to the composer scripts (`setup:composer`, see below)
-5. writes the most important options to `config/config.php`: downsizing images (`content.optimizeImages`) and php files in the content folder (`content.allowPHP`, editable in the panel by nobody, admins or every user). Options the config already has aren't asked; if `config/config.php` exists, the options are printed to add them by hand
+2. creates a basic `site/` folder if there is none: a site and a page blueprint, a `default` and a `404` template with a `layout` snippet
+3. creates the home page `content/home.md` if there is none
+4. creates an admin user if there are no users yet (`admin` is suggested as name, the password needs at least 8 characters), then other users (role `user` or one of the [user blueprints](/reference/blueprints/users))
+5. adds the missing lines of Blueprint's recommended `.gitignore` (`setup:gitignore`)
+6. adds `public:setup` to the composer scripts and a `serve` script for the dev server, unless a script runs `php -S` already (`setup:composer`, see below)
+7. writes the most important options to `config/config.php`: downsizing images (`content.optimizeImages`) and php files in the content folder (`content.allowPHP`, editable in the panel by nobody, admins or every user). Options the config already has aren't asked; if `config/config.php` exists, the options are printed to add them by hand
 
 Users can also be created later with `user:create`, see [Command line](/guides/cli).
 
@@ -36,7 +38,11 @@ The website has the folders below except `bin/`, `panel/` and `src/` (they are i
 ```json
 "scripts": {
     "post-install-cmd": "blueprint public:setup",
-    "post-update-cmd": "blueprint public:setup"
+    "post-update-cmd": "blueprint public:setup",
+    "serve": [
+        "Composer\\Config::disableProcessTimeout",
+        "APP_ENV=development php -S localhost:8000 -t public public/index.php"
+    ]
 }
 ```
 

@@ -13,7 +13,7 @@ bin/blueprint media:clear                  # deletes the optimized images
 bin/blueprint public:setup [--force]       # copies index.php, .htaccess and the panel into public/
 bin/blueprint setup                        # sets up a website step by step (asks questions)
 bin/blueprint setup:gitignore              # adds the recommended lines to the .gitignore
-bin/blueprint setup:composer               # lets composer run public:setup after install and update
+bin/blueprint setup:composer               # lets composer run public:setup after install and update, adds composer serve
 bin/blueprint repl                         # php shell with the loaded app
 ```
 
@@ -21,7 +21,7 @@ bin/blueprint repl                         # php shell with the loaded app
 
 `public:setup` copies the front controller `index.php`, the `.htaccess` (for Apache) and the built panel of the installed package into the website's `public/`. The panel is always replaced, an existing `index.php` and `.htaccess` are kept (they may be customized) unless `--force` is given. Run it after every update of the package.
 
-`setup` runs `public:setup`, creates the first (admin) user and other users, `setup:gitignore`, `setup:composer` and writes the most important config options, see [Getting started](/guides/getting-started#as-a-composer-package). The setup commands need a terminal, they ask before they change anything. `setup:gitignore` compares the `.gitignore` with the template of the package (comments aside) and adds the missing lines with their comments.
+`setup` runs `public:setup`, creates a basic site folder (from the package's `site_template/`) and `content/home.md` if they don't exist, the first (admin) user and other users, `setup:gitignore`, `setup:composer` and writes the most important config options, see [Getting started](/guides/getting-started#as-a-composer-package). The setup commands need a terminal, they ask before they change anything. `setup:gitignore` compares the `.gitignore` with the template of the package (comments aside) and adds the missing lines with their comments.
 
 `repl` starts [PsySH](https://psysh.org) with the created app: `$app`, `$site`, the helpers (`site()`, `page("blog")`, `md()`, …) and Blueprint's classes without their namespace (`User::all()`, `Page::find(...)`). `doc`, `show` and `ls` explain functions and objects, ctrl+d exits.
 

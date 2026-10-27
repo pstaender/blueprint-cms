@@ -1,0 +1,22 @@
+title: Page
+default: true
+
+fields:
+  title:
+    type: text
+  content:
+    type: writer
+  files:
+    label: Files
+    type: filelist
+  subpages:
+    type: pagelist
+
+tabs:
+  content:
+    columns:
+      - width: 2/3
+        fields: true
+      - width: 1/3
+        fields:
+          - files

@@ -49,7 +49,7 @@ class PublicFolder
         return $done;
     }
 
-    private static function copyFolder(string $source, string $target): void
+    public static function copyFolder(string $source, string $target): void
     {
         mkdir($target, 0755, true);
         foreach (scandir($source) as $name) {

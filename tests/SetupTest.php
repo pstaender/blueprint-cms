@@ -49,7 +49,7 @@ it("adds public:setup to the composer scripts and keeps other scripts", function
         "scripts" => ["post-update-cmd" => "echo updated"],
     ]));
 
-    ($this->setup)("y\n")->composer();
+    ($this->setup)("y\nn\n")->composer();
 
     $composer = file_get_contents("$this->project/composer.json");
     expect(json_decode($composer, true)["scripts"])->toBe([
@@ -59,6 +59,40 @@ it("adds public:setup to the composer scripts and keeps other scripts", function
 
     $updated = Setup::withComposerScripts(json_decode($composer));
     expect($updated)->toEqual(json_decode($composer));
+});
+
+it("adds a serve script unless one runs php -S", function () {
+    file_put_contents("$this->project/composer.json", json_encode(["scripts" => ["post-install-cmd" => "blueprint public:setup", "post-update-cmd" => "blueprint public:setup"]]));
+
+    ($this->setup)("y\n")->composer();
+
+    $composer = json_decode(file_get_contents("$this->project/composer.json"));
+    expect($composer->scripts->serve)->toBe(Setup::SERVE_SCRIPT)
+        ->and(Setup::hasServeScript(json_decode('{"scripts": {"dev": "php -S 0.0.0.0:8080 -t public"}}')))->toBeTrue()
+        ->and(Setup::hasServeScript(json_decode('{"scripts": {"test": "pest"}}')))->toBeFalse();
+});
+
+it("creates a site folder and a home page that render", function () {
+    exec("rm -rf " . escapeshellarg("$this->project/site") . " " . escapeshellarg("$this->project/content"));
+    createApp($this->project);
+
+    ($this->setup)("y\ny\n")->siteFolder();
+    ($this->setup)("y\n")->homePage();
+
+    $html = body(createApp($this->project)->request("/"));
+    expect("$this->project/site/blueprints/pages/page.yml")->toBeFile()
+        ->and($html)->toContain("<title>Home |", "Welcome 👋", 'href="/panel"');
+});
+
+it("doesn't touch an existing site folder or home page", function () {
+    $home = file_get_contents("$this->project/content/home/page.json");
+
+    $setup = ($this->setup)("");
+    $setup->siteFolder();
+    $setup->homePage();
+
+    expect(file_get_contents("$this->project/content/home/page.json"))->toBe($home)
+        ->and(file_get_contents("$this->project/output"))->toContain("site folder already", "home page already");
 });
 
 it("creates an admin and other users", function () {

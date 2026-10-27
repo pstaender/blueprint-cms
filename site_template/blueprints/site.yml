@@ -1,0 +1,9 @@
+title: Site
+
+fields:
+  name:
+    type: text
+  tagline:
+    type: text
+  pages:
+    type: pagelist
