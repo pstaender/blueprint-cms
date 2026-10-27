@@ -20,7 +20,7 @@ To get a first impression, have a look at the [documentation of Blueprint CMS](h
 
 ## Requirements
 
-PHP >= 8.3, [Composer](https://getcomposer.org) and Node.js (to build the panel).
+PHP >= 8.4, [Composer](https://getcomposer.org) and Node.js (to build the panel).
 
 ## Quick start
 

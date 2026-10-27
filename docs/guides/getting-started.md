@@ -4,7 +4,7 @@ sort: 1
 ---
 ## Requirements
 
-PHP >= 8.3 and [Composer](https://getcomposer.org).
+PHP >= 8.4 and [Composer](https://getcomposer.org).
 
 ## As a composer package
 
