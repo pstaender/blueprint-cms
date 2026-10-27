@@ -77,6 +77,9 @@ if (Blueprint\App::instance()->isPanelEnabled() && user() !== null) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= esc($title) ?> | <?= esc($siteName) ?></title>
     <link rel="icon" href="<?= esc(static_file_url("assets/images/blueprint_cms.svg")) ?>" type="image/svg+xml">
+    <link rel="preconnect" href="https://rsms.me/">
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/firacode@6.2.0/distr/fira_code.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@speed-highlight/core@2.1.0/dist/themes/dark.css">
     <link rel="stylesheet" href="<?= esc(static_file_url("assets/css/docs.css")) ?>">
     <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0/dist/fuse.min.js" defer></script>
