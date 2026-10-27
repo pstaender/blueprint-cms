@@ -393,3 +393,9 @@
 - composer.json is decoded as objects and written with `JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES` (composer's style), so `{}` stays `{}`; an existing post-install/update script becomes a list with `blueprint public:setup` appended.
 - Config: only options that `config/config.php` doesn't set are asked. A new file is written with a small exporter (short arrays, double quotes), an existing one is never rewritten (it may use constants, closures and comments that a re-export would lose), the snippet is printed instead. "Editable by anyone" lists `User::roles()` at setup time, `allowPHP.edit` has no wildcard.
 - `bin/blueprint repl`: PsySH with `$app`/`$site`. An autoloader aliases unqualified class names to `Blueprint\{name}` (`User::all()`), `use` statements in psysh conflict with its own names (`App`).
+
+2026-10-27 – Model blueprints in blueprints/collections
+- The blueprints of models moved from `blueprints/models/{name}` to `blueprints/collections/{name}` (named after what the panel shows: "Collections"), the classes stay in `site/models/`. No fallback to the old folder (breaking changes are fine before a stable release).
+
+2026-10-27 – Content-Security-Policy is opt-in
+- `csp` defaults to `false`: a default policy breaks sites that load scripts, fonts or embeds from other origins, without an obvious reason. `"csp" => true` sends `Config::CSP_DEFAULTS`, an array is merged over these defaults (so a project still only lists the directives it changes, `false` removes one). The panel keeps its own fixed policy.

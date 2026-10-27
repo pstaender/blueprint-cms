@@ -456,17 +456,18 @@ class App
     }
 
     /**
-     * The `csp` config as header value, with the nonce in script-src (or default-src) if a template used it.
+     * The `csp` config (`true` or directives merged over Config::CSP_DEFAULTS) as header value, with the nonce in
+     * script-src (or default-src) if a template used it. Without the config no header is sent.
      */
     public function contentSecurityPolicy(): ?string
     {
-        $directives = $this->config->get("csp");
+        $config = $this->config->get("csp");
 
-        if (!is_array($directives)) {
+        if ($config !== true && !is_array($config)) {
             return null;
         }
 
-        $directives = array_filter($directives, fn($sources) => $sources === true || (is_string($sources) && $sources !== ""));
+        $directives = array_filter([...Config::CSP_DEFAULTS, ...($config === true ? [] : $config)], fn($sources) => $sources === true || (is_string($sources) && $sources !== ""));
 
         if ($this->cspNonce !== null) {
             foreach (["script-src", "default-src"] as $name) {

@@ -45,10 +45,10 @@ $rating->delete();
 
 ## Blueprint
 
-`site/blueprints/models/{name}.yml` defines the fields like a page blueprint (tabs, columns, all field types) and a few options:
+`site/blueprints/collections/{name}.yml` defines the fields like a page blueprint (tabs, columns, all field types) and a few options:
 
 ```yaml
-# site/blueprints/models/pageRating.yml
+# site/blueprints/collections/pageRating.yml
 title: Page ratings
 icon: star
 panel: true          # listed under "Collections" in the panel

@@ -170,7 +170,7 @@ describe("panel", function () {
     });
 
     it("refuses uploads with files: false in the blueprint", function () {
-        file_put_contents("$this->dir/site/blueprints/models/logEntry.yml", "title: Log\npanel: true\nfiles: false\n");
+        file_put_contents("$this->dir/site/blueprints/collections/logEntry.yml", "title: Log\npanel: true\nfiles: false\n");
         $entry = LogEntry::create(["message" => "No files"]);
         $response = $this->app->request("/panel/api/models/logEntry/{$entry->uid()}/~files?filename=a.txt", "POST", null, ["X-CSRF-Token" => $this->csrf]);
 

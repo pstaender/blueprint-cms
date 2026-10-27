@@ -22,20 +22,23 @@ class Config
         ],
         // Markdown Extra (tables, footnotes, …) for md() and textarea fields
         "markdown" => ["extra" => false],
-        // Content-Security-Policy of rendered pages: directive => sources (true for directives without sources,
-        // false/null removes one), `"csp" => false` sends none. Templates get a nonce for inline scripts with csp_nonce().
-        "csp" => [
-            "default-src" => "'self'",
-            "script-src" => "'self'",
-            "style-src" => "'self' 'unsafe-inline'",
-            "img-src" => "'self' data: https:",
-            "media-src" => "'self' https:",
-            "frame-src" => "https://www.youtube-nocookie.com https://player.vimeo.com",
-            "object-src" => "'none'",
-            "base-uri" => "'self'",
-            "form-action" => "'self'",
-            "frame-ancestors" => "'self'",
-        ],
+        // Content-Security-Policy of rendered pages, opt-in: `true` sends CSP_DEFAULTS, an array of directive => sources
+        // is merged over them (true for directives without sources, false/null removes one). Templates get a nonce for
+        // inline scripts with csp_nonce().
+        "csp" => false,
+    ];
+
+    public const CSP_DEFAULTS = [
+        "default-src" => "'self'",
+        "script-src" => "'self'",
+        "style-src" => "'self' 'unsafe-inline'",
+        "img-src" => "'self' data: https:",
+        "media-src" => "'self' https:",
+        "frame-src" => "https://www.youtube-nocookie.com https://player.vimeo.com",
+        "object-src" => "'none'",
+        "base-uri" => "'self'",
+        "form-action" => "'self'",
+        "frame-ancestors" => "'self'",
     ];
 
     public function __construct(

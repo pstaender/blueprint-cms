@@ -11,7 +11,15 @@ beforeEach(function () {
 
 afterEach(fn() => removeProject($this->dir));
 
-it("sends the content security policy with pages", function () {
+it("sends no content security policy by default", function () {
+    $response = $this->app->request("/about");
+
+    expect($response->hasHeader("Content-Security-Policy"))->toBeFalse()
+        ->and($response->getHeaderLine("X-Content-Type-Options"))->toBe("nosniff");
+});
+
+it("sends the default content security policy with csp: true", function () {
+    $this->app = createApp($this->dir, ["csp" => true]);
     $response = $this->app->request("/about");
 
     expect($response->getHeaderLine("Content-Security-Policy"))
@@ -23,7 +31,7 @@ it("sends the content security policy with pages", function () {
 
 it("adds the nonce of csp_nonce() to script-src", function () {
     file_put_contents("$this->dir/content/inline.php", '<script nonce="<?= csp_nonce() ?>">1</script>');
-    $this->app = createApp($this->dir, ["content" => ["allowPHP" => true]]);
+    $this->app = createApp($this->dir, ["content" => ["allowPHP" => true], "csp" => true]);
     $response = $this->app->request("/inline");
     preg_match('/nonce="([^"]+)"/', body($response), $matches);
 

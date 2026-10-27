@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 /**
  * A record of a collection: models are classes in `site/models/` (or a plugin's `models/`) that extend this class,
  * e.g. `class PageRating extends Blueprint\Model` in `site/models/PageRating.php`. The model name is the class
- * name in camelCase (`pageRating`), its blueprint `site/blueprints/models/pageRating.yml`.
+ * name in camelCase (`pageRating`), its blueprint `site/blueprints/collections/pageRating.yml`.
  *
  * The records are stored as a list in a json file in the content folder, by default the plural of the model name
  * (`content/pageRatings.json`, change it with the `COLLECTION` constant). Every record has a `uid`, `createdAt` and
@@ -63,11 +63,11 @@ abstract class Model
     }
 
     /**
-     * site/blueprints/models/{name}.yml, without one the records have no fields in the panel.
+     * site/blueprints/collections/{name}.yml, without one the records have no fields in the panel.
      */
     public static function blueprint(): Blueprint
     {
-        $name = "models/" . static::name();
+        $name = "collections/" . static::name();
 
         return Blueprint::file($name) !== null ? Blueprint::load($name) : new Blueprint($name, []);
     }
