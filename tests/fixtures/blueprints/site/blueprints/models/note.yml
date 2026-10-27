@@ -1,0 +1,14 @@
+title: Notes
+icon: text
+panel: true
+softDelete: true
+searchableFields:
+  - title
+fields:
+  title:
+    type: text
+    required: true
+  text: textarea
+  priority:
+    type: number
+    default: 1

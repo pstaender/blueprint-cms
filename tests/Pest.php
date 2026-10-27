@@ -40,3 +40,20 @@ function removeProject(string $dir): void
         exec("rm -rf " . escapeshellarg($dir));
     }
 }
+
+/**
+ * Logs in to the panel, returns the csrf token.
+ */
+function login(App $app, string $email = "panel@example.com", string $password = "secret-password"): string
+{
+    $response = $app->request("/panel/api/session", "POST", ["email" => $email, "password" => $password]);
+
+    return json_decode(body($response), true)["csrf"];
+}
+
+function api(App $app, string $method, string $path, ?array $json = null, ?string $csrf = null): array
+{
+    $response = $app->request("/panel/api$path", $method, $json, $csrf === null ? [] : ["X-CSRF-Token" => $csrf]);
+
+    return [$response->getStatusCode(), json_decode(body($response), true)];
+}

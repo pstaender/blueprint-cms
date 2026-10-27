@@ -54,6 +54,7 @@ class App
         // plugins may use the app (App::instance(), site(), …) when they are loaded
         $app->plugins = Plugin::scan($app->siteDir() . "/plugins");
         array_map(fn(Plugin $plugin) => $plugin->load(), $app->plugins);
+        Models::load($app);
 
         return $app;
     }

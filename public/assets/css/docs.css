@@ -2,6 +2,7 @@
 
 :root {
   --color-bg: #fff;
+  --scroll-shadow: rgba(0, 0, 0, 0.22);
   --color-bg-dimmed: #f5f5f4;
   --color-text: #1c1c1e;
   --color-text-dimmed: #6b6b70;
@@ -24,6 +25,7 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --color-bg: #161618;
+    --scroll-shadow: rgba(0, 0, 0, 0.6);
     --color-bg-dimmed: #1e1e21;
     --color-text: #ececee;
     --color-text-dimmed: #9b9ba2;
@@ -49,7 +51,7 @@ body {
   margin: 0;
   background: var(--color-bg);
   color: var(--color-text);
-  font: 18px/1.65 var(--font-sans);
+  font: 17px/1.65 var(--font-sans);
 }
 
 a {
@@ -174,7 +176,7 @@ a:hover {
   border: 1px solid var(--color-border);
   border-radius: 4px;
   color: var(--color-text-dimmed);
-  font: 12px/18px var(--font-mono);
+  font: 12px/17px var(--font-mono);
   pointer-events: none;
 }
 
@@ -464,6 +466,8 @@ a:hover {
   opacity: 1;
 }
 
+/* wide tables scroll; a subtle shadow at the left/right edge shows that there is more. The covers (page background,
+   `local`) scroll with the content and hide the shadows (`scroll`, fixed to the edges) at the end they've reached */
 .docs-text table {
   display: block;
   width: 100%;
@@ -471,6 +475,11 @@ a:hover {
   overflow-x: auto;
   border-collapse: collapse;
   font-size: 0.95rem;
+  background:
+    linear-gradient(to right, var(--color-bg) 30%, transparent) left / 40px 100% no-repeat local,
+    linear-gradient(to left, var(--color-bg) 30%, transparent) right / 40px 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, var(--scroll-shadow), transparent) left / 16px 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, var(--scroll-shadow), transparent) right / 16px 100% no-repeat scroll;
 }
 
 .docs-text th,
@@ -507,6 +516,50 @@ a:hover {
 }
 
 /* Previous / next */
+
+.docs-rating {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 48px;
+  color: var(--color-text-dimmed);
+}
+
+.docs-rating[hidden] {
+  display: none;
+}
+
+.docs-rating button {
+  display: inline-flex;
+  padding: 6px 10px;
+  color: inherit;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.docs-rating button:hover:not(:disabled) {
+  color: var(--color-text);
+  border-color: var(--color-text-dimmed);
+}
+
+.docs-icon {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.docs-rating button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
 
 .docs-pager {
   display: grid;
@@ -725,7 +778,7 @@ a:hover {
 .docs-text .icon-list code {
   padding: 0;
   background: none;
-  font-size: 0.95rem;
+  font-size: 0.75rem;
   overflow-wrap: anywhere;
   text-align: center;
 }

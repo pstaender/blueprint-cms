@@ -11,8 +11,9 @@
 use Illuminate\Support\Collection;
 
 $sortKey = fn($item) => [$item->data()->sort ?? PHP_INT_MAX, mb_strtolower((string) $item->title()->value())];
+// `hidden: true` pages (e.g. the rating endpoint) aren't in the menu
 $sorted = fn(Collection $pages) => $pages
-    ->reject(fn($item) => $item->isHome())
+    ->reject(fn($item) => $item->isHome() || $item->data()->hidden === true)
     ->sort(fn($a, $b) => $sortKey($a) <=> $sortKey($b))
     ->values();
 $isActive = fn($item) => $page !== null && ($page->id() === $item->id() || str_starts_with($page->id(), $item->id() . "/"));
@@ -58,6 +59,10 @@ $siteName = $site->data()->name ?? "Docs";
 $composer = json_decode((string) @file_get_contents(Blueprint\App::instance()->projectDir() . "/composer.json"), true);
 $version = $composer["version"] ?? null;
 $title ??= $page?->title()->value();
+
+// the panel's line icons (panel/src/icons.json), e.g. for the rating buttons
+$panelIcons = json_decode((string) @file_get_contents(Blueprint\App::instance()->projectDir() . "/panel/src/icons.json"), true) ?: [];
+$icon = fn(string $name) => '<svg class="docs-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="' . esc($panelIcons[$name] ?? "") . '"/></svg>';
 
 // only for logged in users, opens the current page in the panel
 $panelUrl = null;
@@ -115,6 +120,16 @@ if (Blueprint\App::instance()->isPanelEnabled() && user() !== null) {
             <?php endif ?>
             <h1><?= esc($title) ?></h1>
             <article class="docs-text"><?= $slot ?></article>
+            <?php // the static build (cli) has no php to store ratings, docs.js shows the form ?>
+            <?php if ($page !== null && PHP_SAPI !== "cli"): ?>
+                <form class="docs-rating" method="post" action="/rating" hidden>
+                    <input type="hidden" name="page" value="<?= esc($page->id()) ?>">
+                    <span>Was this page helpful?</span>
+                    <button type="submit" name="ratingValue" value="1" title="Yes" aria-label="Yes"><?= $icon("thumbs-up") ?></button>
+                    <button type="submit" name="ratingValue" value="-1" title="No" aria-label="No"><?= $icon("thumbs-down") ?></button>
+                    <span class="docs-rating-message" role="status"></span>
+                </form>
+            <?php endif ?>
             <?php if ($previous || $next): ?>
                 <nav class="docs-pager" aria-label="Pages">
                     <?php if ($previous): ?>

@@ -13,7 +13,7 @@ onMounted(loadSession);
     <div v-else class="layout">
       <Sidebar />
       <main class="main">
-        <RouterView :key="$route.fullPath" />
+        <RouterView :key="$route.meta.key?.($route) ?? $route.fullPath" />
       </main>
     </div>
   </template>

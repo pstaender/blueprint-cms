@@ -5,6 +5,8 @@ declare(strict_types=1);
 use Blueprint\App;
 use Blueprint\FieldValue;
 use Blueprint\File;
+use Blueprint\Model;
+use Blueprint\Models;
 use Blueprint\Page;
 use Blueprint\Redirect;
 use Blueprint\Site;
@@ -30,6 +32,14 @@ function site(): Site
 function user(?string $emailOrUid = null): ?User
 {
     return $emailOrUid === null ? User::current() : User::find($emailOrUid);
+}
+
+/**
+ * The record of a model reference, e.g. record("pageRating://19qiajkmcaw3x8bp").
+ */
+function record(string $reference): ?Model
+{
+    return Models::resolve($reference);
 }
 
 /**

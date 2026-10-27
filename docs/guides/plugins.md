@@ -22,6 +22,7 @@ site/plugins/my-plugin/
   blueprints/      pages/article.yml, blocks/…, …
   templates/       templates, snippets/, partials/, 404.php
   cli/             commands
+  models/          model classes, see [Models](/guides/models)
 ```
 
 The site's own files win over the files of plugins, plugins win over the core (`src/blueprints`, `src/views`, `src/cli/commands`). Between plugins the first in alphabetical order wins. So `site/templates/article.php` replaces `site/plugins/my-plugin/templates/article.php`, and a plugin can bring the blueprint, template and snippets of a page type.

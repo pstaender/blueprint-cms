@@ -65,6 +65,10 @@ A file in a page folder: `filename()`, `name()`, `extension()`, `type()` (image,
 
 Blocks have `id()`, `type()`, `isHidden()`, `render()` and field methods for their content. Layouts have `columns()`, columns have `width()`, `span()` and `blocks()`.
 
+## `Model`, `Models`
+
+`Model` is the base class of [models](/guides/models): `Model::all()`, `find($uidOrReference)`, `where($field, $value)`, `create($data)`, `trashed()`, `emptyTrash()`, `name()`, `collection()`, `collectionFile()`, `blueprint()`, `update($values)`, `delete()`, `restore()`, `isTrashed`, `uid()`, `ref()`, `data()`, field methods, `files()`, `file($filename)`, `addFile($filename, $contents)`, `deleteFile($filename)`, `panelTitle()`, `toArray()`. `Models::all()` (name → class), `Models::get($name)`, `Models::resolve($reference)`, `Models::inPanel()`.
+
 ## `Uid`
 
 `Uid::generate()`, `Uid::parse("page://abc")`.

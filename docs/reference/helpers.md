@@ -11,6 +11,7 @@ Global functions for templates, defined in `src/helpers.php`.
 | `site()` | the site, data from `content/site.json` |
 | `user()` | the logged in user or `null` |
 | `user("admin")` | a user by email/username or uid |
+| `record("pageRating://uid")` | the record of a [model](/guides/models) by reference or `null` |
 | `esc($value)` | escapes for html output |
 | `csp_nonce()` | the nonce for inline scripts of the current request: `<script nonce="<?= csp_nonce() ?>">`, see [Content Security Policy](/reference/config#content-security-policy) |
 | `md($markdown, $page = null, $html = false)` | markdown to html (Markdown Extra with the config `markdown.extra`), inline html is escaped and links with unsafe schemes like `javascript:` point to `#`; `html: true` allows inline html, only for content that panel users can't edit (it may contain scripts), relative file links (`hello.jpg`, `blog/hello.jpg`) point to the files of `$page` (default: the current page), `page://uid` and `file://uid` links to the page or file |

@@ -41,6 +41,7 @@ Then log in at http://localhost:8000/panel, with email and password or (in brows
 - drag a file from a file list or from your computer into a textarea or writer: inserts `![name](file.jpg)` (images) or `[name](file.pdf)`; only used files are public, file lists mark unused ones
 - `writer` fields: a markdown editor in a monospace font with a toolbar (formatting, link, link to a page, link to a file of the page); page links are chosen in a dialog that browses all pages (arrow: subpages) or searches them
 - block and layout editors: add, hide, duplicate, sort (drag the handle) and remove blocks and rows
+- collections: the records of [models](/guides/models) with `panel: true` in their blueprint; search, sort, add, edit, delete (to the trash with `softDelete: true`: an expandable item below the records, restore or delete permanently, empty the trash) and files
 - admins create, edit and delete users and change roles; everybody else only sees their own account (email, fields, password confirmed with the current password)
 
 ## Icons

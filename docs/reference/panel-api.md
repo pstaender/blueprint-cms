@@ -13,7 +13,7 @@ A JSON REST API under `/panel/api`, implemented in `src/Panel.php`.
 
 | Method | Path | Body | |
 |---|---|---|---|
-| `POST` | `/session` | `{email, password}` | log in, returns `{user, csrf, site}` |
+| `POST` | `/session` | `{email, password}` | log in, returns `{user, csrf, site, models}` (`models`: the models in the panel) |
 | `GET` | `/session` | | the logged in user |
 | `DELETE` | `/session` | | log out |
 | `POST` | `/session/~passkey-options` | | options for `navigator.credentials.get()` (binary values base64url encoded), the challenge is valid for 5 minutes |
@@ -42,6 +42,16 @@ A JSON REST API under `/panel/api`, implemented in `src/Panel.php`.
 | `GET` | `/users/{uid}` | | user data, `role`, `blueprint`; non-admins only themselves (403 for other users, also for `PATCH`) |
 | `PATCH` | `/users/{uid}` | `{data?, email?, role?, password?, currentPassword?}` | a new `password` needs the logged in user's `currentPassword` (422 if wrong), except for admins; changing the `role` needs an admin (403) |
 | `DELETE` | `/users/{uid}` | | admins only, not yourself |
+| `GET` | `/models/{name}?search=&sort=&direction=&trash=&offset=&limit=` | | the records of a [model](/guides/models) with `panel: true` (others → 404): `{name, collection, title, icon, softDelete, files, perPage, searchableFields, blueprint, total, trashCount, records}`; `sort`: `createdAt` (default) or `modifiedAt`, `direction`: `desc` (default) or `asc`, `trash=1` lists the trash, `offset` and `limit` page through them (`limit` defaults to the blueprint's `perPage`, 10) |
+| `POST` | `/models/{name}` | `{data}` | create a record (validated by the blueprint) |
+| `GET` | `/models/{name}/{uid}` | | `{uid, ref, title, createdAt, modifiedAt, isTrashed, model, blueprint, data, files}` |
+| `PATCH` | `/models/{name}/{uid}` | `{data, modifiedAt?, original?}` | save fields, with the conflict check |
+| `DELETE` | `/models/{name}/{uid}` | | move it to the trash (`softDelete: true`), otherwise or from the trash delete it permanently |
+| `POST` | `/models/{name}/{uid}/~restore` | | restore it from the trash |
+| `DELETE` | `/models/{name}/~trash` | | empty the trash: delete all trashed records and their files permanently, returns `{deleted}` (the number) |
+| `POST` | `/models/{name}/{uid}/~files?filename=` | the file | upload a file of the record (400 with `files: false` in the blueprint) |
+| `GET` | `/models/{name}/{uid}/~files/{filename}` | | the file itself (images, pdf, … inline, others as download, sandboxed) |
+| `DELETE` | `/models/{name}/{uid}/~files/{filename}` | | delete a file of the record |
 | `POST` | `/users/{uid}/~passkey-options` | | options for `navigator.credentials.create()`, only for your own account |
 | `POST` | `/users/{uid}/~passkeys` | `{name, id, publicKey, algorithm, clientDataJSON, authenticatorData}` | add a passkey to your own account: `publicKey` from `response.getPublicKey()` (SPKI), `algorithm` from `getPublicKeyAlgorithm()` (ES256 or RS256) |
 | `DELETE` | `/users/{uid}/~passkeys/{id}` | | delete a passkey (your own, admins also those of others) |

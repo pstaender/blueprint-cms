@@ -4,3 +4,7 @@ node_modules/
 /public/media/
 /docs/users.json
 /static/
+# ratings of the docs (site/models/PageRating.php)
+/docs/pageRatings.json
+/docs/.trash/
+/docs/.database_files/

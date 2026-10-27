@@ -4,6 +4,7 @@ import { useRoute } from "vue-router";
 import { session, logout } from "../api.js";
 import Icon from "./Icon.vue";
 import PageTree from "./PageTree.vue";
+import PageIcon from "./PageIcon.vue";
 
 // The page tree scrolls on its own (brand, site/users and the footer stay visible) and can be collapsed.
 const STORAGE_KEY = "blueprint.sidebar.pagesCollapsed";
@@ -65,6 +66,13 @@ watch(pagesCollapsed, (collapsed) => {
     <nav class="sidebar-nav">
       <RouterLink to="/site" class="sidebar-link"><Icon name="site" /> Site</RouterLink>
       <RouterLink v-if="session.user?.role === 'admin'" to="/users" class="sidebar-link"><Icon name="users" /> Users</RouterLink>
+    </nav>
+
+    <nav v-if="session.models?.length" class="sidebar-nav">
+      <h3 class="sidebar-heading">Collections</h3>
+      <RouterLink v-for="model in session.models" :key="model.name" :to="`/models/${model.name}`" class="sidebar-link">
+        <PageIcon :icon="model.icon || 'table'" /> {{ model.title }}
+      </RouterLink>
     </nav>
 
     <nav class="sidebar-nav sidebar-pages">

@@ -1,0 +1,24 @@
+title: Page ratings
+icon: star
+panel: true
+softDelete: true
+files: false
+searchableFields:
+  - page
+  - ip
+fields:
+  page:
+    type: text
+    help: The path of the rated page (or page://uid)
+    required: true
+  ratingValue:
+    type: number
+    label: Rating
+    help: 1 (helpful) or -1 (not helpful)
+    min: -1
+    max: 1
+    step: 2
+    required: true
+  ip:
+    type: text
+    label: IP

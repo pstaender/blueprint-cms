@@ -4,18 +4,22 @@ sort: 1
 ---
 ## Requirements
 
-PHP >= 8.4 and [Composer](https://getcomposer.org).
+* PHP 8.4+
+* [Composer](https://getcomposer.org)
 
 ## As a composer package
 
-Install Blueprint as requirement via composer:
+Install Blueprint CMS as a requirement via composer:
 
 ```sh
 composer require pstaender/blueprintcms
 
 # builds public/index.php, public/.htaccess, public/panel/
 ./vendor/bin/blueprint public:build
-./vendor/bin/blueprint user:create admin@example.com
+# creates user (note: first created user has always admin rights)
+./vendor/bin/blueprint user:create admin
+# optional: create none-admin user
+./vendor/bin/blueprint user:create editor@mysite.local
 
 # starts development server
 php -S localhost:8000 -t public public/index.php

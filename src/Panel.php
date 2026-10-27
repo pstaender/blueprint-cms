@@ -56,6 +56,16 @@ class Panel
         ["GET", "#^/users/([^/]+)$#", "getUser"],
         ["PATCH", "#^/users/([^/]+)$#", "updateUser"],
         ["DELETE", "#^/users/([^/]+)$#", "deleteUser"],
+        ["GET", "#^/models/([\\w-]+)$#", "listRecords"],
+        ["POST", "#^/models/([\\w-]+)$#", "createRecord"],
+        ["DELETE", "#^/models/([\\w-]+)/~trash$#", "emptyTrash"],
+        ["POST", "#^/models/([\\w-]+)/([\\w-]+)/~restore$#", "restoreRecord"],
+        ["POST", "#^/models/([\\w-]+)/([\\w-]+)/~files$#", "uploadRecordFile"],
+        ["GET", "#^/models/([\\w-]+)/([\\w-]+)/~files/([^/]+)$#", "getRecordFile"],
+        ["DELETE", "#^/models/([\\w-]+)/([\\w-]+)/~files/([^/]+)$#", "deleteRecordFile"],
+        ["GET", "#^/models/([\\w-]+)/([\\w-]+)$#", "getRecord"],
+        ["PATCH", "#^/models/([\\w-]+)/([\\w-]+)$#", "updateRecord"],
+        ["DELETE", "#^/models/([\\w-]+)/([\\w-]+)$#", "deleteRecord"],
     ];
 
     private const PUBLIC_HANDLERS = ["login", "passkeyLoginOptions", "passkeyLogin"];
@@ -205,6 +215,7 @@ class Panel
             "user" => User::current()->toArray(),
             "csrf" => Session::csrfToken(),
             "site" => ["title" => (string) site()->data()->name, "url" => "/"],
+            "models" => array_values(array_map(self::modelSummary(...), Models::inPanel())),
         ]);
     }
 
@@ -774,6 +785,212 @@ class Panel
     private function findUser(string $uid): User
     {
         return User::find($uid) ?? throw new ApiError("User \"$uid\" not found", 404);
+    }
+
+    // Models
+
+    /**
+     * @param class-string<Model> $class
+     */
+    private static function modelSummary(string $class): array
+    {
+        $blueprint = $class::blueprint();
+
+        return [
+            "name" => $class::name(),
+            "collection" => $class::collection(),
+            "title" => $blueprint->title(),
+            "icon" => $blueprint->get("icon"),
+            "softDelete" => $blueprint->get("softDelete") === true,
+            // `files: false` hides the files of the records
+            "files" => $blueprint->get("files") !== false,
+            "perPage" => self::perPage($blueprint),
+            "searchableFields" => array_values((array) $blueprint->get("searchableFields", [])),
+        ];
+    }
+
+    /**
+     * Query: search (in the blueprint's `searchableFields`, otherwise all fields), sort (createdAt, modifiedAt),
+     * direction (asc, desc), trash=1, offset, limit (default: the blueprint's `perPage`, 10).
+     */
+    private function listRecords(ServerRequestInterface $request, string $name): ResponseInterface
+    {
+        $class = $this->findModel($name);
+        $query = $request->getQueryParams();
+        $search = mb_strtolower(trim((string) ($query["search"] ?? "")));
+        $sort = in_array($query["sort"] ?? null, ["createdAt", "modifiedAt"], true) ? $query["sort"] : "createdAt";
+        $fields = (array) $class::blueprint()->get("searchableFields", []);
+
+        $records = (($query["trash"] ?? "") === "1" ? $class::trashed() : $class::all())
+            ->filter(function (Model $record) use ($search, $fields) {
+                $data = $record->data->toArray();
+                $values = $fields === [] ? $data : array_intersect_key($data, array_flip($fields));
+
+                return $search === "" || str_contains(mb_strtolower(json_encode(array_values($values), JSON_UNESCAPED_UNICODE)), $search);
+            })
+            ->sortBy(fn(Model $record) => (string) $record->data->get($sort), descending: ($query["direction"] ?? "desc") !== "asc")
+            ->values();
+
+        $offset = max(0, (int) ($query["offset"] ?? 0));
+        $limit = max(1, (int) ($query["limit"] ?? self::perPage($class::blueprint())));
+
+        return self::json([
+            ...self::modelSummary($class),
+            "blueprint" => $class::blueprint()->toArray(),
+            "total" => $records->count(),
+            "trashCount" => $class::blueprint()->get("softDelete") === true ? $class::trashed()->count() : 0,
+            "records" => $records->slice($offset, $limit)->map(self::recordSummary(...))->values()->all(),
+        ]);
+    }
+
+    /**
+     * Body: {"data": {...}}, creates a record with the blueprint's defaults.
+     */
+    private function createRecord(ServerRequestInterface $request, string $name): ResponseInterface
+    {
+        $class = $this->findModel($name);
+        $blueprint = $class::blueprint();
+        $record = $class::create($this->validatedValues($blueprint, $blueprint->defaults(), self::input($request)["data"] ?? []));
+
+        return self::json(self::recordDetails($record), 201);
+    }
+
+    private function getRecord(ServerRequestInterface $request, string $name, string $uid): ResponseInterface
+    {
+        return self::json(self::recordDetails($this->findRecord($name, $uid)));
+    }
+
+    /**
+     * Body: {"data": {...}, "modifiedAt": "…", "original": {...}} like pages.
+     */
+    private function updateRecord(ServerRequestInterface $request, string $name, string $uid): ResponseInterface
+    {
+        $record = $this->findRecord($name, $uid);
+        $input = self::input($request);
+        self::checkConflicts($record->data->toArray(), $input);
+        $record = $record->update($this->validatedValues($record::blueprint(), $record->data->toArray(), $input["data"] ?? []));
+
+        return self::json(self::recordDetails($record));
+    }
+
+    /**
+     * Moves the record to the trash (`softDelete: true`), records in the trash are deleted permanently.
+     */
+    private function deleteRecord(ServerRequestInterface $request, string $name, string $uid): ResponseInterface
+    {
+        $this->findRecord($name, $uid)->delete();
+
+        return new Response(204);
+    }
+
+    /**
+     * Deletes all records in the trash permanently.
+     */
+    private function emptyTrash(ServerRequestInterface $request, string $name): ResponseInterface
+    {
+        return self::json(["deleted" => $this->findModel($name)::emptyTrash()]);
+    }
+
+    private function restoreRecord(ServerRequestInterface $request, string $name, string $uid): ResponseInterface
+    {
+        return self::json(self::recordDetails($this->findRecord($name, $uid)->restore()));
+    }
+
+    /**
+     * The body is the file itself, e.g. POST /models/pageRating/{uid}/~files?filename=photo.jpg
+     */
+    private function uploadRecordFile(ServerRequestInterface $request, string $name, string $uid): ResponseInterface
+    {
+        $record = $this->findRecord($name, $uid);
+
+        if ($record::blueprint()->get("files") === false) {
+            throw new ApiError("Records of this model have no files", 400);
+        }
+
+        $body = $request->getBody();
+        $record->addFile((string) ($request->getQueryParams()["filename"] ?? ""), $body->detach() ?? (string) $body);
+
+        return self::json(self::recordDetails($record), 201);
+    }
+
+    /**
+     * The file itself, with the same safe headers as the files of pages.
+     */
+    private function getRecordFile(ServerRequestInterface $request, string $name, string $uid, string $filename): ResponseInterface
+    {
+        $path = $this->findRecord($name, $uid)->file($filename) ?? throw new ApiError("File \"$filename\" not found", 404);
+        $mime = mime_content_type($path) ?: "application/octet-stream";
+        $isInline = in_array($mime, File::INLINE_MIMES, true);
+
+        return new Response(200, [
+            "Content-Type" => $isInline ? $mime : "application/octet-stream",
+            "Content-Length" => (string) filesize($path),
+            "Content-Disposition" => ($isInline ? "inline" : "attachment") . "; filename=\"$filename\"",
+            "X-Content-Type-Options" => "nosniff",
+            "Content-Security-Policy" => "default-src 'none'; sandbox",
+            "Cache-Control" => "no-store",
+        ], \Nyholm\Psr7\Stream::create(fopen($path, "rb")));
+    }
+
+    private function deleteRecordFile(ServerRequestInterface $request, string $name, string $uid, string $filename): ResponseInterface
+    {
+        $record = $this->findRecord($name, $uid);
+        $record->file($filename) ?? throw new ApiError("File \"$filename\" not found", 404);
+        $record->deleteFile($filename);
+
+        return self::json(self::recordDetails($record));
+    }
+
+    /**
+     * `perPage` of the blueprint, any positive number, default 10.
+     */
+    private static function perPage(Blueprint $blueprint): int
+    {
+        $perPage = $blueprint->get("perPage");
+
+        return is_int($perPage) && $perPage > 0 ? $perPage : 10;
+    }
+
+    /**
+     * Only models with `panel: true` in their blueprint.
+     *
+     * @return class-string<Model>
+     */
+    private function findModel(string $name): string
+    {
+        return Models::inPanel()[$name] ?? throw new ApiError("Model \"$name\" not found", 404);
+    }
+
+    private function findRecord(string $name, string $uid): Model
+    {
+        return $this->findModel($name)::find($uid) ?? throw new ApiError("Record \"$uid\" not found", 404);
+    }
+
+    private static function recordSummary(Model $record): array
+    {
+        return [
+            "uid" => $record->uid(),
+            "ref" => $record->ref(),
+            "title" => $record->panelTitle(),
+            "createdAt" => $record->data->createdAt,
+            "modifiedAt" => $record->data->modifiedAt,
+            "isTrashed" => $record->isTrashed,
+        ];
+    }
+
+    private static function recordDetails(Model $record): array
+    {
+        return [
+            ...self::recordSummary($record),
+            "model" => self::modelSummary($record::class),
+            "blueprint" => $record::blueprint()->toArray(),
+            "data" => (object) $record->data->toArray(),
+            "files" => array_map(fn(string $filename, string $path) => [
+                "filename" => $filename,
+                "size" => filesize($path),
+                "mime" => mime_content_type($path) ?: "application/octet-stream",
+            ], array_keys($record->files()), $record->files()),
+        ];
     }
 
     // Helpers

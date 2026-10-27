@@ -201,6 +201,28 @@ function search() {
   });
 }
 
+// "Was this page helpful?", stored by docs/rating/page.php
+function rating() {
+  const form = document.querySelector(".docs-rating");
+  if (!form) return;
+
+  const message = form.querySelector(".docs-rating-message");
+  form.hidden = false;
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const data = new FormData(form);
+    data.set("ratingValue", event.submitter.value);
+    form.querySelectorAll("button").forEach((button) => (button.disabled = true));
+    try {
+      const response = await fetch(form.action, { method: "POST", body: data });
+      const result = JSON.parse(await response.text());
+      message.textContent = result.ok ? "Thanks for your feedback!" : result.error;
+    } catch {
+      message.textContent = "The rating couldn't be saved.";
+    }
+  });
+}
+
 if (text) {
   tableOfContents(headingAnchors());
   copyButtons();
@@ -210,3 +232,4 @@ if (text) {
 }
 mobileMenu();
 search();
+rating();

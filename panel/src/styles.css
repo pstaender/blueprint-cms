@@ -1550,6 +1550,133 @@ select[multiple].input {
 
 /* Small screens */
 
+/* Collections: the records of a model next to the open record */
+
+.collection-view {
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+
+.record-list {
+  position: sticky;
+  top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: calc(100vh - 48px);
+}
+
+.record-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.record-list-header .view-title {
+  font-size: 20px;
+}
+
+.record-list-controls {
+  display: flex;
+  gap: 6px;
+}
+
+.record-list-controls select {
+  flex: 1;
+  min-width: 0;
+}
+
+.record-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  overflow-y: auto;
+  margin: 0 -4px;
+  padding: 4px;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.pagination-info {
+  color: var(--color-text-dimmed);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.record-trash-empty {
+  display: flex;
+  margin: 8px auto 0;
+}
+
+.record-trash > .items {
+  margin-top: 4px;
+  padding-left: 12px;
+}
+
+.record-trash-summary {
+  list-style: none;
+  cursor: pointer;
+  color: var(--color-text-dimmed);
+  background: none;
+  box-shadow: none;
+  border: 1px dashed var(--color-border);
+}
+
+.record-trash-summary::-webkit-details-marker {
+  display: none;
+}
+
+.record-trash-chevron {
+  width: 12px;
+  height: 12px;
+  transition: transform 0.15s;
+}
+
+.record-trash[open] .record-trash-chevron {
+  transform: rotate(90deg);
+}
+
+.record-item {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.record-item .record-link {
+  flex: 1;
+  min-width: 0;
+}
+
+.record-link .item-info {
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.record-link.router-link-active {
+  box-shadow: inset 3px 0 0 var(--color-primary), var(--shadow);
+  font-weight: 500;
+}
+
+.record-meta {
+  margin: -12px 0 16px;
+}
+
+.record-fields {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
 @media (max-width: 800px) {
   .layout {
     grid-template-columns: 1fr;
@@ -1573,8 +1700,14 @@ select[multiple].input {
     grid-column: span 12 !important;
   }
 
-  .file-overview {
+  .file-overview,
+  .collection-view {
     grid-template-columns: 1fr;
+  }
+
+  .record-list {
+    position: static;
+    max-height: 50vh;
   }
 }
 

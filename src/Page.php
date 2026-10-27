@@ -98,7 +98,8 @@ class Page
         }
 
         return (new Collection(scandir($dir)))
-            ->reject(fn(string $name) => $name === "." || $name === "..")
+            // the folders of the records' trash and files are never pages (a leading `.` would be a draft)
+            ->reject(fn(string $name) => in_array($name, [".", "..", Model::TRASH_FOLDER, Model::FILES_FOLDER], true))
             ->map(fn(string $name) => self::fromPath("$dir/$name", $parent))
             ->filter()
             ->sortBy(fn(self $page) => [$page->isDraft, !$page->isFolder()])
