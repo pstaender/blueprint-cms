@@ -225,7 +225,7 @@ class Panel
             "title" => (string) ($site->data()->name ?? "Site"),
             "url" => "/",
             "blueprint" => $site->blueprint()->toArray(),
-            "data" => $site->data()->toArray(),
+            "data" => (object) $site->data()->toArray(),
             "children" => $site->allChildren()->map($this->pageSummary(...))->all(),
         ]);
     }
@@ -461,7 +461,7 @@ class Panel
             "php" => $this->phpDetails($page),
             "contentFormat" => $page->contentFormat(),
             "blueprint" => $page->blueprint()->toArray(),
-            "data" => $page->data()->toArray(),
+            "data" => (object) $page->data()->toArray(),
             "breadcrumb" => $breadcrumb,
             "children" => $page->allChildren()->map($this->pageSummary(...))->all(),
             "files" => $page->files()->map($this->fileSummary(...))->all(),
@@ -603,7 +603,7 @@ class Panel
                 ["id" => $file->page->id(), "title" => (string) $file->page->title()->value()],
             ],
             "blueprint" => $file->blueprint()->toArray(),
-            "data" => $file->data()->toArray(),
+            "data" => (object) $file->data()->toArray(),
         ];
     }
 

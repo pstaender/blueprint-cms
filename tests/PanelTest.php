@@ -454,6 +454,19 @@ describe("php files in the content folder", function () {
             ->and(file_get_contents("$this->dir/content/script.php"))->toBe("<?php\necho 'broken'");
     });
 
+    it("creates a page.json for the fields of a folder page with only a page.php", function () {
+        mkdir("$this->dir/content/releases");
+        file_put_contents("$this->dir/content/releases/page.php", "<?php echo 'releases';");
+        $app = createApp($this->dir, ["content" => ["allowPHP" => true]]);
+        $csrf = login($app);
+
+        // an empty object, an empty array would lose the fields set on it in the panel
+        expect(body($app->request("/panel/api/pages/releases")))->toContain('"data":{}')
+            ->and(api($app, "PATCH", "/pages/releases", ["data" => ["title" => "Releases"]], $csrf)[0])->toBe(200)
+            ->and(json_decode(file_get_contents("$this->dir/content/releases/page.json"), true)["title"])->toBe("Releases")
+            ->and(body($app->request("/releases")))->toBe("releases");
+    });
+
     it("rejects changes to a file that has changed in the meantime", function () {
         $app = createApp($this->dir, ["content" => ["allowPHP" => ["edit" => ["editor"]]]]);
         $csrf = login($app);
