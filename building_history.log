@@ -403,3 +403,7 @@
 2026-10-27 – Setup: site folder, home page, serve script
 - `setup` creates a basic `site/` from `site_template/` (part of the package: site and page blueprint, default/404 template, layout snippet) if the site folder is missing, and `content/home.md` if there is no home page, so a fresh install renders something right away.
 - `setup:composer` also suggests a `serve` script (`APP_ENV=development php -S …`). Any script that runs `php -S` counts as existing, an existing but different `serve` script isn't replaced. The finish message names `composer serve` if such a script exists.
+
+2026-10-27 – Files of single file pages, url references
+- A single file page (`blog/01_entry.md`) has no folder, so it can't have files. Its relative links (`![](cover.jpg)`) point to the files of its folder page (`Page::relativeFile()`, used by `File::resolveUrls()` and `App::resolveFile()`), and its data counts for `File::isUsed()` like the folder page's own data. Folder subpages don't count: their bare filenames mean their own files. Making `Page::files()` return the parent's files instead would show (and let the panel sort/delete) the folder's files on every entry.
+- `File::isUsed()` also counts the url `/blog/cover.jpg` (hand-written `<img>`, `srcset`, CSS `url()`), with the same boundaries as `blog/cover.jpg`, so `/other/blog/cover.jpg` doesn't count. Filenames are compared unencoded (`id()`), a url with `%20` for a space doesn't count.

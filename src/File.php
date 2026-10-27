@@ -388,16 +388,21 @@ class File
     }
 
     /**
-     * Only used files are public: their filename appears in the data of their page, or they are
-     * referenced from any page or the site (`file://uid` or `blog/cover.jpg`).
+     * Only used files are public: their filename appears in the data of their page or of one of its single file
+     * subpages (see Page::relativeFile()), or they are referenced from any page or the site (`file://uid`,
+     * `blog/cover.jpg` or `/blog/cover.jpg`).
      */
     public function isUsed(): bool
     {
-        if (preg_match(self::referencePattern($this->filename()), self::dataString($this->page->data()))) {
-            return true;
+        $filePages = $this->page->allChildren()->reject(fn(Page $page) => $page->isFolder());
+
+        foreach ([$this->page, ...$filePages] as $page) {
+            if (preg_match(self::referencePattern($this->filename()), self::dataString($page->data()))) {
+                return true;
+            }
         }
 
-        $patterns = [self::referencePattern($this->id())];
+        $patterns = [self::referencePattern($this->id()), self::referencePattern("/" . $this->id())];
 
         if ($this->uid() !== null) {
             $patterns[] = self::referencePattern("file://" . $this->uid());
@@ -428,7 +433,7 @@ class File
 
     /**
      * Replaces relative file links and references in html (e.g. from markdown) with the urls:
-     * `hello.jpg` (a file of the page) → /blog/hello.jpg, `blog/hello.jpg` → /blog/hello.jpg,
+     * `hello.jpg` (a file of the page, see Page::relativeFile()) → /blog/hello.jpg, `blog/hello.jpg` → /blog/hello.jpg,
      * `page://uid` → the page's url, `file://uid` → the file's url.
      */
     public static function resolveUrls(string $html, ?Page $page): string
@@ -450,7 +455,7 @@ class File
 
             $file = str_contains($reference, "/")
                 ? site()->find(dirname($reference), includeDrafts: true)?->file(basename($reference))
-                : $page?->file($reference);
+                : $page?->relativeFile($reference);
 
             return $file === null ? $matches[0] : $matches[1] . '="' . esc($file->url()) . '"';
         }, $html);

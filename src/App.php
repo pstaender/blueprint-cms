@@ -117,7 +117,7 @@ class App
 
     /**
      * A file by url (`/blog/hello.jpg`), path (`blog/hello.jpg`), reference (`file://uid`)
-     * or filename of the given page (`hello.jpg`). Drafts' files only for logged in users.
+     * or filename of the given page (`hello.jpg`, see Page::relativeFile()). Drafts' files only for logged in users.
      */
     public function resolveFile(string $reference, ?Page $page = null): ?File
     {
@@ -132,7 +132,7 @@ class App
         $path = trim(rawurldecode((string) parse_url($reference, PHP_URL_PATH)), "/");
 
         if (!str_contains($path, "/")) {
-            return $page?->file($path);
+            return $page?->relativeFile($path);
         }
 
         return $this->site()->find(dirname($path))?->file(basename($path));

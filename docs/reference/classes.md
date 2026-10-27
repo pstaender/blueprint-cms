@@ -25,6 +25,7 @@ Singleton: `App::create(Config $config)`, `App::instance()`.
 | `title()` | the `title` field, falls back to the slug |
 | `type()`, `template()`, `uid()` | page type (default `page`), template (`template` in the data, default: the type), unique id |
 | `files()`, `file($filename)`, `sortFiles($filenames)` | the page's `File`s |
+| `relativeFile($filename)` | the file a relative link like `![](hello.jpg)` in the page points to: the page's own, or its folder page's for a single file page (`blog/01_entry.md`) |
 | `field($name)`, `$page->{field}()` | [field values](/reference/fields/field-methods) |
 | `blueprint()` | the page's `Blueprint` |
 | `children()`, `drafts()`, `allChildren()`, `child($slug)`, `hasChildren()` | collections ([illuminate/support](https://laravel.com/docs/collections)) |

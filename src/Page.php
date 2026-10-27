@@ -295,6 +295,15 @@ class Page
     }
 
     /**
+     * The file a relative link like `![](hello.jpg)` in the page's content points to: a single file page
+     * (`blog/01_entry.md`) has no files of its own, so its links point to the files of its folder page (`blog/`).
+     */
+    public function relativeFile(string $filename): ?File
+    {
+        return $this->isFolder() ? $this->file($filename) : $this->parent?->file($filename);
+    }
+
+    /**
      * Stores the order as `sort` in the files' data, files missing in the list keep their order after them.
      *
      * @param string[] $filenames

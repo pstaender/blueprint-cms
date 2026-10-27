@@ -262,6 +262,34 @@ describe("file access and links", function () {
 
             page("about")->update(["files" => null, "text" => "see mybuilder/notes.txt and notes.txt.bak"]);
             expect(page("builder")->file("notes.txt")->isUsed())->toBeFalse();
+
+            page("about")->update(["text" => '<a href="/builder/notes.txt">notes</a>']);
+            expect(page("builder")->file("notes.txt")->isUsed())->toBeTrue();
+
+            page("about")->update(["text" => '<a href="/x/builder/notes.txt">notes</a>']);
+            expect(page("builder")->file("notes.txt")->isUsed())->toBeFalse();
+        } finally {
+            removeProject($dir);
+        }
+    });
+
+    it("counts filenames in single file subpages, which use the files of their folder page", function () {
+        $dir = copyProject(BLUEPRINT_PROJECT);
+
+        try {
+            mkdir("$dir/content/builder/sub");
+            file_put_contents("$dir/content/builder/sub/page.md", "[Notes](notes.txt)");
+            createApp($dir);
+
+            expect(page("builder")->file("notes.txt")->isUsed())->toBeFalse();
+
+            file_put_contents("$dir/content/builder/01_entry.md", "[Notes](notes.txt)");
+            $app = createApp($dir);
+
+            expect(page("builder")->file("notes.txt")->isUsed())->toBeTrue()
+                ->and($app->request("/builder/notes.txt")->getStatusCode())->toBe(200)
+                ->and(md("[Notes](notes.txt)", page("builder/entry")))->toContain('href="/builder/notes.txt"')
+                ->and(md("[Notes](notes.txt)", page("builder/sub")))->toContain('href="notes.txt"');
         } finally {
             removeProject($dir);
         }
