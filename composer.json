@@ -26,7 +26,9 @@
         "illuminate/support": "^13.38",
         "michelf/php-markdown": "^2.0",
         "symfony/yaml": "*",
-        "symfony/var-dumper": "*"
+        "symfony/var-dumper": "*",
+        "adhocore/cli": "^1.9",
+        "psy/psysh": "^0.12.24"
     },
     "require-dev": {
         "pestphp/pest": "^4.7"

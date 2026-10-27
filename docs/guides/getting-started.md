@@ -14,23 +14,29 @@ Install Blueprint CMS as a requirement via composer:
 ```sh
 composer require pstaender/blueprintcms
 
-# builds public/index.php, public/.htaccess, public/panel/
-./vendor/bin/blueprint public:build
-# creates user (note: first created user has always admin rights)
-./vendor/bin/blueprint user:create admin
-# optional: create none-admin user
-./vendor/bin/blueprint user:create editor@mysite.local
+# copies public/index.php, public/.htaccess, public/panel/, creates the users, .gitignore and config
+./vendor/bin/blueprint setup
 
 # starts development server
 php -S localhost:8000 -t public public/index.php
 ```
 
-The website has the folders below except `bin/`, `panel/` and `src/` (they are in `vendor/`). To keep the panel up to date, let composer run `public:build` after updates in the website's `composer.json`:
+`setup` asks step by step, each step can be skipped:
+
+1. copies `index.php`, `.htaccess` and the panel into `public/` (`public:setup`)
+2. creates an admin user if there are no users yet (`admin` is suggested as name, the password needs at least 8 characters), then other users (role `user` or one of the [user blueprints](/reference/blueprints/users))
+3. adds the missing lines of Blueprint's recommended `.gitignore` (`setup:gitignore`)
+4. adds `public:setup` to the composer scripts (`setup:composer`, see below)
+5. writes the most important options to `config/config.php`: downsizing images (`content.optimizeImages`) and php files in the content folder (`content.allowPHP`, editable in the panel by nobody, admins or every user). Options the config already has aren't asked; if `config/config.php` exists, the options are printed to add them by hand
+
+Users can also be created later with `user:create`, see [Command line](/guides/cli).
+
+The website has the folders below except `bin/`, `panel/` and `src/` (they are in `vendor/`). To keep the panel up to date, let composer run `public:setup` after updates in the website's `composer.json` (`setup` and `setup:composer` add it):
 
 ```json
 "scripts": {
-    "post-install-cmd": "blueprint public:build",
-    "post-update-cmd": "blueprint public:build"
+    "post-install-cmd": "blueprint public:setup",
+    "post-update-cmd": "blueprint public:setup"
 }
 ```
 

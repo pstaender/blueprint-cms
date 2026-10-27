@@ -243,7 +243,7 @@ if ($interactive && strtolower(ask("Release v$version (build the panel, commit i
     fail("Cancelled");
 }
 
-// websites that require the package copy the built panel with `bin/blueprint public:build`
+// websites that require the package copy the built panel with `bin/blueprint public:setup`
 run("npm ci --prefix panel");
 run("npm run build --prefix panel");
 git("add", "--all", "--", PANEL_BUILD);

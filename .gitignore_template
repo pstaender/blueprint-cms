@@ -1,0 +1,10 @@
+# composer packages
+/vendor
+# nodejs modules
+node_modules/
+# downsized images
+/public/media/
+# contains panel users credentials
+/content/users.json
+# deleted pages and collection items
+/content/.trash/

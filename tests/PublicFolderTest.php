@@ -50,8 +50,8 @@ it("doesn't copy the package's public folder onto itself", function () {
     expect((new PublicFolder($this->source))->copyTo($this->source)[0])->toContain("nothing to copy");
 });
 
-it("registers public:build", function () {
+it("registers public:setup", function () {
     createApp(WEBSITE_PROJECT);
 
-    expect(array_keys(Cli::commands()))->toContain("public:build");
+    expect(array_keys(Cli::commands()))->toContain("public:setup");
 });

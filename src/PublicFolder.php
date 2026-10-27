@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Blueprint;
 
 /**
- * Copies what a website's public folder needs from the package (`bin/blueprint public:build`): the front controller,
+ * Copies what a website's public folder needs from the package (`bin/blueprint public:setup`): the front controller,
  * the .htaccess and the built panel. Existing front controller and .htaccess are kept unless forced, they may be
  * customized; the panel is always replaced.
  */
