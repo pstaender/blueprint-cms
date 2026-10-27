@@ -12,6 +12,12 @@ it("uses the data returned by a page.php with the template", function () {
     expect(body($this->app->request("/data-page")))->toBe("Data from PHP|");
 });
 
+it("renders a page with its template instead of its type's", function () {
+    expect(body($this->app->request("/templated")))->toBe("tagged: Templated")
+        ->and(body($this->app->request("/templated-php")))->toBe("tagged: templated-php")
+        ->and(Blueprint\Page::find("templated")->type())->toBe("page");
+});
+
 it("uses the output of a page php file as response", function () {
     expect(body($this->app->request("/echo")))->toBe("echoed by echo");
 });

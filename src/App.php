@@ -299,7 +299,7 @@ class App
             $page->mergeData($result);
         }
 
-        return $this->renderTemplate($page->type(), ["page" => $page]);
+        return $this->renderTemplate($page->template(), ["page" => $page]);
     }
 
     /**

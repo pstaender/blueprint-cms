@@ -1,0 +1,4 @@
+---
+title: Templated
+template: tagged
+---

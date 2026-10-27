@@ -252,13 +252,23 @@ class Page
 
     /**
      * The page type (`type` in the data), chooses the blueprint (pages/{type}.yml)
-     * and the template (templates/{type}.php → page.php → default.php).
+     * and the template, unless `template` is set.
      */
     public function type(): string
     {
         $type = $this->data()->type;
 
         return is_string($type) && preg_match('/^[\w-]+$/', $type) ? $type : self::DEFAULT_TYPE;
+    }
+
+    /**
+     * `template` in the data, falls back to the type (templates/{template}.php → page.php → default.php).
+     */
+    public function template(): string
+    {
+        $template = $this->data()->template;
+
+        return is_string($template) && preg_match('/^[\w-]+$/', $template) ? $template : $this->type();
     }
 
     public function changeType(string $type): void

@@ -13,7 +13,7 @@ Templates are plain php files in `site/templates/`, one per page type. A page wi
 <?= partial("footer") ?>
 ```
 
-Lookup: `site/templates/{type}.php` → `page.php` → `default.php` → `src/views/default.php`.
+Lookup: `site/templates/{type}.php` → `page.php` → `default.php` → `src/views/default.php`. A page with a `template` (in its data) uses that template instead of its type's, the blueprint stays the one of its type: `template: article-wide` renders `article-wide.php` with the fields of `pages/article.yml`.
 
 Templates get `$page` and `$site`. Field methods like `$page->date()` return values that are formatted and escaped by their [field type](/reference/fields/field-methods). `$page->data()` is raw: use `esc()` for output and `md()` for markdown.
 
@@ -42,6 +42,13 @@ If it returns an array, the array is merged into the page data and the page is r
 ```php
 <?php
 return ["title" => "Computed title", "template" => "article"];
+```
+
+The array only exists while the page is rendered, so menus, lists and the panel don't see it and show the slug as the title. For a fixed title use a folder page with `page.php` and a `page.json` (or `page.md`) for its data:
+
+```
+content/releases/page.php
+content/releases/page.json   {"title": "Releases"}
 ```
 
 ### Editing in the panel

@@ -23,7 +23,7 @@ Singleton: `App::create(Config $config)`, `App::instance()`.
 | `url()` | e.g. `/blog/newest_entry`, `/blog/` |
 | `data()` | raw data as `Data` |
 | `title()` | the `title` field, falls back to the slug |
-| `type()`, `uid()` | page type (default `page`), unique id |
+| `type()`, `template()`, `uid()` | page type (default `page`), template (`template` in the data, default: the type), unique id |
 | `files()`, `file($filename)`, `sortFiles($filenames)` | the page's `File`s |
 | `field($name)`, `$page->{field}()` | [field values](/reference/fields/field-methods) |
 | `blueprint()` | the page's `Blueprint` |
