@@ -446,7 +446,7 @@ describe("php files in the content folder", function () {
         mkdir("$this->dir/content/releases");
         file_put_contents("$this->dir/content/releases/page.php", "<?php echo 'releases';");
         $app = createApp($this->dir, ["content" => ["allowPHP" => true]]);
-        $csrf = login($app);
+        $csrf = login($app, "php-admin@example.com");
 
         // an empty object, an empty array would lose the fields set on it in the panel
         expect(body($app->request("/panel/api/pages/releases")))->toContain('"data":{}')
@@ -460,5 +460,48 @@ describe("php files in the content folder", function () {
         $csrf = login($app);
 
         expect(api($app, "PUT", "/pages/script/~php", ["code" => "<?php", "hash" => sha1("other")], $csrf)[0])->toBe(409);
+    });
+
+    it("can only be changed, moved and deleted by admins and the users in content.allowPHP.edit", function () {
+        mkdir("$this->dir/content/scripts");
+        file_put_contents("$this->dir/content/scripts/page.php", "<?php echo 'scripts';");
+        mkdir("$this->dir/content/folder");
+        file_put_contents("$this->dir/content/folder/page.json", '{"title": "Folder"}');
+        file_put_contents("$this->dir/content/folder/nested.php", "<?php echo 'nested';");
+        $app = createApp($this->dir, ["content" => ["allowPHP" => true]]);
+        $csrf = login($app);
+        [, $page] = api($app, "GET", "/pages/script");
+
+        expect($page["isPhp"])->toBeTrue()
+            ->and($page["canChange"])->toBeFalse()
+            ->and(api($app, "PATCH", "/pages/script", ["slug" => "renamed"], $csrf)[0])->toBe(403)
+            ->and(api($app, "PATCH", "/pages/script", ["status" => "unlisted"], $csrf)[0])->toBe(403)
+            ->and(api($app, "PATCH", "/pages/scripts", ["data" => ["title" => "Scripts"]], $csrf)[0])->toBe(403)
+            ->and(api($app, "DELETE", "/pages/script", csrf: $csrf)[0])->toBe(403)
+            ->and(api($app, "DELETE", "/pages/folder", csrf: $csrf)[0])->toBe(403)
+            ->and(is_file("$this->dir/content/script.php"))->toBeTrue()
+            ->and(is_file("$this->dir/content/folder/nested.php"))->toBeTrue();
+
+        $app = createApp($this->dir, ["content" => ["allowPHP" => ["edit" => ["editor"]]]]);
+        $csrf = login($app);
+
+        expect(api($app, "PATCH", "/pages/script", ["slug" => "renamed"], $csrf)[0])->toBe(200)
+            ->and(is_file("$this->dir/content/renamed.php"))->toBeTrue();
+
+        $app = createApp($this->dir, ["content" => ["allowPHP" => true]]);
+        $csrf = login($app, "php-admin@example.com");
+
+        expect(api($app, "GET", "/pages/renamed")[1]["canChange"])->toBeTrue()
+            ->and(api($app, "DELETE", "/pages/folder", csrf: $csrf)[0])->toBe(204);
+    });
+
+    it("can't change the type of a php page", function () {
+        mkdir("$this->dir/content/scripts");
+        file_put_contents("$this->dir/content/scripts/page.php", "<?php echo 'scripts';");
+        $app = createApp($this->dir, ["content" => ["allowPHP" => true]]);
+        $csrf = login($app, "php-admin@example.com");
+
+        expect(api($app, "PATCH", "/pages/scripts", ["type" => "article"], $csrf)[0])->toBe(400)
+            ->and(file_exists("$this->dir/content/scripts/page.json"))->toBeFalse();
     });
 });

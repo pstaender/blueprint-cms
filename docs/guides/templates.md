@@ -55,6 +55,8 @@ content/releases/page.json   {"title": "Releases"}
 
 With `"allowPHP" => ["edit" => ["admin", "jane@example.com"]]` these roles and users can edit the php files in the panel: the page shows a php editor (syntax highlighting, Tab indents) instead of its fields. Entries that aren't a role are users, matched by email or `name`. Before saving, the code is checked for syntax errors (like `php -l`); the error and its line are shown and the file can still be saved with *Save anyway*. Anyone who can edit them can run any code on the server, so only allow trusted users.
 
+Only admins and these roles and users can change pages with a php file in the panel: edit their fields, rename, move, sort, change the status or delete them (also by deleting a parent page). Admins can't edit the code itself unless they are in `edit`. The type of a page with a php file can't be changed, its php file renders it.
+
 ## Blocks
 
 Echoing a `blocks` field renders every block with `site/templates/snippets/blocks/{type}.php` (core: `src/views/blocks/`). The snippet gets `$block`:

@@ -83,12 +83,12 @@ const busy = ref(false);
 const error = ref(null);
 
 const menuItems = computed(() => current.value ? [
-  { label: "Move to …", icon: "sort", action: openMove, disabled: current.value.isHome },
+  { label: "Move to …", icon: "sort", action: openMove, disabled: current.value.isHome || !current.value.canChange },
   "-",
   ...current.value.statuses.map((status) => ({
     label: STATUS_LABELS[status],
     icon: status === current.value.status ? "check" : null,
-    disabled: status === current.value.status || (status === "draft" && current.value.isHome),
+    disabled: status === current.value.status || (status === "draft" && current.value.isHome) || !current.value.canChange,
     action: () => change({ status }),
   })),
 ] : []);
@@ -132,7 +132,7 @@ watch(() => session.changes, load);
     <template v-for="group in groups" :key="group.status">
       <h4 v-if="group.label" class="tree-group" :style="{ paddingLeft: `${depth * 14 + 24}px` }">{{ group.label }}</h4>
       <ul class="tree-list">
-        <li v-for="(page, index) in group.pages" :key="page.id" class="tree-item" v-bind="bind(index, group.status === 'listed')">
+        <li v-for="(page, index) in group.pages" :key="page.id" class="tree-item" v-bind="bind(index, group.status === 'listed' && page.canChange)">
           <div class="tree-row" :style="{ paddingLeft: `${depth * 14}px` }" @contextmenu.prevent.stop="showMenu($event, page)">
             <button
               v-if="page.hasChildren"

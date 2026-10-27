@@ -23,10 +23,10 @@ A JSON REST API under `/panel/api`, implemented in `src/Panel.php`.
 | `POST` | `/site/~children` | `{title, slug?, type?}` | create a draft at the root |
 | `GET` | `/pages?search=` | | all pages (flat), e.g. for pickers |
 | `GET` | `/pages/{id}` | | `{id, uid, ref, title, status, num, url, type, blueprint, data, breadcrumb, children, files, …}` |
-| `PATCH` | `/pages/{id}` | `{data?, contentFormat?, slug?, type?, parent?, status?, num?}` | save fields, change the storage format (`json`, `md`, `json+md`), rename the slug, change the type, move it (`parent`: a folder page id, `null`/`""` = root; keeps its status, subpages and files), change the status (`draft`, `unlisted`, `listed`) or position |
-| `DELETE` | `/pages/{id}` | | delete the page and its subpages |
+| `PATCH` | `/pages/{id}` | `{data?, contentFormat?, slug?, type?, parent?, status?, num?}` | save fields, change the storage format (`json`, `md`, `json+md`), rename the slug, change the type, move it (`parent`: a folder page id, `null`/`""` = root; keeps its status, subpages and files), change the status (`draft`, `unlisted`, `listed`) or position. Pages with a php file: 403 unless the user is an admin or in `content.allowPHP.edit`, their type can't be changed (400) |
+| `DELETE` | `/pages/{id}` | | delete the page and its subpages (403 if one of them has a php file and the user is neither an admin nor in `content.allowPHP.edit`) |
 | `PUT` | `/pages/{id}/~php` | `{code, hash?, force?}` | save the page's php file (only for the roles/users in `content.allowPHP.edit`, otherwise 403); a syntax error → 422 with `syntaxError: {message, line}` unless `force: true`; `hash` (`php.hash` of `GET /pages/{id}`) → 409 if the file has changed in the meantime. `GET /pages/{id}` has `php: {file, canEdit, code, hash}` (`code` only for editors) or `null` |
-| `GET` | `/pages/{id}/~children` | | subpages (summaries `{id, uid, ref, title, status, num, url, type, icon, isHome, canHaveChildren, statuses, parent, hasChildren}`, `icon` is the value of the page's `icon` field or the blueprint's), e.g. for the page tree |
+| `GET` | `/pages/{id}/~children` | | subpages (summaries `{id, uid, ref, title, status, num, url, type, icon, isHome, isPhp, canChange, canHaveChildren, statuses, parent, hasChildren}`, `icon` is the value of the page's `icon` field or the blueprint's, `canChange` is `false` for pages with a php file the user may not change), e.g. for the page tree |
 | `POST` | `/pages/{id}/~children` | `{title, slug?, type?}` | create a draft |
 | `GET` | `/pages/{id}/~files` | | files of the page |
 | `POST` | `/pages/{id}/~files?filename=…&template=…` | the file (raw body) | upload a file |

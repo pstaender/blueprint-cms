@@ -56,7 +56,9 @@ const { bind } = useSortable(async (from, to) => {
 const selected = ref([]);
 const action = ref(null);
 const parent = ref("");
-const allSelected = computed(() => list.value.length > 0 && selected.value.length === list.value.length);
+// pages with a php file only for admins and the users in `content.allowPHP.edit`
+const selectable = computed(() => list.value.filter((page) => page.canChange !== false));
+const allSelected = computed(() => selectable.value.length > 0 && selected.value.length === selectable.value.length);
 const statuses = computed(() => [...new Set(list.value.flatMap((page) => page.statuses ?? []))]);
 const STATUS_LABELS = { draft: "Draft", unlisted: "Unlisted", listed: "Listed" };
 
@@ -65,7 +67,7 @@ watch(() => props.pages, (pages) => {
 });
 
 function selectAll(event) {
-  selected.value = event.target.checked ? list.value.map((page) => page.id) : [];
+  selected.value = event.target.checked ? selectable.value.map((page) => page.id) : [];
 }
 
 function openAction(name) {
@@ -147,8 +149,8 @@ async function create() {
     <p v-if="error && !open && !action" class="notice notice-negative">{{ error }}</p>
 
     <ul v-if="list.length" class="items" :class="`items-${layout || 'list'}`">
-      <li v-for="(page, index) in list" :key="page.id" class="item item-selectable" v-bind="bind(index, page.status === 'listed')">
-        <input v-model="selected" type="checkbox" class="item-select" :value="page.id" :title="`Select ${page.title}`">
+      <li v-for="(page, index) in list" :key="page.id" class="item item-selectable" v-bind="bind(index, page.status === 'listed' && page.canChange !== false)">
+        <input v-model="selected" type="checkbox" class="item-select" :value="page.id" :disabled="page.canChange === false" :title="`Select ${page.title}`">
         <RouterLink :to="`/pages/${page.id}`" class="item-link" draggable="false">
           <span class="item-icon">
             <Icon v-if="page.status === 'listed'" name="grip" class="drag-hint" />

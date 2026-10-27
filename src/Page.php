@@ -278,6 +278,10 @@ class Page
             throw new \InvalidArgumentException("Invalid page type \"$type\"");
         }
 
+        if ($this->phpFile() !== null) {
+            throw new \LogicException("The page \"{$this->id()}\" is rendered by a php file, its type can't be changed");
+        }
+
         $this->update(["type" => $type === self::DEFAULT_TYPE ? null : $type]);
     }
 

@@ -111,6 +111,8 @@ const statuses = computed(() => {
   if (page.value?.isHome) delete status.draft;
   return status;
 });
+// pages with a php file only for admins and the users in `content.allowPHP.edit`
+const showForm = computed(() => page.value.isEditable && page.value.canChange);
 const fieldTypes = computed(() => Object.values(page.value?.blueprint.fields ?? {}).map((field) => field.type));
 
 async function changeStatus(event) {
@@ -152,7 +154,9 @@ async function submitDialog() {
       const parent = page.value.breadcrumb.at(-1);
       return router.push(parent ? `/pages/${parent.id}` : "/site");
     }
-    const updated = await api.patch(`/pages/${props.id}`, settings.value);
+    // the type of a php page can't be changed
+    const { type, ...rest } = settings.value;
+    const updated = await api.patch(`/pages/${props.id}`, page.value.isPhp ? rest : settings.value);
     dialog.value = null;
     if (updated.id !== props.id) return router.replace(`/pages/${updated.id}`);
     load(updated);
@@ -201,12 +205,12 @@ onMounted(async () => {
         <a class="button" :href="page.url" target="_blank"><Icon name="open" /> Open</a>
         <label class="button status-select">
           <StatusDot :status="page.status" />
-          <select :value="page.status" :disabled="busy || isDirty" title="Status" @change="changeStatus">
+          <select :value="page.status" :disabled="busy || isDirty || !page.canChange" title="Status" @change="changeStatus">
             <option v-for="(status, key) in statuses" :key="key" :value="key">{{ status.label }}</option>
           </select>
         </label>
-        <button type="button" class="button" title="Page settings" :disabled="isDirty" @click="openSettings"><Icon name="settings" /></button>
-        <button v-if="!page.isHome" type="button" class="button" title="Delete" @click="dialog = 'delete'"><Icon name="trash" /></button>
+        <button v-if="page.canChange" type="button" class="button" title="Page settings" :disabled="isDirty" @click="openSettings"><Icon name="settings" /></button>
+        <button v-if="!page.isHome && page.canChange" type="button" class="button" title="Delete" @click="dialog = 'delete'"><Icon name="trash" /></button>
       </template>
     </ViewHeader>
 
@@ -215,7 +219,7 @@ onMounted(async () => {
       <button type="button" class="button button-small" :disabled="saving" @click="saveDespiteSyntaxError">Save anyway</button>
       <button type="button" class="icon-button syntax-error-close" title="Close" @click="dismissSyntaxError"><Icon name="close" /></button>
     </p>
-    <ModelForm v-if="page.isEditable" :blueprint="page.blueprint" :values="values" :errors="errors" :model="model" />
+    <ModelForm v-if="showForm" :blueprint="page.blueprint" :values="values" :errors="errors" :model="model" />
     <div v-if="page.php?.canEdit" class="field code-field">
       <span id="php-editor-label" class="field-label">PHP <small class="field-help">{{ page.php.file }}</small></span>
       <CodeEditor
@@ -225,10 +229,11 @@ onMounted(async () => {
         :error-message="syntaxError?.message"
       />
     </div>
+    <p v-else-if="!page.canChange" class="notice notice-info">This page is rendered by a php file, only admins and the users allowed to edit php files can change it.</p>
     <p v-else-if="!page.isEditable" class="notice notice-info">This page is rendered by a php file and can't be edited.</p>
 
     <!-- pages rendered by a php file have no form for their subpages field -->
-    <PageItems v-if="!page.isEditable && page.children.length" label="Subpages" :pages="page.children" :parent="model" @changed="reloadChildren" />
+    <PageItems v-if="!showForm && page.children.length" label="Subpages" :pages="page.children" :parent="model" @changed="reloadChildren" />
     <FileList v-if="!fieldTypes.includes('filelist') && page.files.length" :field="{ label: 'Files', type: 'filelist' }" :model="model" />
 
     <Dialog
@@ -252,7 +257,7 @@ onMounted(async () => {
           <span class="field-label">Parent</span>
           <ParentSelect v-model="settings.parent" :exclude="[page.id]" />
         </label>
-        <label class="field">
+        <label v-if="!page.isPhp" class="field">
           <span class="field-label">Type</span>
           <select v-model="settings.type" class="input">
             <option v-for="type in types" :key="type.type" :value="type.type">{{ type.title }}</option>

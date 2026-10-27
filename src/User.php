@@ -259,6 +259,14 @@ class User
         return false;
     }
 
+    /**
+     * Pages with a php file can only be edited, moved, changed or deleted by admins and the users in `content.allowPHP.edit`.
+     */
+    public function canChangePhpPages(): bool
+    {
+        return $this->isAdmin() || $this->canEditPhpFiles();
+    }
+
     public function email(): string
     {
         return (string) $this->data->email;

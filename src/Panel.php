@@ -283,10 +283,12 @@ class Panel
 
     /**
      * Body: {"data": {...}} to save fields, {"contentFormat": "json"}, {"slug": "…"}, {"type": "…"}, {"status": "listed"} and/or {"num": 2}.
+     * Pages with a php file only for admins and the users in `content.allowPHP.edit`.
      */
     private function updatePage(ServerRequestInterface $request, string $id): ResponseInterface
     {
         $page = $this->findPage($id);
+        self::requireChangeable($page);
         $input = self::input($request);
         self::checkConflicts($page->data()->toArray(), $input);
 
@@ -362,7 +364,9 @@ class Panel
 
     private function deletePage(ServerRequestInterface $request, string $id): ResponseInterface
     {
-        $this->findPage($id)->delete();
+        $page = $this->findPage($id);
+        self::requireChangeable($page, withSubpages: true);
+        $page->delete();
         $this->app->refreshSite();
 
         return new Response(204);
@@ -413,6 +417,26 @@ class Panel
         }, $types)));
     }
 
+    /**
+     * Pages with a php file (also among the subpages, e.g. when deleting) only for users who may change them.
+     */
+    private static function requireChangeable(Page $page, bool $withSubpages = false): void
+    {
+        if (!($withSubpages ? self::canChangeWithSubpages($page) : self::canChange($page))) {
+            throw new ApiError("You are not allowed to change pages with a php file", 403);
+        }
+    }
+
+    private static function canChange(Page $page): bool
+    {
+        return $page->phpFile() === null || (bool) User::current()?->canChangePhpPages();
+    }
+
+    private static function canChangeWithSubpages(Page $page): bool
+    {
+        return self::canChange($page) && $page->allChildren()->every(self::canChangeWithSubpages(...));
+    }
+
     private function findPage(string $id): Page
     {
         return $this->app->site()->find($id, includeDrafts: true)
@@ -433,6 +457,8 @@ class Panel
             "type" => $page->type(),
             "icon" => self::pageIcon($page),
             "isHome" => $page->isHome(),
+            "isPhp" => $page->phpFile() !== null,
+            "canChange" => self::canChange($page),
             "canHaveChildren" => $page->isFolder(),
             "statuses" => array_keys($page->blueprint()->get("status")),
             "parent" => $page->parent?->id(),
