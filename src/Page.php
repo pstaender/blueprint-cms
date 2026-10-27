@@ -544,12 +544,12 @@ class Page
      */
     public function changeParent(?self $parent): self
     {
-        if ($this->isHome()) {
-            throw new \LogicException("The home page can't be moved");
-        }
-
         if ($parent?->root === $this->parent?->root) {
             return $this;
+        }
+
+        if ($this->isHome()) {
+            throw new \LogicException("The home page can't be moved");
         }
 
         if ($parent !== null && !$parent->isFolder()) {

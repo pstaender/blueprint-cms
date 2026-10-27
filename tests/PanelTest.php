@@ -99,7 +99,9 @@ it("moves pages to another parent", function () {
         ->and(api($this->app, "GET", "/pages/about")[0])->toBe(404);
 
     expect(api($this->app, "PATCH", "/pages/showcase", ["parent" => "showcase/about"], $csrf)[0])->toBe(400)
-        ->and(api($this->app, "PATCH", "/pages/home", ["parent" => "showcase"], $csrf)[0])->toBe(400);
+        ->and(api($this->app, "PATCH", "/pages/home", ["parent" => "showcase"], $csrf)[0])->toBe(400)
+        // the panel always sends the current parent, the home page has to stay editable
+        ->and(api($this->app, "PATCH", "/pages/home", ["parent" => null, "type" => "frontpage"], $csrf)[0])->toBe(200);
 
     [, $page] = api($this->app, "PATCH", "/pages/showcase/about", ["parent" => null, "status" => "draft"], $csrf);
     expect($page["id"])->toBe("about")
